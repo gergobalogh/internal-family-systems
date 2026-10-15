@@ -6,9 +6,7 @@ only tracks the work.
 
 ## In progress
 
-- **Public GitHub repo.** Create it with `gh`, make the first commit, push.
-  `dream.mp4` (40 MB) and the loose `Generated Image … .jpg` stay out
-  (`.gitignore`); add them later if they should be public.
+Nothing right now: the two items below are waiting on a decision.
 
 ## Needs a decision
 
@@ -54,6 +52,9 @@ only tracks the work.
 
 ## Done
 
+- **Public GitHub repo:** <https://github.com/gergobalogh/internal-family-systems>
+  (branch `main`). `dream.mp4` (40 MB) and the loose `Generated Image … .jpg`
+  stay out (`.gitignore`); add them later if they should be public.
 - **How the app works, in ASCII:** [docs/how-it-works.md](docs/how-it-works.md),
   linked from the README.
 - **Risk calibration script kept:** `node scripts/calibrate-risk.ts [A|B|C]`
