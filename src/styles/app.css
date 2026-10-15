@@ -1,0 +1,1384 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.app {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+/* ---------- Mode bar (interface layer) ---------- */
+
+/*
+ * Away during the conversation; it opens with the closing card, growing
+ * from nothing so the stage gives up its room gradually.
+ */
+.modebar-slot {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: modebar-open var(--mode-fade) var(--ease-soft);
+}
+
+.modebar-slot > .modebar {
+  min-height: 0;
+  overflow: clip;
+}
+
+@keyframes modebar-open {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+.modebar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 14px 20px;
+  background: #fbf3ea;
+  border-bottom: 1px solid var(--line);
+  transition: background-color var(--mode-fade) var(--ease-soft);
+}
+
+[data-mode='whatIf'] .modebar {
+  background: #eeeaf7;
+}
+
+.modebar__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.modebar__hint {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+/* Solid mark for "How it is"; dashed mark for "What if…", echoing the frame. */
+.mode-mark {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--howitis-accent);
+}
+
+[data-mode='whatIf'] .mode-mark {
+  background: transparent;
+  border: 2px dashed var(--whatif-accent);
+}
+
+.modebar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.mode-switch {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--line);
+}
+
+.mode-switch button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.mode-switch button[aria-pressed='true'] {
+  background: var(--ink);
+  color: #fff;
+}
+
+[data-mode='whatIf'] .mode-switch button[aria-pressed='true'] {
+  background: var(--whatif-accent-strong);
+}
+
+.control {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+.control:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.control--quiet {
+  border-color: transparent;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Stage: the map (the conversation card floats on it) ---------- */
+
+.stage {
+  /* The 1fr row, whether or not the mode bar is there yet. */
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+}
+
+/* ---------- Landscape ---------- */
+
+.landscape {
+  position: relative;
+  /* clip, not hidden: focusing an edge part must not scroll the landscape. */
+  overflow: clip;
+  container-type: size;
+  user-select: none;
+  -webkit-user-select: none;
+
+  /*
+   * The plate's frame: the image's own box, covering the landscape (like
+   * object-fit: cover, anchored 60% across). Places on the plate — the house,
+   * the pool of light — are fractions of this frame, so the waiting light
+   * and the card line up with them at any size. Descendants resolve these
+   * (container units need the landscape as their container).
+   */
+  --plate-ratio: 1.7917;
+  --frame-w: max(100cqw, 100cqh * var(--plate-ratio));
+  --frame-h: max(100cqh, 100cqw / var(--plate-ratio));
+  --frame-left: calc((100cqw - var(--frame-w)) * 0.6);
+  --frame-top: calc((100cqh - var(--frame-h)) * 0.5);
+  /* Measured on the plate: the house's centre, its chimney top, and just below its door. */
+  --house-x: 0.648;
+  --house-top: 0.52;
+  --below-house: 0.6;
+}
+
+/*
+ * Tall screens: the plate zooms in and the house's doorstep sits 64% down,
+ * leaving the sky room for the card (which floats above the roof there, see
+ * the card) and the meadow under the house clear for parts. The plate still
+ * reaches past the bottom edge. (0.585: the house's doorstep on the plate.)
+ */
+@container (aspect-ratio < 0.9) {
+  .world,
+  .card-slot {
+    --frame-h: calc(100cqh * 1.7);
+    --frame-w: calc(var(--frame-h) * var(--plate-ratio));
+    --frame-left: calc(60cqw - var(--frame-w) * var(--house-x));
+    --frame-top: calc(64cqh - var(--frame-h) * 0.585);
+  }
+}
+
+.svg-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ---------- World layer ---------- */
+
+.world {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.world__frame {
+  position: absolute;
+  left: var(--frame-left);
+  top: var(--frame-top);
+  width: var(--frame-w);
+  height: var(--frame-h);
+}
+
+.world__plate {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  -webkit-user-drag: none;
+}
+
+/*
+ * The clouds drift right. The sky layer is the same plate masked to the sky
+ * (opaque down past the lowest cloud, clear before the house's chimney), in
+ * a strip of three tiles: plate, mirrored plate, plate. The strip slides two
+ * plate-widths, which lands the first tile where the last one started, and
+ * repeats; the third tile starts exactly over the plate beneath it.
+ */
+.world__sky {
+  position: absolute;
+  inset: 0;
+  mask-image: linear-gradient(to bottom, #000 45%, transparent 51%);
+}
+
+.world__drift {
+  position: absolute;
+  inset: 0;
+  animation: sky-drift 480s linear infinite;
+}
+
+@keyframes sky-drift {
+  to {
+    translate: 200% 0;
+  }
+}
+
+.world__tile {
+  position: absolute;
+  inset: 0;
+}
+
+.world__tile:first-child {
+  translate: -200% 0;
+}
+
+.world__tile--mirrored {
+  translate: -100% 0;
+  scale: -1 1;
+}
+
+/* Waiting, world only: the pool of light breathes. */
+
+.world__pool {
+  position: absolute;
+  left: 50%;
+  top: 74%;
+  width: 56%;
+  height: 16%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 238, 196, 0.55), rgba(255, 238, 196, 0));
+  mix-blend-mode: soft-light;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease-soft);
+}
+
+.world.is-waiting .world__pool {
+  opacity: 1;
+  animation: pool-breathe 3.6s var(--ease-soft) infinite;
+}
+
+@keyframes pool-breathe {
+  50% {
+    scale: 1.06;
+    filter: brightness(1.25);
+  }
+}
+
+.world__plate--dusk {
+  opacity: var(--night);
+}
+
+/* ---------- "What if…" curtains ---------- */
+
+.curtains {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.curtain,
+.valance,
+.moon-prop,
+.curtains__tag {
+  position: absolute;
+  transition:
+    translate var(--mode-fade) var(--ease-soft),
+    opacity var(--mode-fade) var(--ease-soft);
+}
+
+.curtain {
+  top: 0;
+  height: 100%;
+  width: clamp(40px, 10%, 130px);
+  filter: drop-shadow(0 0 10px rgba(59, 34, 54, 0.3));
+}
+
+.curtain--left {
+  left: 0;
+  translate: -110% 0;
+}
+
+.curtain--right {
+  right: 0;
+  scale: -1 1;
+  translate: 110% 0;
+}
+
+.valance {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: clamp(30px, 7%, 56px);
+  translate: 0 -110%;
+  filter: drop-shadow(0 4px 8px rgba(59, 34, 54, 0.3));
+}
+
+.moon-prop {
+  top: 0;
+  right: 22%;
+  width: 0;
+  height: 24%;
+  border-left: 1px solid rgba(255, 246, 232, 0.7);
+  translate: 0 calc(-100% - 8cqmin);
+  opacity: 0;
+}
+
+.moon-prop__moon {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 5.5cqmin;
+  height: 5.5cqmin;
+  translate: -50% 50%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 35%, #fffdf6, #f6e6c8 70%, #e9d2ad);
+  box-shadow: 0 0 28px 10px rgba(255, 230, 196, 0.55);
+}
+
+.curtains__tag {
+  top: 6px;
+  left: 50%;
+  translate: -50% -160%;
+  padding: 3px 14px;
+  border-radius: 999px;
+  background: var(--whatif-accent-strong);
+  color: #fff8f0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  box-shadow: 0 2px 6px rgba(59, 34, 54, 0.3);
+}
+
+[data-mode='whatIf'] .curtain,
+[data-mode='whatIf'] .valance,
+[data-mode='whatIf'] .moon-prop {
+  translate: 0 0;
+  opacity: 1;
+}
+
+[data-mode='whatIf'] .curtains__tag {
+  translate: -50% 0;
+}
+
+/* ---------- Atmosphere: film grain + warm vignette ---------- */
+
+.atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(90, 52, 78, 0.16) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.45 0 0 0 0 0.45 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+.landscape__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--ink);
+}
+
+/* ---------- Parts (character layer) ---------- */
+
+.part {
+  --d: calc(var(--scale) * 18cqmin);
+  --hit: max(var(--d), 44px);
+  position: absolute;
+  width: 0;
+  height: 0;
+  transition:
+    left var(--glide) var(--ease-soft),
+    top var(--glide) var(--ease-soft);
+}
+
+.part__body {
+  position: absolute;
+  left: calc(var(--hit) / -2);
+  top: calc(var(--hit) / -2);
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.part.is-dragging .part__body {
+  cursor: grabbing;
+}
+
+.part__figure {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: var(--d);
+  height: var(--d);
+  translate: -50% 0;
+  transition:
+    width var(--glide) var(--ease-soft),
+    height var(--glide) var(--ease-soft);
+}
+
+/* Dusk light reaches the figures too. */
+[data-mode='whatIf'] .figure {
+  filter: saturate(0.88) brightness(0.93) hue-rotate(-6deg);
+}
+
+/* A part that walked in from the right faces left: the artwork (with its
+   shadow and ring) is mirrored, never its name or controls. */
+.part[data-side='right'] .part__figure {
+  scale: -1 1;
+}
+
+/* Footprint per figure, as fractions of its box (measured from the cutouts). */
+.part {
+  --shadow-x: 0.5;
+  --shadow-w: 0.5;
+}
+.part[data-look='lantern'] {
+  --shadow-x: 0.42;
+  --shadow-w: 0.38;
+}
+.part[data-look='sleeper'] {
+  --shadow-x: 0.52;
+  --shadow-w: 0.8;
+}
+
+.figure {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  transition: filter var(--mode-fade) var(--ease-soft);
+}
+
+.figure__blink {
+  opacity: 0;
+}
+
+.figure__blink.is-visible {
+  opacity: 1;
+}
+
+.figure__lantern-rig {
+  position: absolute;
+  inset: 0;
+  transform-origin: 55.5% 39.1%;
+  rotate: 0deg;
+  transition: rotate 950ms var(--ease-soft);
+}
+
+.figure__lantern-rig.is-raised {
+  rotate: -7deg;
+}
+
+.figure__shadow {
+  position: absolute;
+  left: calc(var(--shadow-x) * 100%);
+  bottom: 5%;
+  width: calc(var(--shadow-w) * 100%);
+  height: 8%;
+  translate: -50% 50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(52, 44, 40, 0.42), rgba(52, 44, 40, 0));
+}
+
+/* The glow travels with the rigged arm, and brightens as dusk falls. */
+.figure__glow {
+  position: absolute;
+  left: 71.8%;
+  top: 40.8%;
+  width: 30%;
+  height: 30%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 214, 140, 0.7), rgba(255, 214, 140, 0));
+  mix-blend-mode: screen;
+  opacity: var(--lantern);
+  pointer-events: none;
+}
+
+/* Selection: a soft ring of light on the ground beneath the figure. */
+.part__ring {
+  position: absolute;
+  left: calc(var(--shadow-x) * 100%);
+  bottom: 5%;
+  width: calc(var(--shadow-w) * 100% + 14px);
+  height: max(calc(var(--d) * 0.12), 10px);
+  translate: -50% 50%;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 251, 240, 0.95);
+  box-shadow: 0 0 14px rgba(255, 246, 220, 0.9);
+  opacity: 0;
+  transition: opacity 200ms var(--ease-soft);
+}
+
+.part.is-selected .part__ring {
+  opacity: 1;
+}
+
+.part__body:focus-visible {
+  outline: none;
+}
+
+.part__body:focus-visible .part__ring {
+  opacity: 1;
+  border-color: var(--focus);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+/* At the right end of the figure's footprint (mirrored or not), on its ground line. */
+.part__handle {
+  position: absolute;
+  left: calc(var(--d) * (var(--shadow-x) + var(--shadow-w) / 2 - 0.5) + 12px);
+  top: calc(var(--hit) / 2 - var(--d) * 0.05);
+  width: 18px;
+  height: 18px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--ink-soft);
+  box-shadow: 0 1px 3px rgba(58, 51, 64, 0.25);
+  cursor: nwse-resize;
+  touch-action: none;
+  transition:
+    left var(--glide) var(--ease-soft),
+    top var(--glide) var(--ease-soft);
+}
+
+.part[data-side='right'] .part__handle {
+  left: calc(var(--d) * (0.5 - var(--shadow-x) + var(--shadow-w) / 2) + 12px);
+}
+
+.part__handle::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+}
+
+/* Label, then actions when selected, stacked away from the figure. */
+.part__tag {
+  position: absolute;
+  left: var(--label-left, 0px);
+  top: calc(var(--hit) / 2 + 8px);
+  translate: var(--label-shift, -50%) 0;
+  /* As wide as the name on one line, until it has to wrap. */
+  width: max-content;
+  max-width: min(18em, 70cqw);
+  display: flex;
+  flex-direction: column;
+  align-items: var(--label-align, center);
+  gap: 8px;
+  pointer-events: none;
+  transition: top var(--glide) var(--ease-soft);
+}
+
+.part[data-label-x='start'] {
+  --label-left: -12px;
+  --label-shift: 0%;
+  --label-align: flex-start;
+  --label-text: left;
+}
+
+.part[data-label-x='end'] {
+  --label-left: 12px;
+  --label-shift: -100%;
+  --label-align: flex-end;
+  --label-text: right;
+}
+
+.part__label,
+.part__actions {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.part__label {
+  flex-direction: column;
+  align-items: var(--label-align, center);
+  gap: 1px;
+  max-width: 100%;
+  padding: 4px 12px 5px;
+  border-radius: 12px;
+  background: var(--surface);
+  backdrop-filter: blur(4px);
+}
+
+.part__hedge {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
+/* The person's own words, shown whole: a long name wraps. */
+.part__name {
+  max-width: 100%;
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: var(--label-text, center);
+  text-wrap: balance;
+}
+
+.part__rename {
+  width: 14em;
+  padding: 2px 6px;
+  border: 1px solid var(--whatif-accent);
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  pointer-events: auto;
+}
+
+.part__actions {
+  gap: 6px;
+  pointer-events: auto;
+  /* Up to four actions: they wrap inside the label's width rather than run off the map. */
+  flex-wrap: wrap;
+  justify-content: var(--label-align, center);
+}
+
+/* A part's words from Get to know it, under its name when selected: theirs, whole. */
+.part__words {
+  display: flex;
+  flex-direction: column;
+  align-items: var(--label-align, center);
+  gap: 3px;
+  max-width: 100%;
+  margin-top: 4px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: var(--label-text, center);
+  text-wrap: pretty;
+}
+
+.part__voice {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-style: italic;
+}
+
+.part__intent {
+  font-size: 0.85rem;
+}
+
+.part__intent-label {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.part[data-label-y='above'] .part__tag {
+  top: auto;
+  bottom: calc(var(--hit) / 2 + 8px);
+  flex-direction: column-reverse;
+}
+
+.part__actions button {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(58, 51, 64, 0.12);
+}
+
+.part.is-dragging,
+.part.is-dragging * {
+  transition: none;
+}
+
+/* Entrances: a part named while the world waits holds, then walks in from its
+   side as a pale trace that becomes the figure. Its name comes last. */
+.part.is-held {
+  visibility: hidden;
+}
+
+.part.is-walking {
+  animation: part-walk-in var(--walk) var(--ease-soft) both;
+}
+
+.part.is-walking .part__figure {
+  animation: part-trace var(--walk) linear both;
+}
+
+.part.is-walking .figure {
+  animation: part-step 650ms ease-in-out 3;
+}
+
+.part.is-walking .part__tag,
+.part.is-walking .part__handle {
+  animation: part-late var(--walk) var(--ease-soft) both;
+}
+
+@keyframes part-walk-in {
+  from {
+    translate: var(--walk-from) 0;
+  }
+}
+
+@keyframes part-trace {
+  0% {
+    opacity: 0;
+    filter: grayscale(1) brightness(1.7) contrast(0.5);
+  }
+  20%,
+  55% {
+    opacity: 0.6;
+    filter: grayscale(1) brightness(1.7) contrast(0.5);
+  }
+  100% {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@keyframes part-step {
+  50% {
+    translate: 0 -2%;
+  }
+}
+
+@keyframes part-late {
+  0%,
+  70% {
+    opacity: 0;
+  }
+}
+
+/* ---------- Links: two threads reaching toward each other ---------- */
+
+.link {
+  --thread: #fff7ea;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.link__threads {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 1px 1.5px rgba(58, 51, 64, 0.4));
+}
+
+.link__threads line {
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 0.1 7;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Above the characters, so the knot and its tag stay reachable. */
+.link__anchor {
+  position: absolute;
+  z-index: 600;
+  width: 0;
+  height: 0;
+}
+
+/* A small diamond, so it never reads as a part's round resize handle. */
+.link__knot {
+  position: absolute;
+  left: -7px;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 1.5px solid rgba(58, 51, 64, 0.4);
+  border-radius: 3px;
+  background: var(--thread);
+  box-shadow: 0 1px 3px rgba(58, 51, 64, 0.3);
+  rotate: 45deg;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.link__knot::before {
+  content: '';
+  position: absolute;
+  inset: -15px;
+  border-radius: 50%;
+}
+
+.link.is-selected .link__knot,
+.link__knot:focus-visible {
+  outline: none;
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9);
+}
+
+.link__tag {
+  position: absolute;
+  left: 0;
+  top: 18px;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.link__words {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* ---------- Conversation card: one at a time, at the house's doorstep ---------- */
+
+.card {
+  --card-w: min(30rem, calc(100cqw - 32px));
+  --card-top: min(
+    calc(var(--frame-top) + var(--frame-h) * var(--below-house)),
+    calc(100cqh - 15rem)
+  );
+  position: absolute;
+  z-index: 1100;
+  /* Centred on the page; tall screens move it over the house (--card-x). */
+  left: clamp(
+    16px,
+    calc(var(--card-x, 50cqw) - var(--card-w) / 2),
+    calc(100cqw - 16px - var(--card-w))
+  );
+  top: max(16px, var(--card-top));
+  width: var(--card-w);
+  max-height: calc(100cqh - max(16px, var(--card-top)) - 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 24px 20px;
+  /* Glass at rest: frosted and quiet, never under the contrast floor. */
+  border: 1.5px solid rgba(255, 252, 246, 0.9);
+  border-radius: 20px;
+  outline: 1px solid rgba(201, 138, 94, 0.4);
+  outline-offset: -8px;
+  background: rgba(255, 250, 242, 0.28);
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  box-shadow: 0 10px 30px rgba(58, 51, 64, 0.1);
+  color: var(--ink);
+  text-align: center;
+  animation: card-in 550ms var(--ease-soft) both;
+  transition:
+    background 400ms var(--ease-soft),
+    opacity 450ms var(--ease-soft),
+    translate 450ms var(--ease-soft);
+}
+
+/* The card's slot: nothing on wide screens; the sky above the house on tall ones. */
+.card-slot {
+  display: contents;
+}
+
+/*
+ * Tall screens: the card floats in the sky over the house instead, its
+ * bottom edge just clear of the chimney, so the meadow stays free for parts
+ * and the field stays above a phone's keyboard. The slot is that sky and the
+ * card sits at its foot; a card too tall for it keeps to the top and runs
+ * down over the house rather than hiding its question (an overflowing flex
+ * item drops its auto margin).
+ */
+@container (aspect-ratio < 0.9) {
+  .card-slot {
+    position: absolute;
+    z-index: 1100;
+    top: 16px;
+    /* The map note arrives with the closing card, in the same sky: start under it. */
+    top: max(16px, anchor(--map-note bottom, 0px) + 12px);
+    right: 0;
+    bottom: calc(100cqh - var(--frame-top) - var(--frame-h) * var(--house-top) + 14px);
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+  }
+
+  .card {
+    --card-x: calc(var(--frame-left) + var(--frame-w) * var(--house-x));
+    position: relative;
+    flex: none;
+    top: 0;
+    margin-top: auto;
+    max-height: calc(100cqh - 32px);
+    pointer-events: auto;
+  }
+}
+
+/* Typing: a little more solid, still glass. */
+.card:focus-within {
+  background: rgba(255, 251, 246, 0.4);
+}
+
+[data-mode='whatIf'] .card {
+  outline-color: rgba(125, 80, 112, 0.45);
+  background: rgba(252, 245, 247, 0.3);
+}
+
+[data-mode='whatIf'] .card:focus-within {
+  background: rgba(253, 248, 249, 0.4);
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+/* Sent: the card ghosts in place while the world waits. */
+.card.is-waiting .card__lines,
+.card.is-waiting .card__field {
+  opacity: 0.45;
+}
+
+/* The next character walks in; the card steps aside until it has. Invisible, it never blocks the map. */
+.card.is-away {
+  opacity: 0;
+  translate: 0 6px;
+  pointer-events: none;
+}
+
+.card__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  transition: opacity 400ms var(--ease-soft);
+}
+
+.card__line {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.card__reply {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card__field {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid rgba(58, 51, 64, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.3);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.4;
+  resize: none;
+  transition: opacity 400ms var(--ease-soft);
+}
+
+.card__field:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.card__actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Fixed width, so "One moment…" replaces "Send" without a jump. */
+.card__button {
+  min-width: 9rem;
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+[data-mode='whatIf'] .card__button {
+  border-color: var(--whatif-accent-strong);
+  background: var(--whatif-accent-strong);
+}
+
+.card__button--quiet,
+[data-mode='whatIf'] .card__button--quiet {
+  border-color: rgba(58, 51, 64, 0.4);
+  background: transparent;
+  color: var(--ink);
+}
+
+.card__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* The pause card's support link reads as a button. */
+a.card__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* While they try an arrangement: one quiet line and one action, so the map stays free. */
+.card--slim {
+  --card-w: min(22rem, calc(100cqw - 32px));
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 14px;
+  padding: 12px 16px;
+}
+
+.card--slim .card__line {
+  font-size: 1rem;
+}
+
+/* DEV ONLY: marks a run that started from the ?jump=after shortcut. */
+.dev-badge {
+  position: absolute;
+  z-index: 1200;
+  right: 8px;
+  bottom: 8px;
+  margin: 0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(58, 51, 64, 0.75);
+  color: #fff;
+  font-size: 0.72rem;
+  pointer-events: none;
+}
+
+/* ---------- Map note: the summary, left on the map after the conversation ---------- */
+
+.map-note {
+  position: absolute;
+  /* Under the characters, so a part dragged across it stays in sight. */
+  z-index: 200;
+  /* Tall screens keep the closing card under it (see .card-slot). */
+  anchor-name: --map-note;
+  left: calc(16px + var(--note-x) * (100cqw - 32px));
+  top: calc(16px + var(--note-y) * (100cqh - 32px));
+  translate: calc(var(--note-x) * -100%) calc(var(--note-y) * -100%);
+  width: min(22rem, calc(100cqw - 32px));
+  padding: 12px 16px;
+  border: 1.5px solid rgba(255, 252, 246, 0.9);
+  border-radius: 16px;
+  background: rgba(255, 250, 242, 0.72);
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  box-shadow: 0 6px 20px rgba(58, 51, 64, 0.14);
+  color: var(--ink);
+  cursor: grab;
+  touch-action: none;
+  animation: note-in 550ms var(--ease-soft) both;
+  transition:
+    left var(--glide) var(--ease-soft),
+    top var(--glide) var(--ease-soft),
+    translate var(--glide) var(--ease-soft);
+}
+
+.map-note.is-dragging {
+  z-index: 1050;
+  cursor: grabbing;
+  transition: none;
+}
+
+[data-mode='whatIf'] .map-note {
+  background: rgba(252, 245, 247, 0.74);
+}
+
+.map-note__text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+/* A changed sentence fades in. */
+.map-note__words {
+  animation: note-in 450ms var(--ease-soft) both;
+}
+
+@keyframes note-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Toast ---------- */
+
+.toast-region {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 10;
+  translate: -50% 0;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 8px 8px 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(58, 51, 64, 0.25);
+  white-space: nowrap;
+}
+
+.toast button {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .modebar {
+    padding: 12px 16px;
+  }
+  .modebar__controls {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ---------- THROWAWAY review spike: Rive Critic walk-in ---------- */
+/* Delete with src/ui/CriticWalkSpike.tsx and its render in App.tsx. */
+
+.spike-walk {
+  position: fixed;
+  inset: 0;
+  /* Review-only: above the conversation card so the whole gait stays visible. */
+  z-index: 1150;
+  pointer-events: none;
+}
+
+.spike-walk__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.spike-walk__traveler {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(190px, 34vmin, 320px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+}
+
+/* Off the left edge until the walk script takes over the transform. */
+.spike-walk__traveler--entering {
+  transform: translateX(-100vw);
+}
+
+.spike-walk__replay {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  pointer-events: auto;
+}
+
+/* ---------- THROWAWAY review spikes: Rive entrances (parachute, leaf drift, sprout) ---------- */
+/* Delete with src/ui/DescentSpike.tsx, src/ui/SproutRiseSpike.tsx and their renders in App.tsx.
+   The geometry variables come from the scene's plan, in artboard px. */
+
+.spike-entrance {
+  /* The figure's box: the same size as the walk spike's Critic. */
+  --figure: clamp(190px, 34vmin, 320px);
+  position: fixed;
+  inset: 0;
+  /* Review-only: above the conversation card so the whole descent stays visible. */
+  z-index: 1150;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.spike-entrance__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The artboard and the figure's box differ (the canopy and its lines sit
+   above the Defender's box; the Sleeper's box sticks out of its artboard);
+   scale it so the box is --figure wide, centred on the screen. */
+.spike-entrance__traveler {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--figure) * var(--board-w) / var(--box));
+  aspect-ratio: var(--board-w) / var(--board-h);
+  translate: calc(-100% * var(--box-cx) / var(--board-w)) calc(-100% * var(--box-cy) / var(--board-h));
+}
+
+/* Above the top edge until the descent script takes over the transform. */
+.spike-entrance__traveler--entering {
+  transform: translateY(-200vh);
+}
+
+/* Off the side until the side entrance script takes over the transform. */
+.spike-entrance--from-left :is(.spike-entrance__traveler, .spike-entrance__shadow) {
+  transform: translateX(-200vw);
+}
+
+.spike-entrance--from-right :is(.spike-entrance__traveler, .spike-entrance__shadow) {
+  transform: translateX(200vw);
+}
+
+/* On the ground where the feet will land, like a figure's own shadow. */
+.spike-entrance__shadow {
+  position: absolute;
+  left: calc(50% + (var(--shadow-x) + var(--shadow-dx, 0) - 0.5) * var(--figure));
+  top: calc(50% + (var(--feet-y) - var(--box-cy)) / var(--box) * var(--figure));
+  width: calc(var(--shadow-w) * var(--figure));
+  height: calc(0.08 * var(--figure));
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(52, 44, 40, 0.42), rgba(52, 44, 40, 0));
+}
+
+.spike-entrance__replay {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  pointer-events: auto;
+}
+
+/* Map's trail (MapRouteSpike.tsx) and Doodle's line (DoodleLineSpike.tsx),
+   drawn over the whole screen behind the figure, faded out once it is there. */
+.spike-entrance__trail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 1.8s ease;
+}
+
+.spike-entrance__trail--faded {
+  opacity: 0;
+}
+
+/* Map's: a running stitch along the route, up to its feet, in the
+   natural-wool tan of the parachute lines, with a little shade under it so
+   it sits in the meadow. */
+.spike-entrance__stitches {
+  fill: none;
+  stroke: #ae9f86;
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 9px 10px;
+}
+
+.spike-entrance__stitches--shade {
+  stroke: rgba(74, 58, 44, 0.3);
+  translate: 0 1.5px;
+}
+
+/* Doodle's: a loose dusty-pink crayon line, a little translucent, revealed
+   by its dash offset and stroked with a tile of crayon grain (#c98a93). */
+.spike-entrance__crayon {
+  fill: none;
+  stroke: url(#spike-crayon);
+  stroke-width: calc(var(--figure) * 0.017);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
+}

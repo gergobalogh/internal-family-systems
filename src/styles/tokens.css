@@ -1,0 +1,44 @@
+:root {
+  /* Palette: dusty pinks, soft greens, creamy whites, gentle blues. */
+  --cream: #fbf6ef;
+  --ink: #3a3340;
+  --ink-soft: #5e5566;
+  --line: rgba(58, 51, 64, 0.14);
+  --surface: rgba(255, 251, 246, 0.86);
+
+  /* "How it is" accent: daylight warmth. "What if…" accent: the curtains' deep rose. */
+  --howitis-accent: #c98a5e;
+  --whatif-accent: #7d5070;
+  --whatif-accent-strong: #6d4462;
+
+  --focus: #6d4462;
+
+  --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+  --ease-soft: cubic-bezier(0.33, 0, 0.2, 1);
+  --mode-fade: 900ms;
+  --glide: 350ms;
+}
+
+/*
+ * Scene light. Registered so the browser can interpolate them: switching mode
+ * re-lights one place (day → dusk) rather than swapping scenes.
+ */
+@property --night { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --lantern { syntax: '<number>'; inherits: true; initial-value: 0; }
+
+/* How it is: soft daylight. */
+.app {
+  --night: 0;
+  --lantern: 0;
+  transition:
+    --night var(--mode-fade) var(--ease-soft),
+    --lantern var(--mode-fade) var(--ease-soft);
+}
+
+/* What if…: the same place at dusk — lavender and peach, never dark or cold. */
+.app[data-mode='whatIf'] {
+  --night: 1;
+  --lantern: 1;
+}

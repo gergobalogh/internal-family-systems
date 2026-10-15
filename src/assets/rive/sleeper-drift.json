@@ -1,0 +1,21 @@
+{
+  "fps": 60,
+  "artboard": {
+    "width": 840,
+    "height": 420
+  },
+  "figureBox": {
+    "x": 100.0,
+    "y": -221.0,
+    "size": 640
+  },
+  "feetY": 379.0,
+  "contentTop": 19.8,
+  "cycleFrames": 160,
+  "flareFrames": 64,
+  "touchdownSpeed": 0.6,
+  "shadow": {
+    "x": 0.52,
+    "w": 0.8
+  }
+}
