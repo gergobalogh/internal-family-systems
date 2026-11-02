@@ -1,0 +1,262 @@
+{
+  "url": "http://localhost:5180/",
+  "size": "390x844",
+  "timeline": [
+    {
+      "t": 5.7,
+      "what": "turn0-freewrite",
+      "lines": [
+        "In your own words, what's weighing on you right now? No need to be organized."
+      ],
+      "buttons": [
+        "Send"
+      ],
+      "choices": [],
+      "file": "01-turn0-freewrite.jpg"
+    },
+    {
+      "t": 15.8,
+      "what": "turn1-loudest",
+      "lines": [
+        "It sounds like work has been relentless, with nights spent replaying meetings. Part of you says \"push harder,\" and part of you wants to hide under the covers.",
+        "Which feeling has been loudest lately — what would you call it?"
+      ],
+      "buttons": [
+        "Send"
+      ],
+      "choices": [],
+      "file": "02-turn1-loudest.jpg"
+    },
+    {
+      "t": 26.9,
+      "what": "entry",
+      "lines": [
+        "It sounds like \"not feeling good enough\" has been the loudest lately, especially in those late nights spent replaying what you said at work.",
+        "And how do you feel toward ‘not feeling good enough’ — curious about it, frustrated with it, or something else?"
+      ],
+      "buttons": [
+        "Send"
+      ],
+      "choices": [],
+      "file": "03-entry.jpg"
+    },
+    {
+      "t": 32.5,
+      "what": "entry",
+      "lines": [
+        "It sounds like you feel frustrated with 'not feeling good enough' right now.",
+        "There may be another feeling here too.",
+        "If it feels separate, what would you call it — or is it part of the same feeling?"
+      ],
+      "buttons": [
+        "Send"
+      ],
+      "choices": [],
+      "file": "04-entry.jpg"
+    },
+    {
+      "t": 42.8,
+      "what": "entry",
+      "lines": [
+        "It sounds like you'd call it \"the one who wants to hide,\" the part of you that would rather pull the covers up than deal with any of it.",
+        "Which feels closer — ‘not feeling good enough’ or ‘the one who wants to hide’?"
+      ],
+      "buttons": [
+        "Send"
+      ],
+      "choices": [],
+      "file": "05-entry.jpg"
+    },
+    {
+      "t": 47.2,
+      "what": "entry",
+      "lines": [
+        "It sounds like the one who wants to hide feels closer right now, the part of you that just wants to be under the covers and not deal with any of it.",
+        "One way I'm seeing this is that ‘not feeling good enough’ takes up the most space; ‘the one who wants to hide’ feels closer than ‘not feeling good enough’; and the two seem to be pulling in different directions — what would you change?"
+      ],
+      "buttons": [
+        "No changes",
+        "Send"
+      ],
+      "choices": [],
+      "file": "06-entry.jpg"
+    },
+    {
+      "t": 54.5,
+      "what": "entry",
+      "lines": [
+        "That sounds like how you'd like it to be — you could try that in ‘What if’.",
+        "That's the picture so far — it's yours. Move anything that doesn't look right."
+      ],
+      "buttons": [
+        "Add a quieter part",
+        "Close"
+      ],
+      "choices": [],
+      "file": "07-entry.jpg"
+    },
+    {
+      "t": 57,
+      "what": "quieter-ask",
+      "lines": [
+        "What would you call the part that rarely gets heard?"
+      ],
+      "buttons": [
+        "Not now",
+        "Send"
+      ],
+      "choices": [],
+      "file": "08-quieter-ask.jpg"
+    },
+    {
+      "t": 68.6,
+      "what": "quieter-here",
+      "lines": [
+        "‘the tired one’ is here now, at the edge. Move it wherever feels right."
+      ],
+      "buttons": [
+        "Close"
+      ],
+      "choices": [],
+      "file": "09-quieter-here.jpg"
+    },
+    {
+      "t": 72.1,
+      "what": "map handed over",
+      "file": "10-map-handed-over.jpg"
+    },
+    {
+      "t": 75.2,
+      "what": "part selected",
+      "file": "11-part-box.jpg",
+      "box": [
+        "Smaller",
+        "Larger",
+        "Get to know it",
+        "Rename",
+        "Change figure",
+        "Not one of my parts"
+      ]
+    },
+    {
+      "t": 77.3,
+      "what": "know-voice",
+      "lines": [
+        "If ‘not feeling good enough’ had words, what would it say?"
+      ],
+      "buttons": [
+        "Not now",
+        "Send"
+      ],
+      "choices": [],
+      "file": "12-know-voice.jpg"
+    },
+    {
+      "t": 82.1,
+      "what": "know-intent",
+      "lines": [
+        "It sounds like 'not feeling good enough' tells you that you can't stop now, or everything falls apart.",
+        "What might ‘not feeling good enough’ be trying to do for you?"
+      ],
+      "buttons": [
+        "That's enough for now",
+        "Send"
+      ],
+      "choices": [],
+      "file": "13-know-intent.jpg"
+    },
+    {
+      "t": 87.6,
+      "what": "know-reflection",
+      "lines": [
+        "It sounds like 'not feeling good enough' might be trying to keep you from being let go, so it tells you that you can't stop now."
+      ],
+      "buttons": [
+        "Close"
+      ],
+      "choices": [],
+      "file": "14-know-reflection.jpg"
+    },
+    {
+      "t": 92.9,
+      "what": "dragged part 1"
+    },
+    {
+      "t": 98,
+      "what": "noticing",
+      "lines": [
+        "The map now shows that ‘not feeling good enough’ feels closer than ‘the one who wants to hide’. Is anything different about it?"
+      ],
+      "buttons": [
+        "Skip this one",
+        "Send"
+      ],
+      "choices": [],
+      "file": "15-noticing.jpg"
+    },
+    {
+      "t": 104,
+      "what": "noticing-reflection",
+      "lines": [
+        "It sounds like, with 'not feeling good enough' sitting closer, something feels a bit quieter over there."
+      ],
+      "buttons": [
+        "Close"
+      ],
+      "choices": [],
+      "file": "16-noticing-reflection.jpg"
+    },
+    {
+      "t": 110.2,
+      "what": "whatif-invite",
+      "lines": [
+        "In your words: ‘I wish it were further away.’ Would it be alright to try that here, and notice what shifts? Undo is one tap."
+      ],
+      "buttons": [
+        "Not now",
+        "Let's try"
+      ],
+      "choices": [],
+      "file": "17-whatif-invite.jpg"
+    },
+    {
+      "t": 112.9,
+      "what": "trying bar",
+      "file": "18-whatif-trying.jpg"
+    },
+    {
+      "t": 117.8,
+      "what": "whatif-after",
+      "lines": [
+        "Nothing's moved yet — take your time."
+      ],
+      "buttons": [
+        "Keep trying",
+        "Finish without changes"
+      ],
+      "choices": [],
+      "file": "19-whatif-after.jpg"
+    },
+    {
+      "t": 117.8,
+      "what": "the drag did not count as a move"
+    },
+    {
+      "t": 119.7,
+      "what": "end what-if",
+      "file": "20-end-whatif.jpg"
+    },
+    {
+      "t": 123.6,
+      "what": "end how-it-is",
+      "file": "21-end-howitis.jpg",
+      "note": "One way I'm seeing this is that ‘not feeling good enough’ takes up the most space and feels closer than ‘the one who wants to hide’; the two seem to be pulling in different directions; and ‘the tired one’ rarely gets heard."
+    }
+  ],
+  "logs": [
+    "debug: [vite] connecting...",
+    "debug: [vite] connected.",
+    "info: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "warning: [Rive: state-machine-inputs] State machine inputs are deprecated and will be removed in a future major version: please use data binding properties instead. See https://rive.app/docs/editor/data-binding/migration-guide#state-machine-inputs for how to migrate.\nTo suppress this warning, set Rive.suppressDeprecationWarnings = [\"state-machine-inputs\"]"
+  ]
+}

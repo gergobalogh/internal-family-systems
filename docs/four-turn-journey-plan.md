@@ -204,6 +204,13 @@ every answer, the pinned rule that the app never writes its own questions
    spots. **Complete:** figure and kind are returned by one JEV request;
    only readings at or above 0.70 move off the neutral starting spots.
 4. **Turn 3:** leftovers and the quieter lines; remove the closeness step.
+   **Complete (2026-11-02):** one Turn 3 answer brings one part (a tap, a
+   typed leftover or a new name); a typed name replaces the "Something
+   else…" button; the ways out beside Send are "No one else" and "I don't
+   think so". The 4-part skip never fires, since at most two parts exist
+   before Turn 3. A crowded starting ring falls back to two spare spots.
+   Under the redesign's Option A (`docs/redesign/story-redesign.md`),
+   step 5's drag invite moves after Act 2.
 5. **Turn 4:** the drag invite and summary ordering for 3–4 parts.
 6. **Turn 2 skip:** the "already said" check.
 

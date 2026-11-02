@@ -36,3 +36,6 @@ __pycache__/
 /dream.mp4
 /Generated Image *.jpg
 .playwright-mcp/
+
+# Session recordings (videos) stay local; stills and timelines are in git
+/docs/redesign/today/**/*.webm

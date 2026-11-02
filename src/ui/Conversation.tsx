@@ -1,7 +1,7 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react'
 import type { ChangeEvent, KeyboardEvent, MouseEvent, RefObject } from 'react'
-import { ANSWERED_STEPS } from '../conversation/flow'
-import type { ConversationState, Line, Step, Turn1Ask } from '../conversation/flow'
+import { ANSWERED_STEPS, canAddQuieter } from '../conversation/flow'
+import type { ConversationState, Line, Step } from '../conversation/flow'
 import type { Talk } from '../conversation/useConversation'
 import { copy } from './copy'
 import type { Phase } from './useChoreography'
@@ -12,7 +12,7 @@ export const SUPPORT_URL = 'https://findahelpline.com/'
 /** What the person can do on a card, from the conversation hook. */
 type CardActions = Pick<
   Talk,
-  'answer' | 'chooseTurn1' | 'noChanges' | 'dismiss' | 'decline' | 'accept' | 'tried' | 'keepTrying' | 'addQuieter'
+  'answer' | 'choose' | 'noChanges' | 'dismiss' | 'decline' | 'accept' | 'tried' | 'keepTrying' | 'addQuieter'
 >
 
 interface ConversationProps {
@@ -21,6 +21,13 @@ interface ConversationProps {
   shown: number | null
   phase: Phase
   actions: CardActions
+}
+
+/** Phrases copied from the free-write, offered as buttons: Turn 1's choose row, or Turn 3's leftovers. */
+function choicesFor(state: ConversationState): string[] {
+  if (state.step === 'loudest' && state.turn1?.kind === 'choose') return state.turn1.phrases
+  if (state.step === 'alsoHere') return state.alsoHere
+  return []
 }
 
 /** The guide's lines on a card: from its first line up to the person's answer. */
@@ -59,7 +66,8 @@ export function Conversation({ state, shown, phase, actions }: ConversationProps
             key={shown}
             lines={lines}
             step={state.step}
-            turn1={state.turn1}
+            choices={choicesFor(state)}
+            quieter={canAddQuieter(state)}
             phase={phase}
             current={current}
             actions={actions}
@@ -74,17 +82,21 @@ interface CardProps {
   lines: Line[]
   /** The conversation's step when this card appeared. */
   step: Step
-  turn1: Turn1Ask | null
+  /** Free-write phrases to tap, as the card first showed them. */
+  choices: string[]
+  /** The closing card may still offer a quieter part (none was added at Turn 3). */
+  quieter: boolean
   phase: Phase
   /** This card is the conversation's current one, and settled on screen. */
   current: boolean
   actions: CardActions
 }
 
-function Card({ lines, step: stepNow, turn1: turn1Now, phase, current, actions }: CardProps) {
+function Card({ lines, step: stepNow, choices: choicesNow, quieter: quieterNow, phase, current, actions }: CardProps) {
   // The card keeps its own shape while it ghosts: no layout jump.
   const [step] = useState(stepNow)
-  const [turn1] = useState(turn1Now)
+  const [choices] = useState(choicesNow)
+  const [quieter] = useState(quieterNow)
   const cardRef = useRef<HTMLElement>(null)
   const slim = step === 'trying'
 
@@ -104,7 +116,7 @@ function Card({ lines, step: stepNow, turn1: turn1Now, phase, current, actions }
       </div>
 
       {ANSWERED_STEPS.includes(step) ? (
-        <Reply step={step} turn1={turn1} phase={phase} interactive={current} cardRef={cardRef} actions={actions} />
+        <Reply step={step} choices={choices} phase={phase} interactive={current} cardRef={cardRef} actions={actions} />
       ) : (
         <div className="card__actions">
           {step === 'invite' && (
@@ -138,7 +150,7 @@ function Card({ lines, step: stepNow, turn1: turn1Now, phase, current, actions }
               {copy.talk.support}
             </a>
           )}
-          {step === 'closing' && (
+          {step === 'closing' && quieter && (
             <button type="button" className="card__button card__button--quiet" disabled={!current} data-opens-card onClick={actions.addQuieter}>
               {copy.talk.addQuieter}
             </button>
@@ -156,7 +168,7 @@ function Card({ lines, step: stepNow, turn1: turn1Now, phase, current, actions }
 
 interface ReplyProps {
   step: Step
-  turn1: Turn1Ask | null
+  choices: string[]
   phase: Phase
   interactive: boolean
   cardRef: RefObject<HTMLElement | null>
@@ -164,7 +176,7 @@ interface ReplyProps {
 }
 
 /** The field and its buttons, for a question that waits for a typed answer. */
-function Reply({ step, turn1, phase, interactive, cardRef, actions }: ReplyProps) {
+function Reply({ step, choices, phase, interactive, cardRef, actions }: ReplyProps) {
   const [draft, setDraft] = useState('')
   const fieldRef = useRef<HTMLTextAreaElement>(null)
   const fieldId = useId()
@@ -225,7 +237,11 @@ function Reply({ step, turn1, phase, interactive, cardRef, actions }: ReplyProps
   const aside =
     step === 'confirm'
       ? { label: copy.talk.noChanges, onClick: () => actions.noChanges(copy.talk.noChanges) }
-      : step === 'intent'
+      : step === 'alsoHere'
+        ? { label: copy.talk.noOneElse, onClick: () => submit(copy.talk.noOneElse) }
+        : step === 'quieter'
+          ? { label: copy.talk.quieterNo, onClick: () => submit(copy.talk.quieterNo) }
+          : step === 'intent'
         ? { label: copy.talk.enough, onClick: actions.decline }
         : step === 'noticing'
           ? { label: copy.talk.skip, onClick: actions.decline }
@@ -241,16 +257,16 @@ function Reply({ step, turn1, phase, interactive, cardRef, actions }: ReplyProps
         submit(draft)
       }}
     >
-      {step === 'loudest' && turn1?.kind === 'choose' && (
+      {choices.length > 0 && (
         <div className="card__choices" role="group" aria-label={copy.talk.feelingChoices}>
-          {turn1.phrases.map((phrase) => (
+          {choices.map((phrase) => (
             <button
               key={phrase}
               type="button"
               className="card__button card__button--quiet card__choice"
               disabled={!interactive}
               onMouseDown={keepFocus}
-              onClick={() => actions.chooseTurn1(phrase)}
+              onClick={() => actions.choose(phrase)}
             >
               {`‘${phrase}’`}
             </button>

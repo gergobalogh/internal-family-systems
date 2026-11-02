@@ -27,7 +27,8 @@ const ANSWERS = [
   'the worry',
   "honestly I can't stand it",
   'the one who yells',
-  'the worry',
+  // Turn 3, the quieter question: nobody, so the closing card still offers one.
+  'no',
   'I wish the worry were further away',
 ]
 
@@ -77,9 +78,6 @@ export function jumpToClosing(): { conversation: ConversationState; landscape: L
               probabilities: { warm_curious: 0.04, frustrated_critical: 0.92, unclear: 0.04 },
             },
           })
-          break
-        case 'centrality':
-          feed({ type: 'centralityChecked', seq, result: null })
           break
         case 'figure':
           // Scripted pass-through: short names come back unchanged.

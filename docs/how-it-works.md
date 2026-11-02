@@ -89,13 +89,22 @@ them.
            │            │                 └─ "same" / "no" ─► one part
            │            └─ otherwise  ─► straight on with one part
            │
-           ├─ Turn 3  "Does ‘X’ feel close, or more off to the side?"
-           │          or "Which feels closer — ‘X’ or ‘Y’?"
-           │            ─► parts glide nearer to / further from the centre
+           ├─ Turn 3  who else is here?
+           │            ├─ the free-write named feelings not on the map yet
+           │            │  ─► "You also mentioned these. Are any of them
+           │            │      here too?" + a button for each, copied from
+           │            │      their words                  [No one else]
+           │            │      a tap or a typed name ─► PART 3 walks in
+           │            └─ otherwise ─► "Is there a quieter feeling ‘X’
+           │               might be standing in front of?" (‘X’ guards or
+           │               escapes) or "Is there a quieter feeling here,
+           │               one that rarely gets heard?" [I don't think so]
+           │               a name ─► a small part walks in at the edge
            │
            └─ Turn 4  "One way I'm seeing this is that ‘X’ takes up the
-                        most space; ‘Y’ feels closer than ‘X’; … — what
-                        would you change?"   [No changes]  [Send]
+                        most space; ‘X’ and ‘Y’ seem to be pulling in
+                        different directions; … — what would you
+                        change?"   [No changes]  [Send]
                         ├─ a fix ("call it the boss", "that's not a part",
                         │  "they're not fighting") ─► applied to the map
                         └─ a wish ("I wish it were further away") ─► kept
@@ -105,6 +114,7 @@ them.
           CLOSING  "That's the picture so far — it's yours. Move anything
                     that doesn't look right."
                     [Add a quieter part]  [Close]
+                    (Add a quieter part only if Turn 3 didn't add one)
                     ─► the top bar appears; the summary stays on the map
                        as a note, and keeps itself true as you move things
                     │

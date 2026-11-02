@@ -57,10 +57,17 @@ export const script = {
   secondName: 'If it feels separate, what would you call it — or is it part of the same feeling?',
   /** After a bare "separate" or "yes" only: a name can't be conjured. */
   secondNameAgain: 'What would you call it?',
-  /** Turn 3, one part on the map. */
-  centralityOne: (name: string) => `Does ${quoted(name)} feel close, or more off to the side?`,
-  /** Turn 3, two parts on the map (in creation order). */
-  centralityTwo: (a: string, b: string) => `Which feels closer — ${quoted(a)} or ${quoted(b)}?`,
+  /**
+   * Turn 3, who else is here (docs/four-turn-journey-plan.md). Feelings their
+   * free-write named that aren't on the map yet, as choices copied from their
+   * words. Draft copy.
+   */
+  alsoHere: (count: number) =>
+    count === 1 ? 'You also mentioned this. Is it here too?' : 'You also mentioned these. Are any of them here too?',
+  /** Turn 3 with nothing left over, when a part on the map guards or escapes. Draft copy. */
+  quieterBehind: (name: string) => `Is there a quieter feeling ${quoted(name)} might be standing in front of?`,
+  /** Turn 3 otherwise. Draft copy. */
+  quieter: 'Is there a quieter feeling here, one that rarely gets heard?',
   /** Turn 4. `map` is the deterministic summary (see summary.ts). */
   confirm: (map: string) => `One way I'm seeing this is ${map} — what would you change?`,
   /** Full runs end here. Draft copy until reviewed. */
@@ -145,11 +152,8 @@ export const script = {
     close: 'feels close',
     middle: 'sits somewhere in the middle',
     far: 'feels more off to the side',
-    closerThan: (other: string) => `feels closer than ${quoted(other)}`,
-    aboutAsCloseAs: (other: string) => `feels about as close as ${quoted(other)}`,
     unheard: 'rarely gets heard',
     tension: (a: string, b: string) => `${quoted(a)} and ${quoted(b)} seem to be pulling in different directions`,
-    tensionOfTheTwo: 'the two seem to be pulling in different directions',
     here: (names: readonly string[]) => `${listed(names.map(quoted))} ${names.length === 1 ? 'is' : 'are'} here`,
     hereToo: (names: readonly string[]) => `${listed(names.map(quoted))} ${names.length === 1 ? 'is' : 'are'} here too`,
   },

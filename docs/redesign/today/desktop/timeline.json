@@ -1,0 +1,278 @@
+{
+  "url": "http://localhost:5180/",
+  "size": "1440x900",
+  "timeline": [
+    {
+      "t": 7.6,
+      "what": "turn0-freewrite",
+      "lines": [
+        "In your own words, what's weighing on you right now? No need to be organized."
+      ],
+      "buttons": [
+        "Send"
+      ],
+      "choices": [],
+      "file": "01-turn0-freewrite.jpg"
+    },
+    {
+      "t": 19.1,
+      "what": "turn1-loudest",
+      "lines": [
+        "It sounds like work has been relentless and nights go to replaying meetings, with one part of you saying push harder and another wanting to hide under the covers.",
+        "Which feeling has been loudest lately — what would you call it?"
+      ],
+      "buttons": [
+        "Send"
+      ],
+      "choices": [],
+      "file": "02-turn1-loudest.jpg"
+    },
+    {
+      "t": 30.5,
+      "what": "entry",
+      "lines": [
+        "Thank you for giving it a name.",
+        "And how do you feel toward ‘not feeling good enough’ — curious about it, frustrated with it, or something else?"
+      ],
+      "buttons": [
+        "Send"
+      ],
+      "choices": [],
+      "file": "03-entry.jpg"
+    },
+    {
+      "t": 37.3,
+      "what": "entry",
+      "lines": [
+        "It sounds like you feel frustrated with 'not feeling good enough' right now.",
+        "There may be another feeling here too.",
+        "If it feels separate, what would you call it — or is it part of the same feeling?"
+      ],
+      "buttons": [
+        "Send"
+      ],
+      "choices": [],
+      "file": "04-entry.jpg"
+    },
+    {
+      "t": 49.5,
+      "what": "entry",
+      "lines": [
+        "It sounds like \"the one who wants to hide\" feels like its own part, separate from the part that says to push harder.",
+        "Which feels closer — ‘not feeling good enough’ or ‘the one who wants to hide’?"
+      ],
+      "buttons": [
+        "Send"
+      ],
+      "choices": [],
+      "file": "05-entry.jpg"
+    },
+    {
+      "t": 55.7,
+      "what": "entry",
+      "lines": [
+        "It sounds like the part of you that wants to hide under the covers feels closer right now, the one that doesn't want to deal with any of it.",
+        "One way I'm seeing this is that ‘not feeling good enough’ takes up the most space; ‘the one who wants to hide’ feels closer than ‘not feeling good enough’; and the two seem to be pulling in different directions — what would you change?"
+      ],
+      "buttons": [
+        "No changes",
+        "Send"
+      ],
+      "choices": [],
+      "file": "06-entry.jpg"
+    },
+    {
+      "t": 62.4,
+      "what": "entry",
+      "lines": [
+        "That sounds like how you'd like it to be — you could try that in ‘What if’.",
+        "That's the picture so far — it's yours. Move anything that doesn't look right."
+      ],
+      "buttons": [
+        "Add a quieter part",
+        "Close"
+      ],
+      "choices": [],
+      "file": "07-entry.jpg"
+    },
+    {
+      "t": 65.5,
+      "what": "quieter-ask",
+      "lines": [
+        "What would you call the part that rarely gets heard?"
+      ],
+      "buttons": [
+        "Not now",
+        "Send"
+      ],
+      "choices": [],
+      "file": "08-quieter-ask.jpg"
+    },
+    {
+      "t": 76.6,
+      "what": "quieter-here",
+      "lines": [
+        "‘the tired one’ is here now, at the edge. Move it wherever feels right."
+      ],
+      "buttons": [
+        "Close"
+      ],
+      "choices": [],
+      "file": "09-quieter-here.jpg"
+    },
+    {
+      "t": 81.2,
+      "what": "map handed over",
+      "file": "10-map-handed-over.jpg"
+    },
+    {
+      "t": 84.4,
+      "what": "part selected",
+      "file": "11-part-box.jpg",
+      "box": [
+        "Smaller",
+        "Larger",
+        "Get to know it",
+        "Rename",
+        "Change figure",
+        "Not one of my parts"
+      ]
+    },
+    {
+      "t": 87.4,
+      "what": "know-voice",
+      "lines": [
+        "If ‘not feeling good enough’ had words, what would it say?"
+      ],
+      "buttons": [
+        "Not now",
+        "Send"
+      ],
+      "choices": [],
+      "file": "12-know-voice.jpg"
+    },
+    {
+      "t": 93.2,
+      "what": "know-intent",
+      "lines": [
+        "It sounds like 'not feeling good enough' tells you that you can't stop now, or everything falls apart.",
+        "What might ‘not feeling good enough’ be trying to do for you?"
+      ],
+      "buttons": [
+        "That's enough for now",
+        "Send"
+      ],
+      "choices": [],
+      "file": "13-know-intent.jpg"
+    },
+    {
+      "t": 99.4,
+      "what": "know-reflection",
+      "lines": [
+        "It sounds like 'not feeling good enough' might be trying to keep you from being let go, telling you that you can't stop now."
+      ],
+      "buttons": [
+        "Close"
+      ],
+      "choices": [],
+      "file": "14-know-reflection.jpg"
+    },
+    {
+      "t": 109.1,
+      "what": "dragged part 1"
+    },
+    {
+      "t": 116.3,
+      "what": "noticing",
+      "lines": [
+        "The map now shows that ‘not feeling good enough’ feels about as close as ‘the one who wants to hide’. Is anything different about it?"
+      ],
+      "buttons": [
+        "Skip this one",
+        "Send"
+      ],
+      "choices": [],
+      "file": "15-noticing.jpg"
+    },
+    {
+      "t": 121.8,
+      "what": "noticing-reflection",
+      "lines": [
+        "It sounds like, with 'not feeling good enough' about as close as 'the one who wants to hide,' things feel a bit quieter over there."
+      ],
+      "buttons": [
+        "Close"
+      ],
+      "choices": [],
+      "file": "16-noticing-reflection.jpg"
+    },
+    {
+      "t": 128.9,
+      "what": "whatif-invite",
+      "lines": [
+        "In your words: ‘I wish it were further away.’ Would it be alright to try that here, and notice what shifts? Undo is one tap."
+      ],
+      "buttons": [
+        "Not now",
+        "Let's try"
+      ],
+      "choices": [],
+      "file": "17-whatif-invite.jpg"
+    },
+    {
+      "t": 135.3,
+      "what": "trying bar",
+      "file": "18-whatif-trying.jpg"
+    },
+    {
+      "t": 146.9,
+      "what": "whatif-after",
+      "lines": [
+        "What was that like?"
+      ],
+      "buttons": [
+        "Not now",
+        "Send"
+      ],
+      "choices": [],
+      "file": "19-whatif-after.jpg"
+    },
+    {
+      "t": 152.9,
+      "what": "whatif-reflection",
+      "lines": [
+        "It sounds like with 'the one who wants to hide' sitting further out, things felt lighter, like there was more room to breathe.",
+        "‘How it is’ hasn't changed — both pictures are here."
+      ],
+      "buttons": [
+        "Close"
+      ],
+      "choices": [],
+      "file": "20-whatif-reflection.jpg"
+    },
+    {
+      "t": 157.2,
+      "what": "end what-if",
+      "file": "21-end-whatif.jpg"
+    },
+    {
+      "t": 164,
+      "what": "end how-it-is",
+      "file": "22-end-howitis.jpg",
+      "note": "One way I'm seeing this is that ‘not feeling good enough’ takes up the most space and feels about as close as ‘the one who wants to hide’; the two seem to be pulling in different directions; and ‘the tired one’ rarely gets heard."
+    }
+  ],
+  "logs": [
+    "debug: [vite] connecting...",
+    "debug: [vite] connected.",
+    "info: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "error: Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "error: Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "error: Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "error: Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    "warning: [Rive: state-machine-inputs] State machine inputs are deprecated and will be removed in a future major version: please use data binding properties instead. See https://rive.app/docs/editor/data-binding/migration-guide#state-machine-inputs for how to migrate.\nTo suppress this warning, set Rive.suppressDeprecationWarnings = [\"state-machine-inputs\"]",
+    "error: Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "error: Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "error: Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+  ]
+}

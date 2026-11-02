@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from 'react'
 import type { Dispatch } from 'react'
 import type { Action, LandscapeState } from '../model/types'
-import { analyzeFreeWrite, checkCentrality, checkRisk, checkToward, chooseFigure, extractName, parseCorrections, reflect } from './ai'
+import { analyzeFreeWrite, checkRisk, checkToward, chooseFigure, extractName, parseCorrections, reflect } from './ai'
 import { conversationReducer, startConversation } from './flow'
 import type { ConversationEvent, ConversationState, Pending } from './flow'
 import type { ReflectRequest } from './contract'
@@ -10,7 +10,7 @@ import type { ReflectRequest } from './contract'
 type WithoutMap<E> = E extends unknown ? Omit<E, 'map'> : never
 type Outcome = Extract<
   WithoutMap<ConversationEvent>,
-  { type: 'reflected' | 'freeWriteRead' | 'towardChecked' | 'centralityChecked' | 'corrected' | 'riskChecked' | 'figured' }
+  { type: 'reflected' | 'freeWriteRead' | 'towardChecked' | 'corrected' | 'riskChecked' | 'figured' }
 >
 
 /** Reflections started ahead of their turn, by request (key order aside), until the flow asks for one. */
@@ -30,8 +30,6 @@ async function run(job: Pending, signal: AbortSignal, early: Early): Promise<Out
     }
     case 'towardCheck':
       return { type: 'towardChecked', seq: job.seq, result: await checkToward(job.request, signal) }
-    case 'centrality':
-      return { type: 'centralityChecked', seq: job.seq, result: await checkCentrality(job.request, signal) }
     case 'corrections':
       return { type: 'corrected', seq: job.seq, ops: await parseCorrections(job.request, signal) }
     case 'risk':
@@ -95,7 +93,7 @@ export function useConversation(landscape: LandscapeState, dispatch: Dispatch<Ac
   return {
     state,
     answer: useCallback((text: string) => say({ type: 'answer', text }), [say]),
-    chooseTurn1: useCallback((phrase: string) => say({ type: 'turn1Choice', phrase }), [say]),
+    choose: useCallback((phrase: string) => say({ type: 'choice', phrase }), [say]),
     noChanges: useCallback((text: string) => say({ type: 'noChanges', text }), [say]),
     dismiss: useCallback(() => say({ type: 'dismiss' }), [say]),
     decline: useCallback(() => say({ type: 'decline' }), [say]),

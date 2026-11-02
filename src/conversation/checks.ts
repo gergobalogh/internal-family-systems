@@ -167,23 +167,7 @@ export const SEPARATE_FORMS = [
   'it does',
 ] as const
 
-/** Turn 3, one part: "Does [name] feel close, or more off to the side?" */
-export const CLOSE_FORMS = [
-  'close',
-  'pretty close',
-  'very close',
-  'near',
-  'nearby',
-  'close to the centre',
-  'close to the center',
-] as const
-export const FAR_FORMS = ['far', 'far away', 'far off', 'distant', 'off to the side'] as const
-export const MIDDLE_FORMS = ['in the middle', 'middle', 'midway', 'halfway', 'in between'] as const
-
-/** Turn 3, two parts: "Which feels closer — [A] or [B]?" (the names themselves match too). */
-export const TIE_FORMS = ['about the same', 'both', 'the same', 'same'] as const
-
-/** Adding a quieter part: a bare yes gets the question again instead of becoming a name; no or unsure adds nothing. */
+/** Turn 3 and adding a part: a bare yes gets the question again instead of becoming a name; no or unsure adds nothing. */
 export const YES_FORMS = ['yes', 'yeah', 'yep', 'there is', 'i think so'] as const
 export const NO_FORMS = [
   'no',
@@ -195,6 +179,8 @@ export const NO_FORMS = [
   "i don't think so",
   'nobody',
   'no one',
+  'no one else',
+  'nobody else',
   'never mind',
   'forget it',
 ] as const
@@ -230,10 +216,6 @@ export const UNLINK_FORMS = [
 export const LISTED_FORMS: readonly string[] = [
   ...EXIT_FORMS,
   ...SEPARATE_FORMS,
-  ...CLOSE_FORMS,
-  ...FAR_FORMS,
-  ...MIDDLE_FORMS,
-  ...TIE_FORMS,
   ...YES_FORMS,
   ...NO_FORMS,
   ...UNSURE_FORMS,
@@ -295,6 +277,32 @@ export function isExit(answer: string): boolean {
 /** Words for whole-word name matching: lowercase, apostrophes dropped, any script. */
 export function nameWords(text: string): string[] {
   return text.toLowerCase().replace(/['‘’]/g, '').match(/[\p{L}\p{N}]+/gu) ?? []
+}
+
+/**
+ * Words that don't tell one feeling from another: the frame around a name
+ * ("the one who wants to…", "the part that keeps saying…", "under the…").
+ * "not" is never filler.
+ */
+const FILLER_WORDS = new Set([
+  // articles, pronouns, linking words
+  'a', 'an', 'the', 'one', 'ones', 'who', 'that', 'which', 'what', 'and', 'or', 'but', 'so', 'if', 'when',
+  'me', 'my', 'myself', 'i', 'im', 'ive', 'id', 'it', 'its', 'this', 'these', 'those', 'all', 'some',
+  'is', 'am', 'are', 'was', 'be', 'been', 'being', 'just', 'really', 'very',
+  // places and directions
+  'to', 'of', 'in', 'on', 'at', 'for', 'with', 'about', 'under', 'over', 'into', 'from', 'by', 'up', 'down',
+  'out', 'off', 'through', 'around',
+  // how parts are framed
+  'part', 'parts', 'feeling', 'feelings', 'feel', 'feels', 'voice', 'side', 'something', 'kind', 'sort', 'like',
+  'want', 'wants', 'wanting', 'need', 'needs', 'try', 'tries', 'trying', 'keep', 'keeps', 'keeping', 'say', 'says',
+  'saying', 'tell', 'tells', 'telling', 'should', 'would', 'could', 'can', 'will', 'get', 'gets', 'getting',
+])
+
+/** A name's words without the filler; all of its words when nothing else is left. */
+export function contentWords(text: string): string[] {
+  const words = nameWords(text)
+  const content = words.filter((word) => !FILLER_WORDS.has(word))
+  return content.length > 0 ? content : words
 }
 
 /** Where `needle` occurs in `words` as a run of whole words, or -1. */

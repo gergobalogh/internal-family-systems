@@ -8,8 +8,9 @@ person's: one invited "What if" experiment, "Get to know it" (a part's voice
 and what it might be trying to do), a question when a "How it is" edit
 changes what the map says, and a safety pause across the whole app. It
 builds on [slice 3](docs/slice-3-handoff.md)'s whole entry conversation
-(Turns 0–4: centrality, a confirmation with one correction round, and the
-part that rarely gets heard, now optional on the closing card), [slice 2](docs/slice-2-handoff.md)'s Turns 0–2 and
+(Turns 0–4; Turn 3 now asks who else is here, per
+[docs/four-turn-journey-plan.md](docs/four-turn-journey-plan.md), and the
+closing card offers the part that rarely gets heard when Turn 3 didn't), [slice 2](docs/slice-2-handoff.md)'s Turns 0–2 and
 [slice 1](docs/slice-1-handoff.md)'s "How it is" / "What if…" landscape.
 The conversation is one glass card under the house, per
 [docs/input-choreography-plan.md](docs/input-choreography-plan.md).
@@ -60,10 +61,10 @@ session, and the map stays editable.
   pause.
 - `server/ai.ts` — the AI routes (`/api/reflect` and `/api/corrections` →
   Claude, `/api/risk` → OpenAI moderation + JEV, `/api/figure` → one JEV
-  request for figure + hidden kind, `/api/toward-check` and
-  `/api/centrality` → JEV, and `/api/free-write` → JEV form reading + Claude phrase lifting),
+  request for figure + hidden kind, `/api/toward-check` → JEV, and
+  `/api/free-write` → JEV form reading + Claude phrase lifting),
   mounted on Vite's dev and preview servers. API keys are read here only
-  and never reach the browser; any other host needs the same eight routes.
+  and never reach the browser; any other host needs the same seven routes.
 - `src/ui/` — the landscape (world → links → characters → mode frame),
   the conversation card and its timing (`Conversation.tsx`,
   `useChoreography.ts`: send → ghost → the world waits → a new part walks

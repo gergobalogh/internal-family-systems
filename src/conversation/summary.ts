@@ -23,21 +23,17 @@ export interface SummaryPart {
   name: string
   /** Where it is now, in the layout being described. */
   placement: Placement
-  /** Where it started; differing from it means the person (or Turn 3) moved it. */
+  /** Where it started; differing from it means the person moved it. */
   start: Placement
   /** Its starting size came from an answer ("loudest" → largest, "rarely heard" → small). */
   sizeFromAnswer: boolean
-  /** Turn 3 answered its distance (one-part question). */
-  positionFromAnswer: boolean
-  /** The part that rarely gets heard (added from the closing card). */
+  /** The part that rarely gets heard (Turn 3's quieter part, or added from the closing card). */
   unheard: boolean
 }
 
 export interface SummaryInput {
   /** Visible parts only, in creation order. */
   parts: SummaryPart[]
-  /** Turn 3's two-part answer (an order or a tie), when both parts are still here. */
-  pair: [string, string] | null
   /** The drawn tension link, when both parts are here. */
   link: [string, string] | null
 }
@@ -54,7 +50,8 @@ const resized = (part: SummaryPart) => Math.abs(part.placement.scale - part.star
 
 /** The unheard part's own clause covers its starting size, so only a resize speaks for it. */
 const sizeSpeaks = (part: SummaryPart) => (part.sizeFromAnswer && !part.unheard) || resized(part)
-const positionSpeaks = (part: SummaryPart) => part.positionFromAnswer || moved(part)
+/** A starting spot is the app's, never an answer: only a move speaks for a part's place. */
+const positionSpeaks = moved
 
 /** The one part strictly bigger (or smaller) than every other, if there is one. */
 function strictlyMost(parts: readonly SummaryPart[], sign: 1 | -1): SummaryPart | null {
@@ -68,12 +65,10 @@ export function summarize(input: SummaryInput): string {
   return script.summary.lead(summaryClauses(input))
 }
 
-/** What the summary says about each part, and which other parts each part's clause names (comparisons). */
-function describe({ parts, pair }: SummaryInput) {
+/** What the summary says about each part. */
+function describe({ parts }: SummaryInput): Map<string, Phrase[]> {
   const words = script.summary
   const phrases = new Map(parts.map((part) => [part.id, [] as Phrase[]]))
-  const alsoNames = new Map(parts.map((part) => [part.id, [] as string[]]))
-  const byId = new Map(parts.map((part) => [part.id, part]))
   const say = (part: SummaryPart, key: string, text: string) => phrases.get(part.id)!.push({ key, text })
 
   // Size: superlatives among several parts, plain size words for one.
@@ -88,56 +83,42 @@ function describe({ parts, pair }: SummaryInput) {
     if (smallest && smallest !== largest && sizeSpeaks(smallest)) say(smallest, 'least', words.least)
   }
 
-  // Position: Turn 3's two-part answer as a comparison only (never "[B] is
-  // off to the side"); anyone else whose position speaks, in plain words.
-  const compared = pair?.every((id) => byId.has(id)) ? pair.map((id) => byId.get(id)!) : null
-  if (compared) {
-    const [a, b] = compared
-    const gap = radiusOf(a.placement) - radiusOf(b.placement)
-    const [near, other] = gap > 0 ? [b, a] : [a, b]
-    if (Math.abs(gap) < MIN_VISIBLE_GAP) say(near, `aboutAsCloseAs:${other.id}`, words.aboutAsCloseAs(other.name))
-    else say(near, `closerThan:${other.id}`, words.closerThan(other.name))
-    alsoNames.get(near.id)!.push(other.id)
-  }
+  // Position: anyone whose position speaks, in plain words.
   for (const part of parts) {
-    if (compared?.includes(part) || !positionSpeaks(part)) continue
+    if (!positionSpeaks(part)) continue
     const bucket = bucketOf(radiusOf(part.placement))
     say(part, bucket, words[bucket])
   }
 
   for (const part of parts) if (part.unheard) say(part, 'unheard', words.unheard)
-  return { phrases, alsoNames }
+  return phrases
 }
 
 /** What the summary says about each visible part, by id — for noticing a change in it. */
 export function partPhrases(input: SummaryInput): Map<string, Phrase[]> {
-  return describe(input).phrases
+  return describe(input)
 }
 
 /** The summary's clauses, in creation order, before any lead-in. */
 export function summaryClauses(input: SummaryInput): string[] {
   const { parts, link } = input
   const words = script.summary
-  const { phrases, alsoNames } = describe(input)
+  const phrases = describe(input)
   const byId = new Map(parts.map((part) => [part.id, part]))
 
   // Clauses in creation order; the tension clause follows the later of its two parts.
   const clauses: string[] = []
   const mentioned = new Set<string>()
-  let lastNamed: string[] = []
   const tensionAfter = link && parts.filter((part) => link.includes(part.id)).at(-1)?.id
   for (const part of parts) {
     const own = phrases.get(part.id)!.map((phrase) => phrase.text)
     if (own.length > 0) {
       clauses.push(words.part(part.name, own))
-      lastNamed = [part.id, ...alsoNames.get(part.id)!]
-      lastNamed.forEach((id) => mentioned.add(id))
+      mentioned.add(part.id)
     }
     if (link && part.id === tensionAfter) {
       const [a, b] = link.map((id) => byId.get(id)!)
-      const both = link.every((id) => lastNamed.includes(id))
-      clauses.push(both ? words.tensionOfTheTwo : words.tension(a.name, b.name))
-      lastNamed = [...link]
+      clauses.push(words.tension(a.name, b.name))
       link.forEach((id) => mentioned.add(id))
     }
   }

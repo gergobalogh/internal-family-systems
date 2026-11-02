@@ -3,8 +3,7 @@ import type { LandscapeState, Placement } from '../model/types'
 import type { PartKind } from './contract'
 
 /**
- * Where the conversation puts parts, and how Turn 3 and corrections move
- * them. Placements are figure centres, normalized to the landscape (0–1).
+ * Where the conversation puts parts, and how corrections move them. Placements are figure centres, normalized to the landscape (0–1).
  *
  * Centrality is distance from MAP_CENTRE: the meadow's pool of light, on its
  * left side, where the conversation card (anchored under the house) never
@@ -13,16 +12,12 @@ import type { PartKind } from './contract'
  */
 export const MAP_CENTRE = { x: 0.42, y: 0.64 } as const
 
-/** Where each answer lands a part, as a distance from the centre. */
-export const RADIUS = { close: 0.08, middle: 0.22, far: 0.36 } as const
-/** Bucket edges used by Turn 3 and the summary: under CLOSE_BELOW is close, FAR_FROM and over is far. */
+/** Bucket edges used by the summary: under CLOSE_BELOW is close, FAR_FROM and over is far. */
 export const CLOSE_BELOW = 0.15
 export const FAR_FROM = 0.3
 /** Nothing moves nearer the centre than this. */
 export const MIN_RADIUS = 0.04
-/** Turn 3, two parts: the named part ends up this much nearer than the other. */
-export const ORDER_GAP = 0.1
-/** A smaller difference in distance doesn't count as "closer" (Turn 3 and the summary). */
+/** A smaller difference in distance doesn't count as "closer" (the summary). */
 export const MIN_VISIBLE_GAP = 0.05
 /** Corrections: one "closer"/"further" step, and one "bigger"/"smaller" factor. */
 export const RADIAL_STEP = 0.15
@@ -32,8 +27,9 @@ export type Bucket = 'close' | 'middle' | 'far'
 
 /**
  * Starting spots for parts 1 and 2: the same middling distance from the
- * centre (neutral — closeness is Turn 3's job), clear of the card, high
- * enough that a large part's label and actions stay on the map.
+ * centre (neutral: where a part without a kind reading starts says
+ * nothing), clear of the card, high enough that a large part's label and
+ * actions stay on the map.
  */
 export const STARTING_SPOTS = [
   { x: 0.23, y: 0.6 },
@@ -68,6 +64,30 @@ export const KIND_SPOTS: Record<PartKind, readonly Point[]> = {
 export const startingSpotsForKind = (kind: PartKind | null): readonly Point[] =>
   kind === null ? STARTING_SPOTS : KIND_SPOTS[kind]
 
+/**
+ * A new part lands at least this far from every other part, so it never
+ * walks in on top of one. A ring's spots sit close together, so a third
+ * part (Turn 3, or Add a part) often finds its ring taken.
+ */
+export const MIN_CLEARANCE = 0.12
+
+/**
+ * Open meadow for a part whose ring has no clear spot: low on the map, left
+ * and right, clear of the card on a phone (top half) and on a wide screen
+ * (centred under the house).
+ */
+export const SPARE_SPOTS = [
+  { x: 0.76, y: 0.86 },
+  { x: 0.12, y: 0.86 },
+] as const
+
+/** Its ring's clearest spot, or, when that is crowded, the clearest of the ring and the spare spots. */
+export function startingSpot(state: LandscapeState, kind: PartKind | null): Point {
+  const ring = startingSpotsForKind(kind)
+  const best = clearestSpot(state, ring)
+  return clearance(state, best) >= MIN_CLEARANCE ? best : clearestSpot(state, [...ring, ...SPARE_SPOTS])
+}
+
 /** The unheard part's spots: at the meadow's edges (Brief 2: "rarely heard" → edge + small). */
 export const EDGE_SPOTS = [
   { x: 0.08, y: 0.76 },
@@ -83,15 +103,16 @@ type Point = { x: number; y: number }
  * where the person dragged them). Ties go to the earlier spot.
  */
 export function clearestSpot(state: LandscapeState, spots: readonly Point[]): Point {
+  return spots.reduce((best, spot) => (clearance(state, spot) > clearance(state, best) ? spot : best))
+}
+
+/** How far a spot is from the nearest part on the map, in either layout. */
+function clearance(state: LandscapeState, spot: Point): number {
   const others = state.order
     .filter((id) => !state.parts[id].removed)
     .flatMap((id) => [state.layouts.current[id], state.layouts.whatIf?.[id]])
     .filter((placement) => placement !== undefined)
-
-  const clearance = (spot: Point) =>
-    Math.min(Infinity, ...others.map((other) => Math.hypot(other.x - spot.x, other.y - spot.y)))
-
-  return spots.reduce((best, spot) => (clearance(spot) > clearance(best) ? spot : best))
+  return Math.min(Infinity, ...others.map((other) => Math.hypot(other.x - spot.x, other.y - spot.y)))
 }
 
 export function radiusOf(point: Point): number {
@@ -128,28 +149,6 @@ export function atRadius(placement: Placement, radius: number): Placement {
 
 export const samePlace = (a: Placement, b: Placement) =>
   Math.abs(a.x - b.x) < 1e-4 && Math.abs(a.y - b.y) < 1e-4 && Math.abs(a.scale - b.scale) < 1e-4
-
-/** Turn 3, one part: into the answered bucket, unless it is already there. */
-export function intoBucket(placement: Placement, bucket: Bucket): Placement {
-  return bucketOf(radiusOf(placement)) === bucket ? placement : atRadius(placement, RADIUS[bucket])
-}
-
-/**
- * Turn 3, two parts: afterwards `near` is strictly nearer than `other`.
- * Only `near` moves (inward), unless the minimum radius would break the
- * order — then `other` is pushed out just enough.
- */
-export function inOrder(near: Placement, other: Placement): { near: Placement; other: Placement } {
-  const nearRadius = radiusOf(near)
-  const otherRadius = radiusOf(other)
-  if (nearRadius <= otherRadius - MIN_VISIBLE_GAP) return { near, other }
-  const target = otherRadius - ORDER_GAP
-  if (target >= MIN_RADIUS) return { near: atRadius(near, target), other }
-  return {
-    near: atRadius(near, MIN_RADIUS),
-    other: atRadius(other, Math.max(otherRadius, MIN_RADIUS + ORDER_GAP)),
-  }
-}
 
 /** Correction ops: one step, never past the limits (and never backwards). */
 export function stepped(placement: Placement, op: 'bigger' | 'smaller' | 'closer' | 'further'): Placement {

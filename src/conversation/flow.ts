@@ -3,17 +3,14 @@ import { LOOKS } from '../model/types'
 import type { Action, LandscapeState, Look, Placement } from '../model/types'
 import {
   AFFIRM_FORMS,
-  CLOSE_FORMS,
-  FAR_FORMS,
   LISTED_FORMS,
-  MIDDLE_FORMS,
   NO_FORMS,
   SEPARATE_FORMS,
-  TIE_FORMS,
   UNLINK_FORMS,
   UNSURE_FORMS,
   YES_FORMS,
   checkReflection,
+  contentWords,
   hasRiskPhrase,
   isExit,
   matchesAny,
@@ -22,8 +19,6 @@ import {
   wordRun,
 } from './checks'
 import type {
-  CentralityRequest,
-  CentralityResult,
   CorrectionsRequest,
   FigureChoice,
   FigureReading,
@@ -42,16 +37,17 @@ import type {
 } from './contract'
 import { applyCorrections } from './corrections'
 import type { CorrectionLink, CorrectionPart, Wish } from './corrections'
-import { EDGE_SPOTS, clearestSpot, inOrder, intoBucket, samePlace, startingSpotsForKind } from './geometry'
-import type { Bucket } from './geometry'
+import { EDGE_SPOTS, clearestSpot, startingSpot } from './geometry'
 import { script } from './script'
 import { arrangementChanges, arrangementDiffers, partPhrases, summarize, summaryClauses } from './summary'
 import type { ArrangedPart, SummaryInput } from './summary'
 
 /**
  * The entry conversation, Turns 0–4, and what the guide does after it
- * (docs/slice-4-handoff.md, plus the optional part that rarely gets heard,
- * offered on the closing card), as a pure state machine. Async work (LLM
+ * (docs/slice-4-handoff.md), as a pure state machine. Turn 3 asks who else
+ * is here (docs/four-turn-journey-plan.md): a feeling from their free-write
+ * not yet on the map, or a quieter one; when it adds nobody, the closing
+ * card still offers the quieter part. Async work (LLM
  * reflections, correction parsing and risk checks, JEV judgements) is
  * described by `pending`; the caller runs it and feeds the result back.
  * Every AI result may be null (failed or timed out): the talk always
@@ -65,7 +61,7 @@ import type { ArrangedPart, SummaryInput } from './summary'
  * risk check, pauses the guide for the session instead of using the answer.
  */
 
-/** A JEV reading at or above this is acted on (the polarization branch, Turn 3 moves). */
+/** A JEV reading at or above this is acted on (the polarization branch, a part's kind). */
 export const JEV_THRESHOLD = 0.7
 /** Calibrated on 72 messy free-writes: 71/72 labels, with the one error below this gate. */
 export const TURN_1_FORM_THRESHOLD = 0.7
@@ -109,7 +105,7 @@ export interface Attribute {
     | 'existence'
     | 'pairing'
     | 'secondPart'
-    | 'centrality'
+    | 'alsoHere'
     | 'unheard'
     | 'confirmation'
     | 'safety'
@@ -155,7 +151,10 @@ export type Step =
   | 'loudest'
   | 'towardCheck'
   | 'secondName'
-  | 'centrality'
+  /** Turn 3: feelings the free-write named that aren't on the map yet, as choices. */
+  | 'alsoHere'
+  /** Turn 3 with nothing left over: is there a quieter feeling? */
+  | 'quieter'
   | 'confirm'
   /** The full run's closing card: Close, or add a part that rarely gets heard. */
   | 'closing'
@@ -191,7 +190,8 @@ export const ANSWERED_STEPS: readonly Step[] = [
   'loudest',
   'towardCheck',
   'secondName',
-  'centrality',
+  'alsoHere',
+  'quieter',
   'confirm',
   'unheard',
   'newPart',
@@ -217,7 +217,6 @@ export type Job =
   | { kind: 'reflect'; request: ReflectRequest }
   | { kind: 'freeWrite'; request: FreeWriteRequest }
   | { kind: 'towardCheck'; request: TowardCheckRequest }
-  | { kind: 'centrality'; request: CentralityRequest }
   | { kind: 'corrections'; request: CorrectionsRequest }
   | { kind: 'risk'; request: RiskRequest }
   /**
@@ -230,9 +229,6 @@ export type Job =
 
 /** An AI call in flight; results carrying another `seq` are stale and ignored. */
 export type Pending = Job & { seq: number }
-
-/** What Turn 3 asked about. */
-type CentralityAsk = { kind: 'one'; id: string } | { kind: 'two'; a: string; b: string }
 
 /** The Turn 1 row chosen from Turn 0; `phrases` are verified copies of their words. */
 export type Turn1Ask = {
@@ -257,8 +253,10 @@ export interface ConversationState {
   /** The latest answer to each question. */
   answers: Partial<Record<Step, string>>
   turn1: Turn1Ask | null
-  /** A Turn 0 phrase confirmed or tapped at Turn 1, with its original source. */
-  turn1Name: { name: string; source: string } | null
+  /** Phrases naming feelings, copied word for word from Turn 0 (verified): Turn 1's and Turn 3's choices. */
+  freeWritePhrases: string[]
+  /** A Turn 0 phrase confirmed or tapped (Turn 1 or Turn 3), with its original source: the exact name. */
+  liftedName: { name: string; source: string } | null
   parts: ConversationPart[]
   record: Attribute[]
   /** Set when JEV opens the polarization branch; part 2 inherits its source. */
@@ -270,11 +268,8 @@ export interface ConversationState {
   figures: Look[]
   /** Landscape actions to apply, in order. Only ever appended to. */
   effects: Action[]
-  centrality: CentralityAsk | null
-  /** Parts whose distance Turn 3 answered (one-part question). */
-  positionAnswered: string[]
-  /** Turn 3's two-part answer: an order (nearer first) or a tie. */
-  pair: [string, string] | null
+  /** Turn 3's choices: Turn 0 phrases not yet on the map, as offered. */
+  alsoHere: string[]
   /** The part that rarely gets heard. */
   unheard: string | null
   /** The tension link, once part 2 exists. */
@@ -304,12 +299,11 @@ export type ConversationEvent =
   | { type: 'reflected'; seq: number; text: string | null; map: LandscapeState }
   | { type: 'freeWriteRead'; seq: number; result: FreeWriteAnalysis | null; map: LandscapeState }
   | { type: 'towardChecked'; seq: number; result: TowardCheck | null; map: LandscapeState }
-  | { type: 'centralityChecked'; seq: number; result: CentralityResult | null; map: LandscapeState }
   | { type: 'corrected'; seq: number; ops: ParsedOp[] | null; map: LandscapeState }
   | { type: 'riskChecked'; seq: number; atRisk: boolean | null; map: LandscapeState }
   | { type: 'figured'; seq: number; result: FigureReading | null; extracted: string | null; map: LandscapeState }
-  /** One of Turn 1's verified free-write phrases was tapped. */
-  | { type: 'turn1Choice'; phrase: string; map: LandscapeState }
+  /** One of the verified free-write phrases on the card was tapped (Turn 1 or Turn 3). */
+  | { type: 'choice'; phrase: string; map: LandscapeState }
   /** Close on a card with nothing pending. */
   | { type: 'dismiss'; map: LandscapeState }
   /** Not now, That's enough for now. */
@@ -481,19 +475,22 @@ function chooseFigure(state: ConversationState, name: string): ConversationState
     next: reflectionAfterNaming(state),
     // A phrase copied from Turn 0 is already the exact name; only typed
     // naming answers need the slower Claude shortening call.
-    extract: !(state.step === 'loudest' && state.turn1Name !== null),
+    extract: state.liftedName === null,
   })
 }
 
 /**
  * The reflection asked for once this naming answer has named a part — the
- * same request `nameLoudest` and `toTurn3` will make, built from the same
- * stored answer, so the early one is used. None after adding a part.
+ * same request `nameLoudest`, `toTurn3` and `toTurn4` will make, built from
+ * the same stored answer, so the early one is used. None after adding a part.
  */
 function reflectionAfterNaming(state: ConversationState): ReflectRequest | undefined {
   const freeWrite = state.answers.freeWrite ?? ''
-  if (state.step === 'loudest') return { turn: 2, freeWrite, loudest: state.turn1Name?.name ?? state.answers.loudest! }
+  if (state.step === 'loudest') return { turn: 2, freeWrite, loudest: state.liftedName?.name ?? state.answers.loudest! }
   if (state.step === 'secondName') return { turn: 3, freeWrite, question: state.asked, answer: state.answers.secondName! }
+  if (state.step === 'alsoHere' || state.step === 'quieter') {
+    return { turn: 4, freeWrite, question: state.asked, answer: state.answers[state.step]! }
+  }
   return undefined
 }
 
@@ -547,7 +544,7 @@ const kindRecord = (id: string, source: string, reading: KindReading): Attribute
 function kindStartingSpot(map: LandscapeState, id: string, source: string, reading: KindReading, scale: number) {
   const activeKind = reading.kind === 'other' ? null : reading.kind
   return {
-    placement: { ...clearestSpot(map, startingSpotsForKind(activeKind)), scale },
+    placement: { ...startingSpot(map, activeKind), scale },
     record: {
       subject: id,
       attribute: 'placement',
@@ -632,15 +629,14 @@ const emptyConversation = (): ConversationState => ({
   card: 0,
   answers: {},
   turn1: null,
-  turn1Name: null,
+  freeWritePhrases: [],
+  liftedName: null,
   parts: [],
   record: [],
   polarization: null,
   figures: shuffled(LOOKS),
   effects: [],
-  centrality: null,
-  positionAnswered: [],
-  pair: null,
+  alsoHere: [],
   unheard: null,
   link: null,
   ended: false,
@@ -761,7 +757,7 @@ function onFreeWriteRead(
     source: freeWrite,
     confidence: result?.phrases === null || result === null ? notJudged : { tag: 'extracted' },
   }
-  const read = note({ ...settled, turn1: row }, formAttribute, phraseAttribute)
+  const read = note({ ...settled, turn1: row, freeWritePhrases: phrases }, formAttribute, phraseAttribute)
   const nextCard = row.phrases.length > 0
     ? `${row.question}\nChoices copied from their words: ${row.phrases.join(' · ')}`
     : row.question
@@ -774,237 +770,157 @@ function onFreeWriteRead(
 const matchingTurn1Phrase = (state: ConversationState, text: string) =>
   state.turn1?.phrases.find((phrase) => normalizeAnswer(phrase) === normalizeAnswer(text)) ?? null
 
-function chooseTurn1Phrase(state: ConversationState, phrase: string): ConversationState {
+/** A Turn 0 phrase (confirmed, tapped, or typed back) is already screened and exact: no shortening. */
+function chooseLifted(state: ConversationState, phrase: string): ConversationState {
   const source = state.answers.freeWrite ?? ''
-  return chooseFigure({ ...state, turn1Name: { name: phrase, source } }, phrase)
+  return chooseFigure({ ...state, liftedName: { name: phrase, source } }, phrase)
 }
 
 /** Turn 1's typed answer: confirm a lifted phrase, choose one, or name it as before. */
 function onTurn1Answer(state: ConversationState, text: string): ConversationState {
   const phrase = matchingTurn1Phrase(state, text)
-  if (phrase) return chooseTurn1Phrase(state, phrase)
+  if (phrase) return chooseLifted(state, phrase)
   if (state.turn1?.kind === 'confirm') {
-    if (matchesAny(text, YES_FORMS)) return chooseTurn1Phrase(state, state.turn1.phrases[0])
+    if (matchesAny(text, YES_FORMS)) return chooseLifted(state, state.turn1.phrases[0])
     if (matchesAny(text, NO_FORMS) || normalizeAnswer(text) === 'something else') {
       const next = { kind: 'name', question: script.nameSomethingElse, phrases: [] } satisfies Turn1Ask
-      return ask({ ...state, turn1: next, turn1Name: null }, 'loudest', next.question)
+      return ask({ ...state, turn1: next, liftedName: null }, 'loudest', next.question)
     }
   }
-  return chooseFigure({ ...state, turn1Name: null }, text.trim())
+  return chooseFigure({ ...state, liftedName: null }, text.trim())
 }
 
-/** A Turn 1 choice is already a screened, verified stretch of Turn 0. */
-function onTurn1Choice(state: ConversationState, phrase: string): ConversationState {
-  if (state.pending || state.step !== 'loudest' || state.turn1?.kind !== 'choose') return state
-  const verified = matchingTurn1Phrase(state, phrase)
-  if (!verified) return state
-  return chooseTurn1Phrase(answered(state, verified), verified)
+/** A tapped choice (Turn 1 or Turn 3) is already a screened, verified stretch of Turn 0. */
+function onChoice(state: ConversationState, phrase: string): ConversationState {
+  if (state.pending) return state
+  const verified =
+    state.step === 'loudest' && state.turn1?.kind === 'choose'
+      ? matchingTurn1Phrase(state, phrase)
+      : state.step === 'alsoHere'
+        ? matchingLeftover(state, phrase)
+        : null
+  return verified ? chooseLifted(answered(state, verified), verified) : state
 }
 
-// ---------- Turn 3: centrality ----------
+// ---------- Turn 3: who else is here ----------
 
 interface Exchange {
   question: string
   answer: string
 }
 
-/** No parts, or two parts with the same name: Turn 3 can't be asked. Records why. */
-function centralitySkipped(state: ConversationState, map: LandscapeState): ConversationState | null {
-  const parts = visibleNow(state, map)
-  if (parts.length === 0) {
-    return note(state, {
-      subject: 'conversation',
-      attribute: 'centrality',
-      value: 'not asked: no parts on the map',
-      source: null,
-      confidence: notJudged,
-    })
-  }
-  const [a, b] = parts
-  if (b && normalizeAnswer(a.name) === normalizeAnswer(b.name)) {
-    return note(
-      state,
-      ...parts.map((part): Attribute => ({
-        subject: part.id,
-        attribute: 'centrality',
-        value: 'undetermined: same name',
-        source: null,
-        confidence: byDefault,
-      })),
-    )
-  }
-  return null
+/**
+ * Every meaningful word of one is in the other, filler aside: ‘the one who
+ * wants to hide’ already covers "wants to hide under the covers". When in
+ * doubt it counts as covered: offering a feeling twice is the worse mistake.
+ */
+function covers(name: string, phrase: string): boolean {
+  const nameSet = new Set(contentWords(name))
+  const phraseSet = new Set(contentWords(phrase))
+  return [...phraseSet].every((word) => nameSet.has(word)) || [...nameSet].every((word) => phraseSet.has(word))
 }
 
-/** After Turn 2: reflect on the latest answer, then Turn 3 — or straight to Turn 4 if it can't be asked. */
+/** Turn 0's phrases no part has taken yet. A part taken off the map still counts: they said it isn't theirs. */
+function leftoverPhrases(state: ConversationState, map: LandscapeState): string[] {
+  const names = partsNow(state, map).map((part) => part.name)
+  return state.freeWritePhrases.filter((phrase) => !names.some((name) => covers(name, phrase)))
+}
+
+/** The part a quieter feeling might stand behind: the first on the map whose kind guards or escapes. */
+function guardOnMap(state: ConversationState, map: LandscapeState): PartNow | null {
+  const visible = visibleNow(state, map)
+  const guard = state.parts.find(
+    (part) => (part.kind === 'guards' || part.kind === 'escapes') && visible.some((each) => each.id === part.id),
+  )
+  return guard ? partNow(state, map, guard.id) : null
+}
+
+/** After Turn 2: reflect on the latest answer, then Turn 3 — or, with no parts left, the early close. */
 function toTurn3(state: ConversationState, map: LandscapeState, last: Exchange | null): ConversationState {
-  const skipped = centralitySkipped(state, map)
-  if (skipped) return toTurn4(skipped, map, null)
-  if (!last) return askCentrality(state, map)
-  return request(state, {
-    kind: 'reflect',
-    request: { turn: 3, freeWrite: state.answers.freeWrite ?? '', ...last },
-  })
-}
-
-function askCentrality(state: ConversationState, map: LandscapeState): ConversationState {
-  const [a, b] = visibleNow(state, map)
-  if (!b) return { ...ask(state, 'centrality', script.centralityOne(a.name)), centrality: { kind: 'one', id: a.id } }
-  return {
-    ...ask(state, 'centrality', script.centralityTwo(a.name, b.name)),
-    centrality: { kind: 'two', a: a.id, b: b.id },
+  if (visibleNow(state, map).length === 0) {
+    const noted = note(state, { subject: 'conversation', attribute: 'alsoHere', value: 'not asked: no parts on the map', source: null, confidence: notJudged })
+    return toTurn4(noted, map, null)
   }
+  if (!last) return askTurn3(state, map)
+  return request(state, { kind: 'reflect', request: { turn: 3, freeWrite: state.answers.freeWrite ?? '', ...last } })
 }
 
-const centralityIds = (asked: CentralityAsk) => (asked.kind === 'one' ? [asked.id] : [asked.a, asked.b])
+/** Their leftovers if Turn 0 named any; otherwise the quieter question, behind a guarding part when there is one. */
+function askTurn3(state: ConversationState, map: LandscapeState): ConversationState {
+  const leftovers = leftoverPhrases(state, map)
+  if (leftovers.length > 0) return { ...ask(state, 'alsoHere', script.alsoHere(leftovers.length)), alsoHere: leftovers }
+  const guard = guardOnMap(state, map)
+  return { ...ask(state, 'quieter', guard ? script.quieterBehind(guard.name) : script.quieter), alsoHere: [] }
+}
+
+const matchingLeftover = (state: ConversationState, text: string) =>
+  state.alsoHere.find((phrase) => normalizeAnswer(phrase) === normalizeAnswer(text)) ?? null
+
+const turn3Attribute = (state: ConversationState) => (state.step === 'quieter' ? 'unheard' : 'alsoHere')
+
+/** Turn 3 adds nobody: no, unsure, or "No one else". Straight to the summary, with nothing to reflect. */
+function noOneElse(state: ConversationState, map: LandscapeState, text: string, value: string): ConversationState {
+  return toTurn4(note(state, { subject: 'conversation', attribute: turn3Attribute(state), value, source: text, confidence: high }), map, null)
+}
+
+/** Turn 3's typed answer: a phrase on offer, a new name, or nobody. A bare yes asks for the name. */
+function onTurn3Answer(state: ConversationState, map: LandscapeState, text: string): ConversationState {
+  if (matchesAny(text, NO_FORMS)) return noOneElse(state, map, text, 'none')
+  if (matchesAny(text, UNSURE_FORMS)) return noOneElse(state, map, text, 'unsure')
+  const phrase = matchingLeftover(state, text)
+  if (phrase) return chooseLifted(state, phrase)
+  if (matchesAny(text, YES_FORMS)) {
+    if (state.alsoHere.length === 1) return chooseLifted(state, state.alsoHere[0])
+    return state.step === 'quieter' ? ask(state, 'quieter', script.nameSomethingElse) : reask(state)
+  }
+  return chooseFigure({ ...state, liftedName: null }, text.trim())
+}
 
 /**
- * Parts removed while Turn 3 was being answered: none left → straight to
- * Turn 4; one of two left → the answer is unclear (no move). Null when
- * every part asked about is still here.
+ * Turn 3 named someone. A feeling from Turn 0, or anyone else, joins at its
+ * kind's starting spot; a quieter feeling joins small, at the edge. A name
+ * already on the map adds nobody.
  */
-function centralityGone(state: ConversationState, map: LandscapeState, last: Exchange): ConversationState | null {
-  const ids = centralityIds(state.centrality!)
-  const left = ids.filter((id) => isHere(state, map, id))
-  if (left.length === ids.length) return null
-  const unjudged = (id: string, value: string): Attribute => ({
-    subject: id,
-    attribute: 'centrality',
-    value,
-    source: last.answer,
-    confidence: notJudged,
-  })
-  if (left.length === 0) return toTurn4(note(state, ...ids.map((id) => unjudged(id, 'not judged: taken off the map'))), map, null)
-  return toTurn4(note(state, unjudged(left[0], 'unclear: the other part was taken off the map')), map, last)
-}
-
-function placeInBucket(
+function nameTurn3(
   state: ConversationState,
   map: LandscapeState,
-  id: string,
-  bucket: Bucket,
-  source: string,
-  confidence: Confidence,
+  figure: Figure,
+  kind: KindReading,
+  name: string,
+  nameConfidence: Confidence,
 ): ConversationState {
-  const { placement } = partNow(state, map, id)!
-  const next = intoBucket(placement, bucket)
-  const noted = note(
-    { ...state, positionAnswered: [...state.positionAnswered, id] },
-    { subject: id, attribute: 'centrality', value: bucket, source, confidence },
-  )
-  return samePlace(next, placement) ? noted : act(noted, map, { type: 'place', partId: id, placement: next })
-}
-
-function placeInOrder(
-  state: ConversationState,
-  map: LandscapeState,
-  nearId: string,
-  otherId: string,
-  source: string,
-  confidence: Confidence,
-): ConversationState {
-  const near = partNow(state, map, nearId)!
-  const other = partNow(state, map, otherId)!
-  const moved = inOrder(near.placement, other.placement)
-  const actions: Action[] = [
-    ...(samePlace(moved.near, near.placement) ? [] : [{ type: 'place' as const, partId: nearId, placement: moved.near }]),
-    ...(samePlace(moved.other, other.placement) ? [] : [{ type: 'place' as const, partId: otherId, placement: moved.other }]),
-  ]
-  const noted = note(
-    { ...state, pair: [nearId, otherId] },
-    { subject: nearId, attribute: 'centrality', value: `closer than ${otherId}`, source, confidence },
-  )
-  return act(noted, map, ...actions)
-}
-
-function markTie(state: ConversationState, a: string, b: string, source: string, confidence: Confidence) {
-  return note(
-    { ...state, pair: [a, b] },
-    { subject: 'conversation', attribute: 'centrality', value: `${a} and ${b}: about the same`, source, confidence },
-  )
-}
-
-/** Turn 3 by exact list match (works with AI off); null when the answer needs JEV. */
-function centralityByList(state: ConversationState, map: LandscapeState, text: string): ConversationState | null {
-  const asked = state.centrality!
-  if (asked.kind === 'one') {
-    const bucket: Bucket | null = matchesAny(text, CLOSE_FORMS)
-      ? 'close'
-      : matchesAny(text, FAR_FORMS)
-        ? 'far'
-        : matchesAny(text, MIDDLE_FORMS)
-          ? 'middle'
-          : null
-    return bucket && placeInBucket(state, map, asked.id, bucket, text, high)
-  }
-  const answer = normalizeAnswer(text)
-  if (answer === normalizeAnswer(partNow(state, map, asked.a)!.name)) return placeInOrder(state, map, asked.a, asked.b, text, high)
-  if (answer === normalizeAnswer(partNow(state, map, asked.b)!.name)) return placeInOrder(state, map, asked.b, asked.a, text, high)
-  if (matchesAny(text, TIE_FORMS)) return markTie(state, asked.a, asked.b, text, high)
-  return null
-}
-
-function onCentralityAnswer(state: ConversationState, map: LandscapeState, text: string): ConversationState {
+  const text = state.answers[state.step]!
   const last = { question: state.asked, answer: text }
-  const gone = centralityGone(state, map, last)
-  if (gone) return gone
-  const listed = centralityByList(state, map, text)
-  if (listed) return toTurn4(listed, map, last)
-
-  const asked = state.centrality!
-  const name = (id: string) => partNow(state, map, id)!.name
-  return request(state, {
-    kind: 'centrality',
-    request:
-      asked.kind === 'one'
-        ? { kind: 'one', partName: name(asked.id), ...last }
-        : { kind: 'two', partA: name(asked.a), partB: name(asked.b), ...last },
-  })
-}
-
-function onCentralityChecked(
-  state: ConversationState,
-  seq: number,
-  result: CentralityResult | null,
-  map: LandscapeState,
-): ConversationState {
-  const job = state.pending
-  if (job?.kind !== 'centrality' || job.seq !== seq) return state
-  const settled = { ...state, pending: null }
-  const last = { question: job.request.question, answer: job.request.answer }
-  const gone = centralityGone(settled, map, last)
-  if (gone) return gone
-
-  const asked = settled.centrality!
-  const subject = asked.kind === 'one' ? asked.id : 'conversation'
-  if (!result) {
-    return toTurn4(
-      note(settled, { subject, attribute: 'centrality', value: 'not judged', source: last.answer, confidence: notJudged }),
-      map,
-      last,
-    )
+  const lifted = state.liftedName
+  const settled = { ...state, liftedName: null }
+  if (visibleNow(state, map).some((part) => sameName(part.name, name))) {
+    const value = 'not added: named a part already on the map'
+    return toTurn4(note(settled, { subject: 'conversation', attribute: turn3Attribute(state), value, source: text, confidence: nameConfidence }), map, last)
   }
-  const probability = (result.probabilities as Record<string, number>)[result.label]
-  const confidence = jev(probability)
-  // Unclear or below the threshold: nothing moves.
-  if (result.label === 'unclear' || probability < JEV_THRESHOLD) {
-    return toTurn4(note(settled, { subject, attribute: 'centrality', value: result.label, source: last.answer, confidence }), map, last)
-  }
-  if (asked.kind === 'one') {
-    return toTurn4(placeInBucket(settled, map, asked.id, result.label as Bucket, last.answer, confidence), map, last)
-  }
-  const placed =
-    result.label === 'part_a_closer'
-      ? placeInOrder(settled, map, asked.a, asked.b, last.answer, confidence)
-      : result.label === 'part_b_closer'
-        ? placeInOrder(settled, map, asked.b, asked.a, last.answer, confidence)
-        : markTie(settled, asked.a, asked.b, last.answer, confidence)
-  return toTurn4(placed, map, last)
+  const id = nextPartId(state)
+  const nameRecord: Attribute = { subject: id, attribute: 'name', value: name, source: lifted?.source ?? text, confidence: nameConfidence }
+  if (state.step === 'quieter') return toTurn4(unheardPart(settled, map, id, figure, kind, text, nameRecord), map, last)
+
+  const judged = lifted?.name ?? text
+  const start = kindStartingSpot(map, id, judged, kind, DEFAULT_SCALE)
+  const created = createPart(
+    settled,
+    map,
+    { id, name, kind: kind.kind, placement: start.placement, sizeFromAnswer: false },
+    figure,
+    judged,
+    start.record,
+    kindRecord(id, judged, kind),
+    { subject: id, attribute: 'alsoHere', value: lifted ? 'named in the free-write, here too' : 'someone else', source: text, confidence: high },
+    nameRecord,
+    { subject: id, attribute: 'size', value: String(DEFAULT_SCALE), source: null, confidence: byDefault },
+  )
+  return toTurn4(created, map, last)
 }
 
 // ---------- Turn 4: confirmation and one correction round ----------
 
-/** Turn 4 opens with a reflection on Turn 3's answer — unless Turn 3 was skipped. */
+/** Turn 4 opens with a reflection on Turn 3's answer — unless it added nobody, or wasn't asked. */
 function toTurn4(state: ConversationState, map: LandscapeState, last: Exchange | null): ConversationState {
   if (!last) return toConfirm(state, map)
   return request(state, { kind: 'reflect', request: { turn: 4, freeWrite: state.answers.freeWrite ?? '', ...last } })
@@ -1013,7 +929,6 @@ function toTurn4(state: ConversationState, map: LandscapeState, last: Exchange |
 function summaryInput(state: ConversationState, map: LandscapeState): SummaryInput {
   const visible = visibleNow(state, map)
   const named = new Map(state.parts.map((part) => [part.id, part]))
-  const here = (id: string) => visible.some((part) => part.id === id)
   return {
     parts: visible.map((part) => ({
       id: part.id,
@@ -1021,10 +936,8 @@ function summaryInput(state: ConversationState, map: LandscapeState): SummaryInp
       placement: part.placement,
       start: named.get(part.id)?.placement ?? part.placement,
       sizeFromAnswer: named.get(part.id)?.sizeFromAnswer ?? false,
-      positionFromAnswer: state.positionAnswered.includes(part.id),
       unheard: part.id === state.unheard,
     })),
-    pair: state.pair?.every(here) ? state.pair : null,
     link: drawnLink(state, map),
   }
 }
@@ -1164,8 +1077,11 @@ function arranged(state: ConversationState, map: LandscapeState): ArrangedPart[]
 /** Parts are numbered in the order they're named; removed ones keep their number. */
 const nextPartId = (state: ConversationState) => `part-${state.parts.length + 1}`
 
+/** The closing card offers a quieter part only when Turn 3 didn't bring one. */
+export const canAddQuieter = (state: ConversationState) => state.unheard === null
+
 function onAddQuieter(state: ConversationState): ConversationState {
-  if (state.pending || state.step !== 'closing') return state
+  if (state.pending || state.step !== 'closing' || !canAddQuieter(state)) return state
   return ask(freshCard(state), 'unheard', script.unheard)
 }
 
@@ -1186,7 +1102,45 @@ function resolveNewName(state: ConversationState, text: string): ConversationSta
   return chooseFigure(state, text.trim())
 }
 
-/** The person named a part that rarely gets heard: it joins the map small, at the edge. */
+/** A part that rarely gets heard joins the map small, at the edge (Turn 3, or the closing card). */
+function unheardPart(
+  state: ConversationState,
+  map: LandscapeState,
+  id: string,
+  figure: Figure,
+  kind: KindReading,
+  text: string,
+  nameRecord: Attribute,
+): ConversationState {
+  const reading = (attribute: Attribute['attribute'], value: string): Attribute => ({
+    subject: id,
+    attribute,
+    value,
+    source: text,
+    confidence: high,
+  })
+  const created = createPart(
+    state,
+    map,
+    {
+      id,
+      name: nameRecord.value,
+      kind: kind.kind,
+      placement: { ...clearestSpot(map, EDGE_SPOTS), scale: UNHEARD_SCALE },
+      sizeFromAnswer: true,
+    },
+    figure,
+    text,
+    reading('placement', 'at the edge (rarely heard)'),
+    kindRecord(id, text, kind),
+    reading('unheard', 'rarely gets heard'),
+    nameRecord,
+    reading('size', 'small (rarely heard)'),
+  )
+  return { ...created, unheard: id }
+}
+
+/** The person named a part that rarely gets heard, from the closing card. */
 function nameUnheard(
   state: ConversationState,
   map: LandscapeState,
@@ -1197,32 +1151,8 @@ function nameUnheard(
 ): ConversationState {
   const text = state.answers.unheard!
   const id = nextPartId(state)
-  const reading = (attribute: Attribute['attribute'], value: string, confidence: Confidence = high): Attribute => ({
-    subject: id,
-    attribute,
-    value,
-    source: text,
-    confidence,
-  })
-  const created = createPart(
-    state,
-    map,
-    {
-      id,
-      name,
-      kind: kind.kind,
-      placement: { ...clearestSpot(map, EDGE_SPOTS), scale: UNHEARD_SCALE },
-      sizeFromAnswer: true,
-    },
-    figure,
-    text,
-    reading('placement', 'at the edge (rarely heard)'),
-    kindRecord(id, text, kind),
-    reading('unheard', 'rarely gets heard'),
-    reading('name', name, nameConfidence),
-    reading('size', 'small (rarely heard)'),
-  )
-  return rest(guide({ ...created, unheard: id }, script.unheardAdded(name)))
+  const nameRecord: Attribute = { subject: id, attribute: 'name', value: name, source: text, confidence: nameConfidence }
+  return rest(guide(unheardPart(state, map, id, figure, kind, text, nameRecord), script.unheardAdded(name)))
 }
 
 /** Added from the top bar: it joins at a starting spot, at the usual size. */
@@ -1484,8 +1414,9 @@ function proceed(state: ConversationState, text: string, map: LandscapeState): C
       return chooseFigure(state, text.trim())
     }
 
-    case 'centrality':
-      return onCentralityAnswer(state, map, text)
+    case 'alsoHere':
+    case 'quieter':
+      return onTurn3Answer(state, map, text)
 
     case 'confirm':
       return onConfirmAnswer(state, map, text)
@@ -1521,8 +1452,8 @@ function nameLoudest(
   nameConfidence: Confidence,
 ): ConversationState {
   const answer = state.answers.loudest!
-  const source = state.turn1Name?.source ?? answer
-  const judgedName = state.turn1Name?.name ?? answer
+  const source = state.liftedName?.source ?? answer
+  const judgedName = state.liftedName?.name ?? answer
   const start = kindStartingSpot(map, PART_1, judgedName, kind, PART_1_SCALE)
   const named = createPart(
     state,
@@ -1541,7 +1472,7 @@ function nameLoudest(
     { subject: PART_1, attribute: 'name', value: name, source, confidence: nameConfidence },
     { subject: PART_1, attribute: 'size', value: 'largest', source: answer, confidence: high },
   )
-  return request({ ...named, turn1Name: null }, {
+  return request({ ...named, liftedName: null }, {
     kind: 'reflect',
     request: { turn: 2, freeWrite: state.answers.freeWrite ?? '', loudest: judgedName },
   })
@@ -1589,19 +1520,19 @@ function onFigured(
   if (job?.kind !== 'figure' || job.seq !== seq) return state
   const settled = { ...state, pending: null }
   const answer = job.request.name
-  const resolved = settled.step === 'loudest' && settled.turn1Name
-    ? { name: settled.turn1Name.name, confidence: high }
-    : resolveName(answer, extracted)
+  const resolved = settled.liftedName ? { name: settled.liftedName.name, confidence: high } : resolveName(answer, extracted)
   // A shortening must not copy a part already on the map. Asked whether
-  // the feeling is separate, naming one that's there means it isn't; when
-  // adding a part, the answer is used as sent.
+  // the feeling is separate, naming one that's there means it isn't; at
+  // Turn 3 it adds nobody (see nameTurn3); when adding a part, the answer
+  // is used as sent.
   const copies =
     resolved.confidence.tag === 'extracted' && visibleNow(settled, map).some((part) => sameName(part.name, resolved.name))
   if (copies && settled.step === 'secondName') {
     const text = settled.answers.secondName!
     return declineSecond(settled, map, text, 'declined: named a part already on the map', resolved.confidence)
   }
-  const { name, confidence } = copies ? { name: answer, confidence: high } : resolved
+  const turn3 = settled.step === 'alsoHere' || settled.step === 'quieter'
+  const { name, confidence } = copies && !turn3 ? { name: answer, confidence: high } : resolved
   const figure = figureFor(settled, map, result?.figure ?? null)
   const kind = kindFor(result?.kind ?? null)
   switch (settled.step) {
@@ -1609,6 +1540,9 @@ function onFigured(
       return nameLoudest(settled, map, figure, kind, name, confidence)
     case 'secondName':
       return nameSecond(settled, map, figure, kind, name, confidence)
+    case 'alsoHere':
+    case 'quieter':
+      return nameTurn3(settled, map, figure, kind, name, confidence)
     case 'unheard':
       return nameUnheard(settled, map, figure, kind, name, confidence)
     case 'newPart':
@@ -1628,11 +1562,8 @@ function onReflected(state: ConversationState, seq: number, text: string | null,
   if (turn === 2 && !isHere(settled, map, PART_1)) {
     return toTurn3(note(settled, towardNotJudged(null, 'not asked: part taken off the map')), map, null)
   }
-  // Turn 3 became impossible while reflecting: drop the reflection, go straight to Turn 4.
-  if (turn === 3) {
-    const skipped = centralitySkipped(settled, map)
-    if (skipped) return toTurn4(skipped, map, null)
-  }
+  // Every part was taken off the map while reflecting: drop the reflection; the early close.
+  if (turn === 3 && visibleNow(settled, map).length === 0) return toTurn3(settled, map, null)
   // Get to know it: the part was taken off the map while reflecting, so the card ends quietly.
   if (turn === 'voice' && !subjectHere(settled, map)) return idle(settled)
   // The toward-check branched, but part 1 left meanwhile: no second part
@@ -1650,7 +1581,7 @@ function onReflected(state: ConversationState, seq: number, text: string | null,
     case 'toward':
       return ask(guide(reflected, script.polarization), 'secondName', script.secondName)
     case 3:
-      return askCentrality(reflected, map)
+      return askTurn3(reflected, map)
     case 4:
       return toConfirm(reflected, map)
     case 'voice':
@@ -1719,16 +1650,14 @@ export function conversationReducer(state: ConversationState, event: Conversatio
       return onFreeWriteRead(state, event.seq, event.result)
     case 'towardChecked':
       return onTowardChecked(state, event.seq, event.result, event.map)
-    case 'centralityChecked':
-      return onCentralityChecked(state, event.seq, event.result, event.map)
     case 'corrected':
       return onCorrected(state, event.seq, event.ops, event.map)
     case 'riskChecked':
       return onRiskChecked(state, event.seq, event.atRisk, event.map)
     case 'figured':
       return onFigured(state, event.seq, event.result, event.extracted, event.map)
-    case 'turn1Choice':
-      return onTurn1Choice(state, event.phrase)
+    case 'choice':
+      return onChoice(state, event.phrase)
     case 'dismiss':
       return onDismiss(state)
     case 'decline':

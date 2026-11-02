@@ -1,7 +1,5 @@
 import {
   API,
-  CENTRALITY_ONE_LABELS,
-  CENTRALITY_TWO_LABELS,
   isFigureReading,
   TOWARD_LABELS,
   isCorrectionsResponse,
@@ -12,8 +10,6 @@ import {
   isRiskResponse,
 } from './contract'
 import type {
-  CentralityRequest,
-  CentralityResult,
   CorrectionsRequest,
   ExtractRequest,
   FigureReading,
@@ -67,12 +63,6 @@ export async function analyzeFreeWrite(request: FreeWriteRequest, signal: AbortS
 export async function checkToward(request: TowardCheckRequest, signal: AbortSignal): Promise<TowardCheck | null> {
   const data = await post(API.towardCheck, request, signal)
   return isJudgement(data, TOWARD_LABELS) ? data : null
-}
-
-export async function checkCentrality(request: CentralityRequest, signal: AbortSignal): Promise<CentralityResult | null> {
-  const data = await post(API.centrality, request, signal)
-  const labels = request.kind === 'one' ? CENTRALITY_ONE_LABELS : CENTRALITY_TWO_LABELS
-  return isJudgement<string>(data, labels) ? (data as CentralityResult) : null
 }
 
 /** Null when the check couldn't be had: the local phrase list stays the floor. */

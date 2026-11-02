@@ -65,11 +65,15 @@ export const copy = {
   talk: {
     label: 'Conversation',
     replyLabel: 'Your answer',
+    /** The group of choice buttons copied from the free-write (Turn 1 and Turn 3). */
     feelingChoices: 'Feelings mentioned in your words',
     send: 'Send',
     waiting: 'One moment…',
     /** Turn 4: same weight as Send, never more — the app doesn't invite agreement. */
     noChanges: 'No changes',
+    /** Turn 3's quiet way out, beside Send: "You also mentioned these…" and the quieter question. Draft copy. */
+    noOneElse: 'No one else',
+    quieterNo: "I don't think so",
     /** On the closing card: the optional part that rarely gets heard. Draft copy. */
     addQuieter: 'Add a quieter part',
     close: 'Close',

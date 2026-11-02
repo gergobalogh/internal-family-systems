@@ -12,7 +12,6 @@ export const API = {
   reflect: '/api/reflect',
   freeWrite: '/api/free-write',
   towardCheck: '/api/toward-check',
-  centrality: '/api/centrality',
   corrections: '/api/corrections',
   risk: '/api/risk',
   figure: '/api/figure',
@@ -55,19 +54,6 @@ export interface TowardCheckRequest {
   question: string
   answer: string
 }
-
-/** Turn 3 with one part on the map. */
-export const CENTRALITY_ONE_LABELS = ['close', 'middle', 'far', 'unclear'] as const
-/** Turn 3 with two parts: which feels closer. */
-export const CENTRALITY_TWO_LABELS = ['part_a_closer', 'part_b_closer', 'about_same', 'unclear'] as const
-export type CentralityOneLabel = (typeof CENTRALITY_ONE_LABELS)[number]
-export type CentralityTwoLabel = (typeof CENTRALITY_TWO_LABELS)[number]
-
-export type CentralityRequest =
-  | { kind: 'one'; partName: string; question: string; answer: string }
-  | { kind: 'two'; partA: string; partB: string; question: string; answer: string }
-
-export type CentralityResult = Judgement<CentralityOneLabel> | Judgement<CentralityTwoLabel>
 
 /**
  * Turn 1 reflects the free-write; Turn 2 the answer to "loudest"; Turns 3

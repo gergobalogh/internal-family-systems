@@ -342,3 +342,56 @@ This decision will determine the tone of the responses, what happens after a cha
   fallback at 390×844, complete entry journeys to closing with AI on and
   off, 31 tests, lint, and production build. No browser errors; the existing
   bundle-size warning remains.
+
+### 2026-11-02 — The story redesign: Option A
+
+- **Picked:** Option A from `docs/redesign/story-redesign.md`, one story in
+  three acts (who came, getting to know one, one "what if"), with Option B
+  as the shape of later visits. The goal: someone carrying something heavy
+  spends about ten minutes, leaves with a landscape that feels true and one
+  part they understand better, and has a reason to come back.
+- **Fears question:** stays behind "Skip" until an IFS-trained therapist
+  has reviewed it.
+- **Hedge:** the "one way to see this" line comes off the name labels; the
+  guide's own lines keep their tentative wording.
+- **Saving:** the meadow is saved on the device, with no account.
+- **Order:** Turn 3 first, then arrivals the card never covers, Act 1's
+  close, Act 2, Act 3, the ending's picture, saving, and removing the modes,
+  top bar, map note and closing card (the redesign doc has the full list).
+
+### 2026-11-02 — Turn 3 asks who else is here
+
+- **Change:** the closeness question is gone (client, `/api/centrality`,
+  its JEV prompts and its parser). Turn 3 now offers the feelings the
+  free-write named that aren't on the map yet, as buttons copied from the
+  person's words, with "No one else" beside Send. With none left over, it
+  asks about a quieter feeling, naming a part on the map that guards or
+  escapes when there is one, with "I don't think so" beside Send.
+- **One answer, one part:** a tap, a typed leftover or a new name brings
+  one part in at its kind's starting spot; a quieter feeling arrives small,
+  at the edge, rarely heard. A typed name replaces the plan's "Something
+  else…" button. A name already on the map adds nobody. The closing card
+  offers "Add a quieter part" only when Turn 3 didn't add one.
+- **Already on the map:** a free-write phrase isn't offered when a part's
+  name covers it, comparing only the words that tell feelings apart: ‘the
+  one who wants to hide’ covers "wants to hide under the covers". The real
+  AI run offered exactly that duplicate before this rule. A typed name is
+  still taken as the person wrote it.
+- **Placement:** a ring's spots sit close together, so a third part landed
+  on top of the first. A new part now needs 0.12 of clearance from every
+  other part; when its ring has none, it takes the clearest of two spare
+  spots low on the meadow, clear of the card on phone and desktop. This
+  also separates two guarding parts.
+- **Position words:** with closeness no longer asked, the summary speaks
+  about a part's place only after the person moves it.
+- **Checked:** with every AI route answered by a script in the browser (no
+  model calls): a tapped leftover, a typed leftover, a new name, "No one
+  else", the quieter question with a guarding part, "I don't think so",
+  `?ai=off` and `?jump=after`, at 390×844 and 1440×900. Every run reached
+  the closing card with the right parts and no page errors. Then one run
+  with real AI at 390×844 (approved): it found the duplicate above, and
+  why Turn 1 shows no buttons for the pusher/hider free-write (a lifted
+  phrase over the 40-character name cap; see the board). Build and lint
+  pass.
+- **No tests:** `src/conversation/flow.test.ts` is deleted, per the
+  project rule; `src/model/landscape.test.ts` predates the rule and stays.

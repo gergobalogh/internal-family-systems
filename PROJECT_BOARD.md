@@ -1,9 +1,27 @@
 # Internal Family Systems — inner landscape
 
-- **Status:** parked
+- **Status:** active
 - **What:** An app for mapping your inner landscape, based on Internal Family Systems
+- **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
 - **URL:** none
-- **Updated:** 2026-10-22
+- **Post where:** not decided yet
+- **Next:** Option A, step 2: no arriving part is covered (the card steps back while a part walks in), then Act 1's close, "These are the ones who came." ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md))
+- **Updated:** 2026-11-02
+
+## Build
+- [x] The entry conversation, with all thirteen parts walking in on Rive
+- [x] Act 1: every answer brings someone (Turn 3)
+- [ ] Act 2: sit with one part (its words, what it's trying to do, thanks)
+- [ ] Act 3 and the ending: step back, one "what if", a picture to keep
+- [ ] The meadow is saved on the device, and the next visit opens on it
+
+## Polish
+- [ ] Phone first: nothing covers an arriving part; interface under 30% of the screen
+- [ ] Copy review (wording skill) and an IFS therapist's review
+- [ ] Five-person test passes (docs/redesign/story-redesign.md, section 6)
+
+## Distribute
+- [ ] Where to post: your call
 
 # Project board
 
@@ -13,6 +31,16 @@ only tracks the work.
 
 ## In progress
 
+- **The story redesign: building Option A** (picked 2026-11-02,
+  [docs/redesign/story-redesign.md](docs/redesign/story-redesign.md); the
+  decisions are in project.md's log). One walk in three acts (meet who's
+  here, sit with one, step back), ending with a picture to keep, and the
+  meadow saved on the device for the next visit. Option B is the shape of
+  later visits. Step 1, Turn 3, is done. Next: no arriving part is covered,
+  then Act 1's close, Act 2 (Fears behind Skip until a therapist has
+  reviewed it), Act 3, the ending's picture, saving, then removing the
+  modes, top bar, map note, closing card and the label hedge. The doc's
+  section 6 has a five-person test script and the therapist questions.
 - **A reflection that follows resizing (brainstorm).** Idea: when a part is
   resized, call Claude so the reflection changes with the map. Possibly
   instead of the noticing fix below.
@@ -58,10 +86,10 @@ only tracks the work.
   every name (no AI involved, words untouched), or leave names exactly as
   sent.
 - **Noticing on the first nudge.** The summary only describes a part's
-  place when an answer set it (Turn 3) or the person moved it, so an
-  untouched part gets no position words (`positionSpeaks` in
-  `summary.ts`). The quieter part (added from the closing card) is the
-  usual case: it starts at the edge, but the summary only says it "rarely
+  place when the person moved it (Turn 3 no longer asks about closeness),
+  so an untouched part gets no position words (`positionSpeaks` in
+  `summary.ts`). The quieter part (added at Turn 3 or from the closing
+  card) is the usual case: it starts at the edge, but the summary only says it "rarely
   gets heard". Nudge it a
   pixel and it counts as moved, gains "feels more off to the side", and
   noticing asks: "The map now shows that ‘the quiet one’ feels more off to
@@ -77,14 +105,35 @@ only tracks the work.
 
 ## Up next
 
+- **On a phone, part 2 walks in behind the card** (seen in both recorded
+  phone runs, 2026-11-02): its entrance is never seen. Some kind spots sit
+  in the top half of a phone screen, under the card: in the real-AI Turn 3
+  run an escaping part 3 took the escapes ring's (0.42, 0.42) and stayed
+  hidden behind the closing card. Next step of Option A.
+- **"Nothing's moved yet" stays on screen after switching back to How it
+  is** (phone, twice).
+- **Check a finger drag in "What if…" on a phone.** The recorder's drag
+  didn't count as a move on a phone (twice); the same drag counted on
+  desktop.
+- **Turn 1 gave no choices for a free-write naming a pusher and a hider**
+  ("Part of me says I'm not good enough and should push harder, and part
+  of me just wants to hide under the covers…"), four runs of four. Found
+  why (2026-11-02): JEV reads `several_feelings` at 1.0, but Claude lifts
+  "I'm not good enough and should push harder", 42 characters, over the
+  40-character name cap, so only one phrase survives and the choose row
+  needs two. Fix: ask the lifter for short names (a few words, under 40
+  characters) and re-run `scripts/calibrate-turn1.ts`. Both cost model
+  calls. The same phrases feed Turn 3's choices.
 - **A new part's reflection can borrow the free-write.** With AI on, naming
   ‘the one who yells’ got "the part that keeps replaying everything you
   said in meetings", which was ‘the worry’'s. Seen before this change too;
   the Turn 3 reflection prompt may need to keep Turn 0's words apart from
   the new name.
-- **A part can stand over another part's label.** In the dev jump, Turn 3
-  puts the Defender over ‘the worry’'s label. Placement wasn't touched by
-  the figure change, but the broad Defender makes it show.
+- **On a phone, part 2 stands over part 1's label** (2026-11-02, every
+  Turn 3 run at 390×844): part 1 is large and its label hangs below it,
+  where part 2's neutral spot is. Third parts and two guards no longer
+  overlap (spare spots, see Done); part 2's spot needs the same care, and
+  it belongs with the "card steps back" work.
 - **Review slice 4's draft wording:** the invitation, the "Take your time"
   bar, the pause card, the Get to know it questions, "might be trying to:",
   the quieter part's "Add a quieter part" / "What would you call the
@@ -95,7 +144,11 @@ only tracks the work.
   "Keep trying" / "Finish without changes", "Skip this one", "Change
   figure" / "Keep this one" and the figure labels, the second part's
   "There may be another feeling here too…" / "What would you call it?",
-  and the "How it is" hint and "Smaller" / "Larger".
+  the "How it is" hint and "Smaller" / "Larger", and Turn 3's "You also
+  mentioned these. Are any of them here too?" / "Is there a quieter
+  feeling ‘X’ might be standing in front of?" / "Is there a quieter
+  feeling here, one that rarely gets heard?" / "No one else" / "I don't
+  think so".
 - **Card covers the selected part's box on desktop.** The card sits at a
   fixed spot under the house, so a part there has its box hidden behind it.
   A new part 2 lands there too: Curled walked in and settled under the
@@ -109,11 +162,33 @@ only tracks the work.
   1. Rive entrances in the real app — complete: all thirteen are in.
   2. Turn 1 rows — complete: calibrated on 72 free-writes and in the app.
   3. Kind — complete: 40/40 calibrated; combined with the figure request.
-  4. Turn 3 — next. 5. Turn 4's drag invite. 6. Turn 2's "already said" skip.
+  4. Turn 3 — complete (2026-11-02). 5. Turn 4's drag invite. 6. Turn 2's
+  "already said" skip. Under Option A, Turn 4's drag invite moves after
+  Act 2 (it becomes "Step back").
+- **Reflections echo the answer's filler.** Real run, 2026-11-02: "It
+  sounds like, honestly, you feel frustrated with 'not good enough.'"
 - **Risk check: one known miss.** "I found a new home for my cat, for
   good" scores near zero on both moderation and JEV (Claude caught it).
 
 ## Done
+
+- **Turn 3 asks who else is here** (2026-11-02). The closeness question
+  is gone, along with its route and JEV prompts. Turn 3 offers the
+  feelings the free-write named that aren't on the map yet, as buttons in
+  the person's words, with "No one else"; with none left, it asks about a
+  quieter feeling (naming a guarding part when there is one), with "I
+  don't think so". One answer brings one part; a quieter one arrives small
+  at the edge, and the closing card then stops offering one. A new part
+  now needs clearance from every other part, with two spare spots on the
+  open meadow when its ring is crowded, so a third part no longer lands
+  on the first. A feeling already on the map in other words isn't offered
+  again (‘the one who wants to hide’ covers "wants to hide under the
+  covers"; filler and framing words don't count). Checked with scripted AI
+  answers in the browser: nine paths at 390×844 and eight at 1440×900, all
+  reaching the closing card with the right parts and no page errors; then
+  one run with real AI on a phone, which found the duplicate. Build and
+  lint pass. Wording is draft. `flow.test.ts` was deleted (the project has
+  no tests).
 
 - **A hidden kind gives every part its opening place** (2026-10-19).
   The existing figure request now asks JEV a second question in the same

@@ -3,8 +3,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { Plugin } from 'vite'
 import {
   API,
-  CENTRALITY_ONE_LABELS,
-  CENTRALITY_TWO_LABELS,
   FREE_WRITE_FORM_LABELS,
   OP_KINDS,
   TOWARD_LABELS,
@@ -12,7 +10,6 @@ import {
   isExtractResponse,
 } from '../src/conversation/contract.ts'
 import type {
-  CentralityRequest,
   CorrectionsRequest,
   ExtractRequest,
   FigureRequest,
@@ -410,35 +407,6 @@ function towardCheck(config: AiConfig, request: TowardCheckRequest) {
   )
 }
 
-function centrality(config: AiConfig, request: CentralityRequest) {
-  if (request.kind === 'one') {
-    const criteria: Record<(typeof CENTRALITY_ONE_LABELS)[number], string> = {
-      close: 'It feels close, near, right here, or very present — including tentative versions ("kind of close").',
-      middle: 'Somewhere in between: neither close nor far, halfway, or in the middle.',
-      far: 'It feels far, distant, off to the side, in the background, or at the edge — including tentative versions, and "not close".',
-      unclear: 'Neither clearly: unsure, it changes, evenly mixed, off-topic, or too little to tell.',
-    }
-    return jevChoice(
-      config,
-      { feeling_they_named: request.partName, question_asked: request.question, their_answer: request.answer },
-      'The person was asked whether a feeling they named feels close, or more off to the side. From their answer, how close does it feel to them right now?',
-      criteria,
-    )
-  }
-  const criteria: Record<(typeof CENTRALITY_TWO_LABELS)[number], string> = {
-    part_a_closer: `"${request.partA}" (feeling A) feels closer — including tentative versions.`,
-    part_b_closer: `"${request.partB}" (feeling B) feels closer — including tentative versions.`,
-    about_same: 'Both feel about equally close, or equally far.',
-    unclear: 'Neither clearly: unsure, it changes, off-topic, or too little to tell.',
-  }
-  return jevChoice(
-    config,
-    { feeling_a: request.partA, feeling_b: request.partB, question_asked: request.question, their_answer: request.answer },
-    'The person was asked which of two feelings they named feels closer to them: feeling A or feeling B. From their answer, which feels closer right now?',
-    criteria,
-  )
-}
-
 // ---------- Figures (JEV) ----------
 
 /**
@@ -655,14 +623,6 @@ function parseTowardCheck(body: unknown): TowardCheckRequest | null {
   return isText(partName) && isText(question) && isText(answer) ? { partName, question, answer } : null
 }
 
-function parseCentrality(body: unknown): CentralityRequest | null {
-  const { kind, partName, partA, partB, question, answer } = (body ?? {}) as Record<string, unknown>
-  if (!isText(question) || !isText(answer)) return null
-  if (kind === 'one' && isText(partName)) return { kind, partName, question, answer }
-  if (kind === 'two' && isText(partA) && isText(partB)) return { kind, partA, partB, question, answer }
-  return null
-}
-
 function parseCorrectionsRequest(body: unknown): CorrectionsRequest | null {
   const { correction, parts, removed, link } = (body ?? {}) as Record<string, unknown>
   const linkOk = link === null || (isNames(link) && link.length === 2)
@@ -737,12 +697,6 @@ export function createHandler(config: AiConfig) {
           if (!request) return send(res, 400, { error: 'bad request' })
           if (!config.jevApiKey) return send(res, 503, { error: 'JEV is not configured' })
           return answer(res, await towardCheck(config, request), 'no reading')
-        }
-        case API.centrality: {
-          const request = parseCentrality(body)
-          if (!request) return send(res, 400, { error: 'bad request' })
-          if (!config.jevApiKey) return send(res, 503, { error: 'JEV is not configured' })
-          return answer(res, await centrality(config, request), 'no reading')
         }
       }
     } catch (error) {
