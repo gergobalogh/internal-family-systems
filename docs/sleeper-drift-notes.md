@@ -30,7 +30,9 @@ python3 gen-scene.py   # back to the shipping scene
 ## Who owns what
 
 The same split as the parachute, and the same page component:
-`src/ui/DescentSpike.tsx` with the `sleeper` entry in `src/ui/descents.ts`.
+`src/ui/DescentSpike.tsx` with the `sleeper` entry in `src/ui/descents.ts`
+(in the app, `src/ui/RiveEntrance.tsx` with `descentRoute` in
+`src/ui/riveEntrances.ts`).
 The page drops the canvas at about 90 screen px/s, fitted to whole swings,
 sets `land` in the last one and eases to `touchdownSpeed` (0.6 artboard
 px/frame) over the 64-frame flare. Rive's `Motion` machine plays `Descend`

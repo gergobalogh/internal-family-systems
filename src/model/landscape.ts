@@ -92,6 +92,10 @@ export function visibleLinks(state: LandscapeState): Link[] {
   )
 }
 
+/** Whether any part other than `partId` has this figure. */
+const lookTaken = (state: LandscapeState, look: Look, partId: string) =>
+  Object.values(state.parts).some((part) => part.id !== partId && part.look === look)
+
 /** Whether reverting `entry` would make a change the person can see. */
 function isVisibleRevert(state: LandscapeState, entry: Entry): boolean {
   switch (entry.kind) {
@@ -99,6 +103,9 @@ function isVisibleRevert(state: LandscapeState, entry: Entry): boolean {
     case 'rename':
     case 'words':
       return !state.parts[entry.partId].removed
+    // Its old figure has gone to another part since: going back would show two alike, so it's skipped.
+    case 'look':
+      return !state.parts[entry.partId].removed && !lookTaken(state, entry.before, entry.partId)
     case 'unlink':
       return state.links[entry.linkId].between.every((id) => !state.parts[id].removed)
     case 'remove':
@@ -142,6 +149,9 @@ function revert(state: LandscapeState, entry: Entry): LandscapeState {
     }
     case 'rename':
       return withPart(state, { ...state.parts[entry.partId], name: entry.before })
+    case 'look':
+      if (lookTaken(state, entry.before, entry.partId)) return state
+      return withPart(state, { ...state.parts[entry.partId], look: entry.before })
     case 'remove':
       return withPart(state, { ...state.parts[entry.partId], removed: false })
     case 'unlink':
@@ -245,6 +255,12 @@ export function landscapeReducer(state: LandscapeState, action: Action): Landsca
         partId: part.id,
         before: part.name,
       })
+    }
+
+    case 'setLook': {
+      const part = state.parts[action.partId]
+      if (!part || part.removed || part.look === action.look || lookTaken(state, action.look, part.id)) return state
+      return record(withPart(state, { ...part, look: action.look }), { kind: 'look', partId: part.id, before: part.look })
     }
 
     case 'remove': {

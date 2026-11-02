@@ -358,6 +358,9 @@ def main():
         "content": {"left": round(box[0], 1), "right": round(box[2], 1)},
         "enterFrames": ENTER,
         "travel": [[f, 0, round(arrived(f), 5), 0] for f in frames(ENTER, STEP_TRAVEL)],
+        # The app's next card waits for this: Shell is still afloat when the
+        # travel stops, and stands once the water has let it down.
+        "stands": SETTLE[1],
     }
     with open(os.path.join(HERE, "wave.json"), "w") as f:
         json.dump(plan, f, separators=(",", ":"))

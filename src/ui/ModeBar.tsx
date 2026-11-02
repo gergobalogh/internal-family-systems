@@ -7,11 +7,15 @@ interface ModeBarProps {
   onModeChange: (mode: Mode) => void
   onUndo: () => void
   onReset: () => void
+  /** Add a part (shown in "How it is"); absent while the guide can't ask. */
+  onAddPart?: () => void
+  /** Try an experiment (shown in "What if…"); absent until a full run, or while a card holds the floor. */
+  onTryExperiment?: () => void
 }
 
 const modes: Mode[] = ['current', 'whatIf']
 
-export function ModeBar({ mode, canUndo, onModeChange, onUndo, onReset }: ModeBarProps) {
+export function ModeBar({ mode, canUndo, onModeChange, onUndo, onReset, onAddPart, onTryExperiment }: ModeBarProps) {
   const { title, hint } = copy.modes[mode]
 
   return (
@@ -41,6 +45,19 @@ export function ModeBar({ mode, canUndo, onModeChange, onUndo, onReset }: ModeBa
         <button type="button" className="control" onClick={onUndo} disabled={!canUndo}>
           <span aria-hidden="true">↶</span> {copy.undo}
         </button>
+
+        {mode === 'current' && onAddPart && (
+          // Asking for the card: its field takes focus (see Conversation's Reply).
+          <button type="button" className="control" data-opens-card onClick={onAddPart}>
+            {copy.addPart}
+          </button>
+        )}
+
+        {mode === 'whatIf' && onTryExperiment && (
+          <button type="button" className="control" onClick={onTryExperiment}>
+            {copy.tryExperiment}
+          </button>
+        )}
 
         {mode === 'whatIf' && (
           <button type="button" className="control control--quiet" onClick={onReset}>

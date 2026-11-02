@@ -31,8 +31,9 @@ python3 gen-scene.py   # back to the shipping scene
 
 ## Who owns what
 
-The page (`src/ui/DescentSpike.tsx`, shared with the Sleeper's drift) moves
-the canvas; Rive moves everything inside it (`Motion`
+The spike's page (`src/ui/DescentSpike.tsx`, shared with the Sleeper's drift) moves
+the canvas (in the app, `src/ui/RiveEntrance.tsx` with `descentRoute` in
+`src/ui/riveEntrances.ts`, at most two swings); Rive moves everything inside it (`Motion`
 machine: `Descend` loops one 160-frame swing, `Land` follows once `land` is
 set and the swing in progress finishes, then `Idle`). The page fits its speed
 so the drop takes whole swings (aiming at ~110 screen px/s), sets `land` in

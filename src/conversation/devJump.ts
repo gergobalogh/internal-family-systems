@@ -1,18 +1,20 @@
 import { createLandscape, landscapeReducer } from '../model/landscape'
-import type { LandscapeState } from '../model/types'
+import { LOOKS } from '../model/types'
+import type { LandscapeState, Look } from '../model/types'
 import { conversationReducer, startConversation } from './flow'
 import type { ConversationEvent, ConversationState } from './flow'
+import type { PartKind } from './contract'
 
 /**
  * DEV ONLY: `?jump=after` starts at the closing card of a full run — two
- * linked parts, an unheard part, and a Turn 4b wish — so everything after the
- * entry conversation (docs/slice-4-handoff.md) can be tried without typing
- * the whole run. Ignored in production.
+ * linked parts and a Turn 4 wish, with "Add a quieter part" still on offer —
+ * so everything after the entry conversation (docs/slice-4-handoff.md) can be
+ * tried without typing the whole run. Ignored in production.
  *
  * The run is played through the real reducers, with scripted AI results:
- * fallback reflections, a confident "frustrated" toward-check, and a parse
- * of the 4b answer as one wish. Nothing is invented that the flow wouldn't
- * decide itself.
+ * fallback reflections, a confident "frustrated" toward-check, the figures
+ * JEV picks for these names, and a parse of the Turn 4 answer as one wish.
+ * Nothing is invented that the flow wouldn't decide itself.
  */
 export const jumpRequested =
   import.meta.env.DEV && new URLSearchParams(window.location.search).get('jump') === 'after'
@@ -26,9 +28,21 @@ const ANSWERS = [
   "honestly I can't stand it",
   'the one who yells',
   'the worry',
-  'the quiet one',
   'I wish the worry were further away',
 ]
+
+/** What JEV picks for the scripted names (Map, Defender). */
+const FIGURES: Record<string, Look> = { 'the worry': 'map', 'the one who yells': 'defender' }
+
+const certain = (look: Look) => ({
+  label: look,
+  probabilities: Object.fromEntries(LOOKS.map((each) => [each, each === look ? 1 : 0])) as Record<Look, number>,
+})
+
+const certainKind = (kind: PartKind) => ({
+  label: kind,
+  probabilities: { guards: kind === 'guards' ? 1 : 0, escapes: kind === 'escapes' ? 1 : 0, hurts: kind === 'hurts' ? 1 : 0, other: kind === 'other' ? 1 : 0 },
+})
 
 export function jumpToClosing(): { conversation: ConversationState; landscape: LandscapeState } {
   let conversation = startConversation()
@@ -45,6 +59,9 @@ export function jumpToClosing(): { conversation: ConversationState; landscape: L
     for (let job = conversation.pending; job; job = conversation.pending) {
       const { seq } = job
       switch (job.kind) {
+        case 'freeWrite':
+          feed({ type: 'freeWriteRead', seq, result: null })
+          break
         case 'risk':
           feed({ type: 'riskChecked', seq, atRisk: false })
           break
@@ -63,6 +80,15 @@ export function jumpToClosing(): { conversation: ConversationState; landscape: L
           break
         case 'centrality':
           feed({ type: 'centralityChecked', seq, result: null })
+          break
+        case 'figure':
+          // Scripted pass-through: short names come back unchanged.
+          feed({
+            type: 'figured',
+            seq,
+            result: { figure: certain(FIGURES[job.request.name]), kind: certainKind('guards') },
+            extracted: job.request.name,
+          })
           break
         case 'corrections': {
           const quote = job.request.correction

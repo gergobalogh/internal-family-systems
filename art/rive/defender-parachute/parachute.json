@@ -13,6 +13,7 @@
   "contentTop": 37.0,
   "cycleFrames": 160,
   "flareFrames": 45,
+  "landFrames": 229,
   "touchdownSpeed": 1.2,
   "shadow": {
     "x": 0.5,

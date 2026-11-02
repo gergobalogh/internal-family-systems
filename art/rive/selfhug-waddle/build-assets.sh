@@ -8,9 +8,10 @@ photo="$root/art/out/figure-self-hug-1.jpg"
 
 mkdir -p "$project_dir/assets" "$project_dir/build" "$app_dir"
 
-# Self-hug is not in the app yet, so it is cut out here (scripts/cutout-figures.py
-# plus a clean-up round the feet) and cropped like a set of one. art/out is
-# gitignored, so without the photo the committed cutout is used as it is.
+# Self-hug is cut out here (scripts/cutout-figures.py plus a clean-up round the
+# feet) and cropped like a set of one. The app's still figure is made from this
+# cutout (scripts/app-figures.py). art/out is gitignored, so without the photo
+# the committed cutout is used as it is.
 if [[ -f "$photo" ]]; then
   python3 "$project_dir/cutout.py" "$photo" "$project_dir/assets"
 else

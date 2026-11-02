@@ -5,7 +5,8 @@ waist-deep behind the crest, bobbing, eyes still closed, still listening to
 its shell. As the wave runs up the beach and stops, it crests: the crest
 leans over and the lip curls. Then it draws back the way it came, sinking
 and fading, and leaves Shell on the ground, which it settles onto with a
-small squash. It is a review spike: hidden unless the URL has `?shell`, or
+small squash. It plays in the app when a part gets Shell. The review spike
+is still there: hidden unless the URL has `?shell`, or
 `?shellpose=<frame>` to hold one frame of `Enter` (0–340; 150 is the crest)
 in the middle of the screen. The method is in
 [rive-entrance-playbook.md](rive-entrance-playbook.md).
@@ -38,14 +39,28 @@ It is scaled to `WAVE_HEIGHT` (460) in Shell's tile pixels, so the scene
 places it 1:1; the scene's wave constants were measured on a 352 px cut and
 are scaled by `K`.
 
+The app's still Shell is made from this cutout too (`scripts/app-figures.py`),
+at 80% of the tile, so rerun that after a new cutout.
+
 ## Who owns what
 
 A side entrance with no gait: the `shell` entry in
-`src/ui/sideEntrances.ts`, with `SideEntranceSpike.tsx`. The page brings the
-canvas in over `Enter`'s first 170 frames (`ARRIVE`), fast at first and
-slowing to a stop, whatever the screen: the plan's travel is all
-`fraction`. Rive does everything else in `Enter` (340 frames), then `Idle`
-(300 frames: breathing, and leaning slowly into the sound).
+`src/ui/sideEntrances.ts`, with `SideEntranceSpike.tsx` (in the app,
+`src/ui/RiveEntrance.tsx` with `sideRoute` in `src/ui/riveEntrances.ts`).
+The page brings the canvas in over `Enter`'s first 170 frames (`ARRIVE`),
+fast at first and slowing to a stop, whatever the screen: the plan's travel
+is all `fraction`. Rive does everything else in `Enter` (340 frames), then
+`Idle` (300 frames: breathing, and leaning slowly into the sound).
+
+In the app the travel stretches like Curled's slides, up to 2000 artboard
+px, which is about the spike's own pace on a 1280 px screen; a part further
+from its edge starts on the map and fades in (on desktop, a part 2 from the
+right). The next card waits for the plan's `stands` (frame 262, the end of
+`SETTLE`), not for the travel to stop at 170: Shell is still afloat in the
+wave until then. The end of the wave's retreat and its fade play under the
+card for 1.3 s, and the still figure takes over at 340. The canvas is 2.4
+tiles wide (the wave reaches back behind Shell and the crest ahead of it),
+scaled like the map's Shell.
 
 ```
 Wave Base  (sinks back and down: x, scaleY; opacity for the fade)
@@ -77,4 +92,6 @@ Feet  (Shell's float, bob and settle)
 - **A big `.riv` stalls headless captures.** At 295 KB (the wave texture and
   its mesh keys), SwiftShader takes about 3 s before the first frame, so a
   screenshot timed for the middle of the entrance catches the start. Use
-  `?shellpose=N` for those.
+  `?shellpose=N` for those. In the app the scene loads with the map, but the
+  wave's first frame still takes about 0.8 s in SwiftShader, and the page
+  draws at about 6 frames a second while the wave is up.

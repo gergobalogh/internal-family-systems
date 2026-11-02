@@ -13,10 +13,11 @@ closed="$root/art/out/figure-kaleidoscope-lowered-blink-1.jpg"
 
 mkdir -p "$project_dir/assets" "$project_dir/build" "$app_dir"
 
-# The Kaleidoscope is not in the app yet, so it is cut out here by
-# scripts/cutout-figures.py and cropped like a set of one, in all three poses,
-# with the closed-eye overlay for the lowered one. art/out is gitignored, so
-# without the photos the committed assets are used as they are.
+# The Kaleidoscope is cut out here (scripts/cutout-figures.py) and cropped
+# like a set of one, in all three poses, with the closed-eye overlay for the
+# lowered one. The app's still figure is made from this cutout
+# (scripts/app-figures.py). art/out is gitignored, so without the photos the
+# committed assets are used as they are.
 if [[ -f "$photo" && -f "$halfway" && -f "$lowered" && -f "$closed" ]]; then
   python3 "$project_dir/cutout.py" "$photo" "$project_dir/assets" "$halfway" "$lowered" "$closed"
 elif [[ -f "$photo" ]]; then

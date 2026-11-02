@@ -2,9 +2,10 @@
 
 `art/rive/selfhug-waddle` brings Self-hug in from the left, rocking from one
 foot to the other like a wind-up felt toy. It stops, and then leans over
-toward the empty space beside it and stays there a while. It is a review
-spike: hidden unless the URL has `?selfhug`, or `?selfhugpose=<frame>` to
-hold one frame of the rock (0–60) in the middle of the screen. The method is
+toward the empty space beside it and stays there a while. It plays in the
+app when a part gets Self-hug. The review spike is still there: hidden
+unless the URL has `?selfhug`, or `?selfhugpose=<frame>` to hold one frame
+of the rock (0–60) in the middle of the screen. The method is
 in [rive-entrance-playbook.md](rive-entrance-playbook.md).
 
 ## Rebuild
@@ -16,6 +17,9 @@ cd art/rive/selfhug-waddle && SELFHUG_REVIEW=enter python3 gen-scene.py   # Ente
 
 The cut is `cut()` from `scripts/cutout-figures.py` (opted in to
 `PALE_FELT`) on `art/out/figure-self-hug-1.jpg`, cropped like a set of one.
+The app's still Self-hug is made from this cutout too:
+`scripts/app-figures.py` shrinks it to 97% about its feet, so rerun that
+after a new cutout, and the entrance scales its canvas to match.
 The project's `cutout.py` then fades the floor round the feet, below tile row
 560, wherever a pixel loses the felt's warmth, `(r − (g + b)/2)/255`, between
 0.13 and 0.19.
@@ -34,7 +38,9 @@ entrance too (the blink recipe in
 ## Who owns what
 
 `src/ui/SideEntranceSpike.tsx`, with the `selfhug` entry in
-`src/ui/sideEntrances.ts`. This is the first figure with a gait:
+`src/ui/sideEntrances.ts` (in the app, `src/ui/RiveEntrance.tsx` with
+`sideRoute` in `src/ui/riveEntrances.ts`). This is the first figure with a
+gait:
 
 - Rive's `Motion` machine loops `Approach` (one rock, 60 frames) until
   `arrive` is set. It then finishes the rock in progress (exit time 100%) and
@@ -46,6 +52,11 @@ entrance too (the blink recipe in
   travel from `cycle.profile` (a fraction of a rock's travel); in `Enter`,
   from `travel` in rocks, so the glide out of the last rock carries on at its
   speed.
+- In the app the route does the same, but takes at most four rocks (as
+  many as fit the Lantern's 5 s walk with the glide) and covers at most half
+  a rock more than they would at the nominal travel; further than that, it
+  starts on the map and fades in. The next card comes when the glide stops
+  (frame 46 of `Enter`), and the still figure takes over when `Enter` ends.
 
 The rig:
 

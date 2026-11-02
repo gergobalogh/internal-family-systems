@@ -489,6 +489,9 @@ def main():
         "artboard": {"width": WIDTH, "height": HEIGHT},
         "figureBox": {"x": FIGURE_BOX[0], "y": FIGURE_BOX[1], "size": TILE},
         "feetY": GROUND,
+        # It is standing once the hop lands; the mound sinking and the bow
+        # can play under the next conversation card.
+        "stands": DROP[1],
         "riseFrames": RISE,
         "shadow": SHADOW,
         # [frame, opacity, width scale, x shift as a fraction of the tile], linear between

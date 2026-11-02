@@ -6,7 +6,7 @@ import { samePlace, stepped } from './geometry'
 import { script } from './script'
 
 /**
- * Turn 4b's one correction round. The LLM only reads the person's words
+ * Turn 4's one correction round. The LLM only reads the person's words
  * into ops; this module decides what may be applied. Identity is exact:
  * every op must quote their words, and its target must be a part they named
  * word for word (or "it" when only one part is on the map). Anything that

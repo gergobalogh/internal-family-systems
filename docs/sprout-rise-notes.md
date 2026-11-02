@@ -5,9 +5,10 @@ of the page. A felt mound of soil heaves up, the two leaves come up through
 its top folded together and open with a shiver, and the Sprout gathers itself,
 pops up out of the soil into a small hop and lands on its feet. The mound
 sinks back into the ground and the Sprout bows, tilting toward its flower.
-It takes 222 frames (3.7 s). It is a review spike: hidden unless the URL has
-`?sprout`, or `?sproutpose=<frame>` to hold one frame of `Rise` (0–222). The
-method is in [rive-entrance-playbook.md](rive-entrance-playbook.md).
+It takes 222 frames (3.7 s). It now plays in the app when a part gets
+Sprout; the review spike remains, hidden unless the URL has `?sprout`, or
+`?sproutpose=<frame>` to hold one frame of `Rise` (0–222). The method is in
+[rive-entrance-playbook.md](rive-entrance-playbook.md).
 
 ## Rebuild
 
@@ -33,11 +34,29 @@ runs `gen-scene.py`, compiles the `.riv` and copies it and `rise.json` into
 ## Who owns what
 
 Rive plays all of it: the `Motion` machine runs `Rise` (oneShot), then
-`Idle`, with no inputs. `src/ui/SproutRiseSpike.tsx` only parks the canvas
-mid-screen and moves the page shadow along `shadowKeys` from the plan,
-reading the frame off Rive's `Advance` events. The shadow is under the mound
-(wider, a little to the right) while the mound stands, and gathers to the
-Sprout's own footprint as the mound sinks.
+`Idle`, with no inputs. `src/ui/SproutRiseSpike.tsx` parks the review canvas
+mid-screen; in the app, `src/ui/RiveEntrance.tsx` lays the scene's figure
+tile over the map figure. Both move the page shadow along `shadowKeys` from
+the plan, reading the frame off Rive's `Advance` events. The shadow is under
+the mound (wider, a little to the right) while the mound stands, and gathers
+to the Sprout's own footprint as the mound sinks.
+
+## In the app
+
+`src/ui/riveEntrances.ts` gives Sprout the first in-place route. Its page
+position is always `{ x: 0, y: 0 }`: the scene itself brings the figure up,
+while the route turns each shadow key's tile-fraction shift into artboard
+pixels and stretches its width without stretching its height. The part's
+side still mirrors the whole scene.
+
+The plan records `stands: 108`, the landing after the hop. That releases the
+conversation while the mound sinks and the Sprout bows; `riseFrames: 222`
+hands over to the still figure at the end. In deterministic headless-Chrome
+runs on desktop, phone and as a mirrored part 2, arrival was reported
+2.0–2.2 s after the part appeared (including scene setup), the next card
+appeared 2.2–2.6 s after it, and the still took over 3.9–4.1 s after it. The
+Rive and still boxes coincide exactly, with no visible handover offset.
+Reduced motion creates no Rive canvas: the still figure simply appears.
 
 The scene, in paint order (the first paints on top):
 

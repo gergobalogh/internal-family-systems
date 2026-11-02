@@ -9,10 +9,10 @@ prop="$root/art/out/prop-wave-1.jpg"
 
 mkdir -p "$project_dir/assets" "$project_dir/build" "$app_dir"
 
-# Shell is not in the app yet, so it is cut out here by
-# scripts/cutout-figures.py and cropped like a set of one; the wave is a
-# generated prop (art/prompts/prop-wave.md). art/out is gitignored, so without
-# the photos the committed cutouts are used as they are.
+# Shell is cut out here by scripts/cutout-figures.py and cropped like a set of
+# one. The app's still figure is made from this cutout (scripts/app-figures.py).
+# The wave is a generated prop (art/prompts/prop-wave.md). art/out is
+# gitignored, so without the photos the committed cutouts are used as they are.
 if [[ -f "$photo" && -f "$prop" ]]; then
   python3 "$project_dir/cutout.py" "$photo" "$prop" "$project_dir/assets"
 else
@@ -22,7 +22,8 @@ fi
 python3 "$project_dir/gen-scene.py"
 rive "$project_dir" --once
 cp "$project_dir/build/shell-wave.riv" "$app_dir/shell-wave.riv"
-# The page moves the canvas across the screen from this plan.
+# The page moves the canvas across the screen from this plan, and the app's
+# next card waits for its `stands` frame.
 cp "$project_dir/wave.json" "$app_dir/shell-wave.json"
 
 echo "Built and copied $app_dir/shell-wave.riv and shell-wave.json"

@@ -180,6 +180,11 @@ loud colour:
 convert -size 640x640 xc:'#d33' src/assets/figures/figure-sprout.webp -composite /tmp/check.png
 ```
 
+The other ten map figures come from their Rive scenes' cutouts instead,
+scaled to the same felt area as these three (on the map, size means
+influence): `python3 scripts/app-figures.py src/assets/figures`, which also
+prints their footprint CSS.
+
 After adding a new figure, measure where its feet and any glow points sit in
 the 640 box. The per-look CSS variables in `src/styles/app.css` (`--shadow-x`,
 `--shadow-w`, the lantern glow position) depend on them.

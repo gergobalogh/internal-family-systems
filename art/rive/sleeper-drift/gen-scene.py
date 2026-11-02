@@ -339,6 +339,9 @@ def main():
         "contentTop": round(content_top, 1),
         "cycleFrames": CYCLE,
         "flareFrames": FLARE,
+        # All of Land: the flare, then settling (the app hands over to the
+        # still figure once it is over).
+        "landFrames": LAND,
         "touchdownSpeed": TOUCHDOWN_SPEED,
         "shadow": SHADOW,
     }

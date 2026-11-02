@@ -1,13 +1,13 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties, KeyboardEvent, RefObject } from 'react'
-import { clampPlacement } from '../model/landscape'
-import type { Part, Placement } from '../model/types'
+import type { RiveFile } from '@rive-app/react-canvas'
+import { SCALE_MAX, SCALE_MIN, clampPlacement } from '../model/landscape'
+import type { Look, Part, Placement } from '../model/types'
 import { copy } from './copy'
-import { Figure } from './Figure'
+import { Figure, FigureThumb } from './Figure'
+import { RiveEntrance } from './RiveEntrance'
+import { entersOnRive, riveEntranceOf } from './riveEntrances'
 import { usePointerDrag } from './usePointerDrag'
-
-/** A new part's entrance: hidden while the world waits, then walking in from its side. */
-export type Entrance = 'held' | 'walking'
 
 /** The edge a part walks in from. A part from the right is mirrored, so it faces the way it walks. */
 export type Side = 'left' | 'right'
@@ -16,13 +16,23 @@ interface PartFigureProps {
   part: Part
   placement: Placement
   selected: boolean
-  entrance?: Entrance
+  /** In "What if…" the part can be moved and resized, but who it is (name, presence, words) changes only in "How it is". */
+  whatIf: boolean
+  /** A new part coming in from its side, from the moment it's named until it stands on its spot. */
+  entering: boolean
+  /** A Rive entrance stands on its spot (a CSS walk-in ends on the landscape's timer). */
+  onArrived: () => void
+  /** Its figure's Rive entrance, loaded ahead, if there is one and it has loaded. */
+  riveFile?: RiveFile
   side: Side
   hintId: string
   landscapeRef: RefObject<HTMLElement | null>
   onSelect: () => void
   onPlace: (placement: Placement) => void
   onRename: (name: string) => void
+  /** Figures no part has: what Change figure offers. */
+  freeLooks: readonly Look[]
+  onChangeLook: (look: Look) => void
   onRemove: () => void
   /** Get to know it; absent while the guide can't ask (mid-conversation, a card waiting, a pause). */
   onGetToKnow?: () => void
@@ -34,6 +44,9 @@ interface PartFigureProps {
 const MOVE_STEP = 0.02
 const MOVE_STEP_LARGE = 0.08
 const SCALE_STEP = 1.12
+
+/** How long a Rive entrance's last frame and the still figure overlap (the fade in app.css). */
+const HANDOVER_MS = 500
 
 /** Room kept between a label and the landscape's edge. */
 const EDGE_ROOM = 8
@@ -93,13 +106,18 @@ export function PartFigure({
   part,
   placement,
   selected,
-  entrance,
+  whatIf,
+  entering,
+  onArrived,
+  riveFile,
   side,
   hintId,
   landscapeRef,
   onSelect,
   onPlace,
   onRename,
+  freeLooks,
+  onChangeLook,
   onRemove,
   onGetToKnow,
   onClearWords,
@@ -112,15 +130,43 @@ export function PartFigure({
     onDraft?.(next)
   }
   const [renaming, setRenaming] = useState(false)
+  const [choosing, setChoosing] = useState(false)
+  // Deselecting closes the figure choices, so they don't come back on the next select.
+  if (!selected && choosing) setChoosing(false)
   const figureRef = useRef<HTMLSpanElement>(null)
   const tagRef = useRef<HTMLDivElement>(null)
   const shown = draft ?? placement
+  const riveEntrance = entersOnRive(part.look) ? riveEntranceOf(part.look) : undefined
+  // A Rive entrance plays from the moment the part is named until it has
+  // settled, a little after it stands on its spot (when the next card can
+  // come). Then it hands over to the still figure by fading it in over the
+  // last frame: the scene's cut of the figure differs slightly from the map's.
+  const [playing, setPlaying] = useState(entering && riveEntrance !== undefined)
+  const [wasEntering, setWasEntering] = useState(entering)
+  if (entering !== wasEntering) {
+    setWasEntering(entering)
+    if (entering && riveEntrance) setPlaying(true)
+  }
+  // Changed to a figure without one: it simply stands there.
+  if (playing && !riveEntrance) setPlaying(false)
+  const [handingOver, setHandingOver] = useState(false)
+  const settled = useCallback(() => {
+    setPlaying(false)
+    setHandingOver(true)
+  }, [])
+  useEffect(() => {
+    if (!handingOver) return
+    const timer = setTimeout(() => setHandingOver(false), HANDOVER_MS)
+    return () => clearTimeout(timer)
+  }, [handingOver])
+  // A Rive entrance moves only the figure, so the part takes neither of the CSS walk-in's classes.
+  const entrance = handingOver ? ' is-handing-over' : !entering ? '' : playing ? ' is-entering' : ' is-walking'
   const hasWords = part.voice !== undefined || part.intent !== undefined
   const label = useLabelSides(
     shown,
     landscapeRef,
     tagRef,
-    `${part.name} ${selected} ${renaming} ${part.voice} ${part.intent} ${onGetToKnow !== undefined}`,
+    `${part.name} ${selected} ${renaming} ${choosing} ${part.voice} ${part.intent} ${onGetToKnow !== undefined} ${whatIf}`,
   )
 
   const finish = (value: Placement | null) => {
@@ -189,7 +235,7 @@ export function PartFigure({
 
   return (
     <div
-      className={`part${selected ? ' is-selected' : ''}${draft ? ' is-dragging' : ''}${entrance ? ` is-${entrance}` : ''}`}
+      className={`part${selected ? ' is-selected' : ''}${draft ? ' is-dragging' : ''}${entrance}`}
       style={style}
       data-part={part.id}
       data-look={part.look}
@@ -211,7 +257,19 @@ export function PartFigure({
         {...moveDrag}
       >
         <span className="part__figure" ref={figureRef}>
-          <Figure look={part.look} />
+          {(playing || handingOver) && riveEntrance && (
+            <RiveEntrance
+              // A new figure mid-entrance is a new entrance.
+              key={part.look}
+              entrance={riveEntrance}
+              riveFile={riveFile}
+              edge={side === 'left' ? shown.x : 1 - shown.x}
+              landscapeRef={landscapeRef}
+              onArrived={onArrived}
+              onDone={settled}
+            />
+          )}
+          {!playing && <Figure look={part.look} />}
           <span className="part__ring" />
         </span>
       </button>
@@ -223,7 +281,7 @@ export function PartFigure({
       <div className="part__tag" ref={tagRef}>
         <div className="part__label">
           <span className="part__hedge">{copy.hedge}</span>
-          {renaming ? (
+          {renaming && !whatIf ? (
             <RenameField
               name={part.name}
               onDone={(name) => {
@@ -247,7 +305,51 @@ export function PartFigure({
           )}
         </div>
 
-        {selected && !renaming && (
+        {selected && !renaming && choosing && !whatIf && (
+          <div className="part__figures" role="group" aria-label={copy.figureChoices(part.name)}>
+            {freeLooks.map((look, index) => (
+              <button
+                key={look}
+                type="button"
+                className="part__figure-choice"
+                aria-label={copy.figureLabels[look]}
+                autoFocus={index === 0}
+                onClick={() => {
+                  setChoosing(false)
+                  onChangeLook(look)
+                }}
+              >
+                <FigureThumb look={look} />
+              </button>
+            ))}
+            <div className="part__actions">
+              <button type="button" onClick={() => setChoosing(false)}>
+                {copy.keepFigure}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {selected && !renaming && !(choosing && !whatIf) && (
+          <div className="part__actions" role="group" aria-label={copy.sizeLabel(part.name)}>
+            <button
+              type="button"
+              disabled={placement.scale <= SCALE_MIN}
+              onClick={() => onPlace({ ...placement, scale: placement.scale / SCALE_STEP })}
+            >
+              {copy.smaller}
+            </button>
+            <button
+              type="button"
+              disabled={placement.scale >= SCALE_MAX}
+              onClick={() => onPlace({ ...placement, scale: placement.scale * SCALE_STEP })}
+            >
+              {copy.larger}
+            </button>
+          </div>
+        )}
+
+        {selected && !renaming && !(choosing && !whatIf) && (
           <div className="part__actions">
             {onGetToKnow && (
               // Asking for the card: its field takes focus (see Conversation's Reply).
@@ -255,16 +357,27 @@ export function PartFigure({
                 {copy.getToKnow}
               </button>
             )}
-            <button type="button" onClick={() => setRenaming(true)}>
-              {copy.rename}
-            </button>
-            <button type="button" onClick={onRemove}>
-              {copy.remove}
-            </button>
-            {hasWords && (
-              <button type="button" onClick={onClearWords}>
-                {copy.clearWords}
-              </button>
+            {whatIf ? (
+              <span className="part__elsewhere">{copy.changeInHowItIs}</span>
+            ) : (
+              <>
+                <button type="button" onClick={() => setRenaming(true)}>
+                  {copy.rename}
+                </button>
+                {freeLooks.length > 0 && (
+                  <button type="button" onClick={() => setChoosing(true)}>
+                    {copy.changeFigure}
+                  </button>
+                )}
+                <button type="button" onClick={onRemove}>
+                  {copy.remove}
+                </button>
+                {hasWords && (
+                  <button type="button" onClick={onClearWords}>
+                    {copy.clearWords}
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}

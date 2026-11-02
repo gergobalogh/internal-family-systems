@@ -24,7 +24,8 @@ fi
 python3 "$project_dir/gen-scene.py"
 rive "$project_dir" --once
 cp "$project_dir/build/sprout-rise.riv" "$app_dir/sprout-rise.riv"
-# The page parks the canvas and draws the shadow from this plan.
+# The spike and the app park the canvas and draw the keyed mound shadow
+# from this plan; `stands` also tells the app when the landing is complete.
 cp "$project_dir/rise.json" "$app_dir/sprout-rise.json"
 
 echo "Built and copied $app_dir/sprout-rise.riv and sprout-rise.json"

@@ -345,6 +345,8 @@ def main():
             "frames": ENTER,
             "travel": [[f, round(gliding(f), 5)] for f in frames(GLIDE, STEP_TRAVEL)],
         },
+        # The page can release the next card at touchdown; the squash settles underneath it.
+        "stands": LAND,
     }
     with open(os.path.join(HERE, "line.json"), "w") as f:
         json.dump(plan, f, separators=(",", ":"))

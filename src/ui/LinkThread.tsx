@@ -47,6 +47,8 @@ interface LinkThreadProps {
   from: { point: Point; glide: number; name: string }
   to: { point: Point; glide: number; name: string }
   selected: boolean
+  /** In "What if…" the link stays: it can be taken down only in "How it is". */
+  whatIf: boolean
   onSelect: () => void
   onRemove: () => void
 }
@@ -56,7 +58,7 @@ interface LinkThreadProps {
  * thread reaches from each part toward the other and fades before they meet,
  * around a small knot that selects the link. Never red, dark, or jagged.
  */
-export function LinkThread({ id, from, to, selected, onSelect, onRemove }: LinkThreadProps) {
+export function LinkThread({ id, from, to, selected, whatIf, onSelect, onRemove }: LinkThreadProps) {
   const a = useGlide(from.point, from.glide)
   const b = useGlide(to.point, to.glide)
   const along = (p: Point, q: Point, t: number) => ({ x: (p.x + (q.x - p.x) * t) * 100, y: (p.y + (q.y - p.y) * t) * 100 })
@@ -106,9 +108,13 @@ export function LinkThread({ id, from, to, selected, onSelect, onRemove }: LinkT
               <span className="link__words">{copy.link.words}</span>
             </div>
             <div className="part__actions">
-              <button type="button" onClick={onRemove}>
-                {copy.link.remove}
-              </button>
+              {whatIf ? (
+                <span className="part__elsewhere">{copy.link.removeInHowItIs}</span>
+              ) : (
+                <button type="button" onClick={onRemove}>
+                  {copy.link.remove}
+                </button>
+              )}
             </div>
           </div>
         )}

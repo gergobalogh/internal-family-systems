@@ -136,9 +136,35 @@ export const EXIT_FORMS = [
   'all one feeling',
   'all one',
   'same feeling',
+  'the same feeling',
+  "it's the same feeling",
+  'part of the same feeling',
+  "it's part of the same feeling",
+  'part of the same',
+  'same',
+  'the same',
+  "it's the same",
+  'not separate',
+  "it's not separate",
+  "it doesn't feel separate",
   'just one',
   'one feeling',
   'no second part',
+  'no',
+  'nope',
+] as const
+
+/** The second-part question answered with only the yes half: it gets "What would you call it?". */
+export const SEPARATE_FORMS = [
+  'separate',
+  "it's separate",
+  'it feels separate',
+  'yes separate',
+  'yes',
+  'yeah',
+  'yep',
+  'it is',
+  'it does',
 ] as const
 
 /** Turn 3, one part: "Does [name] feel close, or more off to the side?" */
@@ -157,7 +183,7 @@ export const MIDDLE_FORMS = ['in the middle', 'middle', 'midway', 'halfway', 'in
 /** Turn 3, two parts: "Which feels closer — [A] or [B]?" (the names themselves match too). */
 export const TIE_FORMS = ['about the same', 'both', 'the same', 'same'] as const
 
-/** Turn 4a: a bare yes, which gets the naming follow-up instead of becoming a name. */
+/** Adding a quieter part: a bare yes gets the question again instead of becoming a name; no or unsure adds nothing. */
 export const YES_FORMS = ['yes', 'yeah', 'yep', 'there is', 'i think so'] as const
 export const NO_FORMS = [
   'no',
@@ -174,7 +200,7 @@ export const NO_FORMS = [
 ] as const
 export const UNSURE_FORMS = ['not sure', 'unsure', "i don't know", "don't know", 'maybe', 'no idea'] as const
 
-/** Turn 4b: "what would you change?" answered with nothing to change. */
+/** Turn 4: "what would you change?" answered with nothing to change. */
 export const AFFIRM_FORMS = [
   'looks right',
   'looks good',
@@ -186,7 +212,7 @@ export const AFFIRM_FORMS = [
   'no changes',
 ] as const
 
-/** Turn 4b: taking down the tension link, without the LLM (so it works AI-off). */
+/** Turn 4: taking down the tension link, without the LLM (so it works AI-off). */
 export const UNLINK_FORMS = [
   'not pulling apart',
   'no pulling apart',
@@ -203,6 +229,7 @@ export const UNLINK_FORMS = [
  */
 export const LISTED_FORMS: readonly string[] = [
   ...EXIT_FORMS,
+  ...SEPARATE_FORMS,
   ...CLOSE_FORMS,
   ...FAR_FORMS,
   ...MIDDLE_FORMS,
@@ -277,6 +304,30 @@ export function findWords(words: readonly string[], needle: readonly string[], f
     if (needle.every((word, offset) => words[start + offset] === word)) return start
   }
   return -1
+}
+
+/**
+ * Where `needle` (as `nameWords`) first occurs in `text`, as the stretch of
+ * `text` itself from that run's first word to its last — spelled as the
+ * person wrote it, with no punctuation at either end — or null. `whole`
+ * when the run is every word of `text`.
+ */
+export function wordRun(text: string, needle: readonly string[]): { text: string; whole: boolean } | null {
+  // The same words as nameWords(text), each with where it sits in `text`.
+  const words: { word: string; start: number; end: number }[] = []
+  for (const run of text.matchAll(/[\p{L}\p{N}'‘’]+/gu)) {
+    const core = /[\p{L}\p{N}](?:.*[\p{L}\p{N}])?/u.exec(run[0])
+    if (!core) continue
+    const start = run.index + core.index
+    for (const word of nameWords(core[0])) words.push({ word, start, end: start + core[0].length })
+  }
+  const at = findWords(
+    words.map(({ word }) => word),
+    needle,
+  )
+  if (at === -1) return null
+  const last = at + needle.length - 1
+  return { text: text.slice(words[at].start, words[last].end), whole: at === 0 && last === words.length - 1 }
 }
 
 /**

@@ -377,6 +377,8 @@ def main():
         "contentTop": round(content_top, 1),
         "cycleFrames": CYCLE,
         "flareFrames": 0,
+        # All of Land (the app hands over to the still figure once it is over).
+        "landFrames": LAND,
         "touchdownSpeed": TOUCHDOWN_SPEED,
         "shadow": SHADOW,
     }

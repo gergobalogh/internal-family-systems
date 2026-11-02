@@ -421,6 +421,25 @@ button {
 
 /* ---------- Atmosphere: film grain + warm vignette ---------- */
 
+/* The light closeness is measured from: soft, warm, fading out where "close" ends. */
+.centre-light {
+  position: absolute;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 236, 190, 0.75), rgba(255, 236, 190, 0.35) 60%, rgba(255, 236, 190, 0));
+  mix-blend-mode: screen;
+  /* On a phone the closest part stands in the light: wide enough to show around a large figure. */
+  min-width: 11rem;
+  pointer-events: none;
+  animation: centre-light-in 1.2s var(--ease-soft) both;
+}
+
+@keyframes centre-light-in {
+  from {
+    opacity: 0;
+  }
+}
+
 .atmosphere {
   position: absolute;
   inset: 0;
@@ -505,6 +524,39 @@ button {
 .part[data-look='sleeper'] {
   --shadow-x: 0.52;
   --shadow-w: 0.8;
+}
+/* The rest, as printed by scripts/app-figures.py. */
+.part[data-look='defender'],
+.part[data-look='pod'] {
+  --shadow-w: 0.45;
+}
+.part[data-look='curled'] {
+  --shadow-w: 0.57;
+}
+.part[data-look='selfhug'] {
+  --shadow-x: 0.49;
+  --shadow-w: 0.41;
+}
+.part[data-look='ribbon'] {
+  --shadow-x: 0.64;
+  --shadow-w: 0.37;
+}
+.part[data-look='kaleidoscope'] {
+  --shadow-x: 0.4;
+  --shadow-w: 0.44;
+}
+.part[data-look='stack'] {
+  --shadow-w: 0.42;
+}
+.part[data-look='map'] {
+  --shadow-x: 0.48;
+}
+.part[data-look='doodle'] {
+  --shadow-w: 0.65;
+}
+.part[data-look='shell'] {
+  --shadow-x: 0.44;
+  --shadow-w: 0.49;
 }
 
 .figure {
@@ -608,7 +660,8 @@ button {
   touch-action: none;
   transition:
     left var(--glide) var(--ease-soft),
-    top var(--glide) var(--ease-soft);
+    top var(--glide) var(--ease-soft),
+    opacity 600ms var(--ease-soft);
 }
 
 .part[data-side='right'] .part__handle {
@@ -636,7 +689,9 @@ button {
   align-items: var(--label-align, center);
   gap: 8px;
   pointer-events: none;
-  transition: top var(--glide) var(--ease-soft);
+  transition:
+    top var(--glide) var(--ease-soft),
+    opacity 600ms var(--ease-soft);
 }
 
 .part[data-label-x='start'] {
@@ -744,6 +799,64 @@ button {
   flex-direction: column-reverse;
 }
 
+/* Change figure: the free figures, still, to choose from. Opaque, like the pointer below. */
+.part__figures {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: var(--label-align, center);
+  gap: 6px;
+  width: max-content;
+  /* At most half the map: the label aligns to the part's side, so half always fits (three across on a phone). */
+  max-width: min(18rem, 50cqw);
+  padding: 8px;
+  border-radius: 16px;
+  background: #fffbf6;
+  box-shadow: 0 1px 4px rgba(58, 51, 64, 0.12);
+  pointer-events: auto;
+}
+
+.part__figure-choice {
+  width: 52px;
+  height: 52px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.part__figure-choice:hover,
+.part__figure-choice:focus-visible {
+  outline: none;
+  border-color: var(--focus);
+  box-shadow: 0 0 0 2px var(--focus);
+}
+
+.part__figures .part__actions {
+  flex-basis: 100%;
+}
+
+.figure-thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* In "What if…", where Rename and remove would be: a quiet pointer back to "How it is". */
+.part__elsewhere {
+  max-width: 16rem;
+  padding: 4px 12px 5px;
+  border-radius: 12px;
+  /* Opaque: it can sit over another part's label. No border, so it doesn't read as a button. */
+  background: #fffbf6;
+  box-shadow: 0 1px 4px rgba(58, 51, 64, 0.12);
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  white-space: normal;
+  text-align: var(--label-text, center);
+}
+
 .part__actions button {
   min-height: 36px;
   padding: 6px 12px;
@@ -760,12 +873,8 @@ button {
   transition: none;
 }
 
-/* Entrances: a part named while the world waits holds, then walks in from its
-   side as a pale trace that becomes the figure. Its name comes last. */
-.part.is-held {
-  visibility: hidden;
-}
-
+/* Entrances: a part walks in from its side the moment it's named, as a pale
+   trace that becomes the figure. Its name comes last. */
 .part.is-walking {
   animation: part-walk-in var(--walk) var(--ease-soft) both;
 }
@@ -814,6 +923,96 @@ button {
 @keyframes part-late {
   0%,
   70% {
+    opacity: 0;
+  }
+}
+
+/* A Rive entrance (RiveEntrance.tsx): the figure and its shadow travel
+   inside the figure box, off stage until the entrance places them (a
+   descent's shadow waits on the ground instead). The
+   scene's artboard is laid over the box (placed and scaled inline, so its
+   tile covers the still figure). The name and the handle wait for it to
+   settle, then fade in. */
+.figure-walk,
+.figure-walk__shadow {
+  transform: translateX(-200cqw);
+}
+
+.figure-walk {
+  position: absolute;
+  inset: 0;
+}
+
+.figure-walk__board {
+  position: absolute;
+}
+
+.figure-walk__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* A trail an entrance leaves behind it (the Map's stitches or Doodle's
+   crayon line), drawn in the figure box's px behind the figure and faded
+   once it stands on its spot. */
+.figure-trail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  transition: opacity 1.8s ease;
+}
+
+.figure-trail.is-faded {
+  opacity: 0;
+}
+
+.figure-trail__stitches {
+  fill: none;
+  stroke: #ae9f86;
+  stroke-width: max(2px, var(--d) * 0.0115);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: max(6px, var(--d) * 0.03) max(6.5px, var(--d) * 0.033);
+}
+
+.figure-trail__stitches--shade {
+  stroke: rgba(74, 58, 44, 0.3);
+  translate: 0 max(1px, var(--d) * 0.005);
+}
+
+/* Doodle's loose dusty-pink line: its path is revealed ahead of the figure
+   and its stroke is set inline to a unique tile of crayon grain (#c98a93). */
+.figure-trail__crayon {
+  fill: none;
+  stroke-width: calc(var(--d) * 0.017);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
+}
+
+.part.is-entering :is(.part__tag, .part__handle) {
+  opacity: 0;
+}
+
+/* The handover (HANDOVER_MS in PartFigure.tsx): the still figure fades in
+   over the walk's last frame, which stays whole underneath; only the walk's
+   shadow fades out, so the two shadows never darken the ground together. */
+.part.is-handing-over .part__figure > :is(.figure, .figure__shadow:not(.figure-walk__shadow), .figure__lantern-rig) {
+  animation: figure-in 500ms var(--ease-soft) both;
+}
+
+.part.is-handing-over .figure-walk__shadow {
+  animation: figure-in 500ms var(--ease-soft) reverse both;
+}
+
+@keyframes figure-in {
+  from {
     opacity: 0;
   }
 }
@@ -1033,6 +1232,21 @@ button {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.card__choices {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.card__choice {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 7px 14px;
+  overflow-wrap: anywhere;
 }
 
 .card__field {

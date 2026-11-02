@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import type { ReactNode } from 'react'
 import { jumpRequested, jumpToClosing } from './conversation/devJump'
-import { canGetToKnow, mapNote } from './conversation/flow'
+import { canAddPart, canGetToKnow, canTryExperiment, mapNote } from './conversation/flow'
 import { useConversation } from './conversation/useConversation'
 import { canUndo, createLandscape, landscapeReducer } from './model/landscape'
 import type { Action, LandscapeState } from './model/types'
@@ -90,15 +90,32 @@ interface ShellProps {
   /** The mode bar (title, mode switch, Undo): kept away until the map is handed over. */
   bar: boolean
   waiting?: boolean
+  /** Whether any part is still entering, for the conversation's timing. */
+  onEntering?: (entering: boolean) => void
   settling?: boolean
   /** After switching to "What if…" (the experiment invitation). */
   onEnteredWhatIf?: () => void
   /** Get to know it, when the guide can ask. */
   onGetToKnow?: (partId: string) => void
+  /** Add a part, when the guide can ask. */
+  onAddPart?: () => void
+  /** Try an experiment, when one can start. */
+  onTryExperiment?: () => void
   children?: ReactNode
 }
 
-function Shell({ workspace, bar, waiting, settling, onEnteredWhatIf, onGetToKnow, children }: ShellProps) {
+function Shell({
+  workspace,
+  bar,
+  waiting,
+  onEntering,
+  settling,
+  onEnteredWhatIf,
+  onGetToKnow,
+  onAddPart,
+  onTryExperiment,
+  children,
+}: ShellProps) {
   const { state, act, selectedId, setSelectedId, notice, setNotice } = workspace
   const dismissNotice = useCallback(() => setNotice(null), [setNotice])
   const removed = (message: string) => {
@@ -120,16 +137,20 @@ function Shell({ workspace, bar, waiting, settling, onEnteredWhatIf, onGetToKnow
             }}
             onUndo={() => act({ type: 'undo' })}
             onReset={() => act({ type: 'resetWhatIf' })}
+            onAddPart={onAddPart}
+            onTryExperiment={onTryExperiment}
           />
         </div>
       )}
       <div className="stage">
         <Landscape
           state={state}
+          centre={bar}
           selectedId={selectedId}
           onSelect={setSelectedId}
           onPlace={(partId, placement) => act({ type: 'place', partId, placement })}
           onRename={(partId, name) => act({ type: 'rename', partId, name })}
+          onChangeLook={(partId, look) => act({ type: 'setLook', partId, look })}
           onRemove={(partId) => {
             act({ type: 'remove', partId })
             removed(copy.removed)
@@ -141,6 +162,7 @@ function Shell({ workspace, bar, waiting, settling, onEnteredWhatIf, onGetToKnow
           onGetToKnow={onGetToKnow}
           onClearWords={(partId) => act({ type: 'clearWords', partId })}
           waiting={waiting}
+          onEntering={onEntering}
           settling={settling}
         >
           {children}
@@ -160,7 +182,8 @@ function TalkWorkspace() {
   const workspace = useWorkspace(startingMap)
   const talk = useConversation(workspace.state, workspace.dispatch, jump?.conversation)
   const { state } = talk
-  const { shown, phase, waiting, settling } = useChoreography(state)
+  const [entering, setEntering] = useState(false)
+  const { shown, phase, waiting, settling } = useChoreography(state, entering)
 
   // The last step: the bar and the map note arrive with the closing card (or
   // a pause), when the map becomes the person's — and stay from then on.
@@ -174,10 +197,13 @@ function TalkWorkspace() {
       workspace={workspace}
       bar={handedOver}
       waiting={waiting}
+      onEntering={setEntering}
       // Parts glide slowly only while the entry conversation moves them, never under the person's own hand.
       settling={settling && !handedOver}
       onEnteredWhatIf={talk.enteredWhatIf}
       onGetToKnow={canGetToKnow(state) ? talk.getToKnow : undefined}
+      onAddPart={canAddPart(state) ? talk.newPart : undefined}
+      onTryExperiment={canTryExperiment(state) ? talk.tryExperiment : undefined}
     >
       {/* After a pause, the map keeps no summary of a conversation that stopped. */}
       {handedOver && !state.paused && <MapNote text={mapNote(state, workspace.state)} />}

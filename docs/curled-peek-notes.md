@@ -14,11 +14,14 @@ URL has `?curled`, or `?curledpose=<frame>` to hold one frame of `Enter`
 art/rive/curled-peek/build-assets.sh
 ```
 
-Curled is not in the app yet, so this cuts it out of
+This cuts Curled out of
 `art/out/figure-curled-1.jpg` with `cut()` from `scripts/cutout-figures.py`,
 opted in to `PALE_FELT` and `FLOOR_UNDER`, and crops it like a set of one.
 It then runs `gen-scene.py`, compiles the `.riv` and copies it and
-`peek.json` into `src/assets/rive/`.
+`peek.json` into `src/assets/rive/`. The app's still Curled is made from
+this cutout too: `scripts/app-figures.py` shrinks it to 77% about its feet,
+so rerun that after a new cutout, and the entrance scales its canvas to
+match (`src/ui/RiveEntrance.tsx`).
 
 The closed-eye overlay, `blink.png`, is cut by `scripts/blink-overlay.py`
 from a generated edit, `art/out/figure-curled-blink-1.jpg`
@@ -30,7 +33,8 @@ twice every ten seconds, through the entrance too (the blink recipe in
 
 This is the first side entrance, and its page component is shared by all of
 them: `src/ui/SideEntranceSpike.tsx`, with the `curled` entry in
-`src/ui/sideEntrances.ts`. Curled has no gait, so Rive plays one long `Enter`
+`src/ui/sideEntrances.ts`. In the app, `src/ui/RiveEntrance.tsx` plays it,
+with its route in `src/ui/riveEntrances.ts`. Curled has no gait, so Rive plays one long `Enter`
 (372 frames) from the start, then `Idle` (300 frames, breathing, glancing up
 now and then). The page reads the travel frame by frame from `travel` in
 `peek.json`. Each row is `[frame, fixed px, fraction, 0]`:

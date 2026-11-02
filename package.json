@@ -9,7 +9,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "calibrate:turn1": "node scripts/calibrate-turn1.ts",
+    "calibrate:kind": "node scripts/calibrate-kind.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

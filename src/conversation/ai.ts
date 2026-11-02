@@ -2,8 +2,11 @@ import {
   API,
   CENTRALITY_ONE_LABELS,
   CENTRALITY_TWO_LABELS,
+  isFigureReading,
   TOWARD_LABELS,
   isCorrectionsResponse,
+  isExtractResponse,
+  isFreeWriteAnalysis,
   isJudgement,
   isReflectResponse,
   isRiskResponse,
@@ -12,6 +15,11 @@ import type {
   CentralityRequest,
   CentralityResult,
   CorrectionsRequest,
+  ExtractRequest,
+  FigureReading,
+  FigureRequest,
+  FreeWriteAnalysis,
+  FreeWriteRequest,
   ParsedOp,
   ReflectRequest,
   RiskRequest,
@@ -50,6 +58,12 @@ export async function reflect(request: ReflectRequest, signal: AbortSignal): Pro
   return isReflectResponse(data) ? data.text : null
 }
 
+/** Null only when both Turn 0 readings are unavailable or malformed. */
+export async function analyzeFreeWrite(request: FreeWriteRequest, signal: AbortSignal): Promise<FreeWriteAnalysis | null> {
+  const data = await post(API.freeWrite, request, signal)
+  return isFreeWriteAnalysis(data) ? data : null
+}
+
 export async function checkToward(request: TowardCheckRequest, signal: AbortSignal): Promise<TowardCheck | null> {
   const data = await post(API.towardCheck, request, signal)
   return isJudgement(data, TOWARD_LABELS) ? data : null
@@ -65,6 +79,18 @@ export async function checkCentrality(request: CentralityRequest, signal: AbortS
 export async function checkRisk(request: RiskRequest, signal: AbortSignal): Promise<boolean | null> {
   const data = await post(API.risk, request, signal)
   return isRiskResponse(data) ? data.atRisk : null
+}
+
+/** Null when JEV can't be had: the flow takes the session's next unused figure. */
+export async function chooseFigure(request: FigureRequest, signal: AbortSignal): Promise<FigureReading | null> {
+  const data = await post(API.figure, request, signal)
+  return isFigureReading(data) ? data : null
+}
+
+/** Null when no extraction could be had: the answer is used as the name, as before. */
+export async function extractName(request: ExtractRequest, signal: AbortSignal): Promise<string | null> {
+  const data = await post(API.extractName, request, signal)
+  return isExtractResponse(data) ? data.label : null
 }
 
 export async function parseCorrections(request: CorrectionsRequest, signal: AbortSignal): Promise<ParsedOp[] | null> {

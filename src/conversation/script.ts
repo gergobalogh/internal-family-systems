@@ -2,7 +2,7 @@
  * The pinned entry script (research/synthesis-4-turn-script.md, as locked in
  * docs/slice-2-handoff.md and docs/slice-3-handoff.md), and the guide's lines
  * after it (docs/slice-4-handoff.md). Shown verbatim: the only things ever
- * substituted in are the person's own words (a part's name, their Turn 4b
+ * substituted in are the person's own words (a part's name, their Turn 4
  * wish) or the deterministic map summary. Kept apart from src/ui/copy.ts
  * because changing a line here changes the agreed script.
  */
@@ -30,27 +30,52 @@ function joinClauses(clauses: readonly string[]): string {
 export const script = {
   /** Turn 0. */
   freeWrite: "In your own words, what's weighing on you right now? No need to be organized.",
-  /** Turn 1. The answer becomes part 1's name, unaltered. */
+  /**
+   * Turn 1. The naming words in the answer become part 1's name: the model
+   * picks the phrase, and the code accepts it only when it appears word for
+   * word in the answer — otherwise the answer is used as sent. Short
+   * answers that already are names come back unchanged.
+   */
   loudest: 'Which feeling has been loudest lately — what would you call it?',
+  /** Turn 1 rows selected from Turn 0's form reading. Names are copied from their free-write. */
+  confirmFeeling: (name: string) => `Would you call it ${quoted(name)} — or something else?`,
+  chooseFeeling: 'Which of these has been loudest lately — or is it something else?',
+  nameThatFeeling: 'What would you call that feeling?',
+  nameSomethingElse: 'What would you call it?',
   /** Turn 2, with the part's name as it is when the question appears. */
   towardCheck: (name: string) =>
-    `And how do you feel toward ${name} — curious about it, frustrated with it, or something else?`,
-  /** Polarization branch: a fixed reflection, then the part 2 naming question. */
-  polarization: 'Sounds like another part has strong feelings about this one.',
-  secondName: 'What would you call that part — or is it all one feeling?',
+    `And how do you feel toward ${quoted(name)} — curious about it, frustrated with it, or something else?`,
+  /**
+   * Polarization branch: one sentence on the toward answer, then this fixed
+   * line, then the part 2 naming question. Tentative on purpose: the app
+   * wonders, the person decides whether it's separate (2026-10-16; was
+   * "Sounds like another part has strong feelings about this one."). The
+   * fixed line stays because "it" in the naming question refers to it.
+   * Draft copy.
+   */
+  polarization: 'There may be another feeling here too.',
+  secondName: 'If it feels separate, what would you call it — or is it part of the same feeling?',
+  /** After a bare "separate" or "yes" only: a name can't be conjured. */
+  secondNameAgain: 'What would you call it?',
   /** Turn 3, one part on the map. */
-  centralityOne: (name: string) => `Does ${name} feel close, or more off to the side?`,
+  centralityOne: (name: string) => `Does ${quoted(name)} feel close, or more off to the side?`,
   /** Turn 3, two parts on the map (in creation order). */
-  centralityTwo: (a: string, b: string) => `Which feels closer — ${a} or ${b}?`,
-  /** Turn 4a. A fused identify+name question, like Turn 1. */
-  unheard: 'Is there a part that rarely gets heard — what would you call it?',
-  /** Turn 4a, after a bare "yes" only: a name can't be conjured. */
-  unheardName: 'What would you call it?',
-  /** Turn 4b. `map` is the deterministic summary (see summary.ts). */
+  centralityTwo: (a: string, b: string) => `Which feels closer — ${quoted(a)} or ${quoted(b)}?`,
+  /** Turn 4. `map` is the deterministic summary (see summary.ts). */
   confirm: (map: string) => `One way I'm seeing this is ${map} — what would you change?`,
   /** Full runs end here. Draft copy until reviewed. */
   closing: "That's the picture so far — it's yours. Move anything that doesn't look right.",
-  /** The note left on the map after a full run: Turn 4b's summary, kept true to the map. Draft copy. */
+  /**
+   * Add a quieter part, from the closing card: was Turn 4a, now optional.
+   * They asked to add one, so only the name is asked. Draft copy.
+   */
+  unheard: 'What would you call the part that rarely gets heard?',
+  /** After it walks in. Draft copy. */
+  unheardAdded: (name: string) => `${quoted(name)} is here now, at the edge. Move it wherever feels right.`,
+  /** Add a part, from the top bar after closing. Draft copy. */
+  newPart: "What would you call the part you'd like to add?",
+  partAdded: (name: string) => `${quoted(name)} is here now. Move it wherever feels right.`,
+  /** The note left on the map after a full run: Turn 4's summary, kept true to the map. Draft copy. */
   note: (map: string) => `One way I'm seeing this is ${map}.`,
   /** The same note in "What if…": about the arrangement being tried. Draft copy. */
   noteWhatIf: (clauses: readonly string[]) => `In this ‘What if’, ${joinClauses(clauses)}.`,
@@ -68,6 +93,7 @@ export const script = {
     2: 'Thank you for giving it a name.',
     3: 'Thank you for telling me.',
     4: 'Thank you for staying with this.',
+    toward: 'Thank you for telling me.',
     voice: 'Thank you for letting it speak.',
     intent: 'Thank you for telling me.',
     experiment: 'Thank you for trying that.',
@@ -77,7 +103,7 @@ export const script = {
   // ---------- After the entry conversation (docs/slice-4-handoff.md). Draft copy. ----------
 
   /**
-   * The experiment invitation, on entering "What if". With a Turn 4b wish,
+   * The experiment invitation, on entering "What if". With a Turn 4 wish,
    * the wish in their words, never paraphrased.
    */
   invite: (wish: string | null) =>
@@ -86,7 +112,7 @@ export const script = {
       : `In your words: ‘${asSentence(wish)}’ Would it be alright to try that here, and notice what shifts? Undo is one tap.`,
   /** The slim bar while they try. */
   trying: 'Take your time.',
-  /** "I've tried it" with nothing different from "How it is". */
+  /** "I've tried it" with nothing different from "How it is": Keep trying, or Finish without changes. */
   nothingMoved: "Nothing's moved yet — take your time.",
   whatWasThatLike: 'What was that like?',
   /** After the experiment's reflection. */
@@ -108,7 +134,7 @@ export const script = {
     moved: 'sits somewhere else',
   },
 
-  /** Turn 4b's summary clauses, about the map as it is now (summary.ts composes them). */
+  /** Turn 4's summary clauses, about the map as it is now (summary.ts composes them). */
   summary: {
     lead: (clauses: readonly string[]) => `that ${joinClauses(clauses)}`,
     part: (name: string, phrases: readonly string[]) => `${quoted(name)} ${listed(phrases)}`,

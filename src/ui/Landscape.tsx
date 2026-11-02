@@ -1,11 +1,14 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
+import { CLOSE_BELOW, MAP_CENTRE } from '../conversation/geometry'
 import { visibleLinks, visibleParts } from '../model/landscape'
-import type { LandscapeState, Placement } from '../model/types'
+import { LOOKS } from '../model/types'
+import type { LandscapeState, Look, Placement } from '../model/types'
 import { copy } from './copy'
+import { entersOnRive, useRiveEntranceFiles } from './riveEntrances'
 import { LinkThread } from './LinkThread'
 import { PartFigure } from './PartFigure'
-import type { Entrance, Side } from './PartFigure'
+import type { Side } from './PartFigure'
 import { SETTLE_MS, WALK_MS } from './useChoreography'
 import { Atmosphere, Curtains, World } from './World'
 
@@ -18,44 +21,55 @@ interface LandscapeProps {
   onSelect: (id: string | null) => void
   onPlace: (partId: string, placement: Placement) => void
   onRename: (partId: string, name: string) => void
+  onChangeLook: (partId: string, look: Look) => void
   onRemove: (partId: string) => void
   onRemoveLink: (linkId: string) => void
   /** Get to know it, when the guide can ask (otherwise absent). */
   onGetToKnow?: (partId: string) => void
   onClearWords: (partId: string) => void
-  /** The world waits with the person; parts named meanwhile hold their entrance. */
+  /** The world waits with the person (a part named meanwhile still walks in). */
   waiting?: boolean
+  /** Whether any part is still coming in, so the next card can wait until it stands on its spot. */
+  onEntering?: (entering: boolean) => void
   /** The conversation is moving parts: they glide slowly. */
   settling?: boolean
+  /** Show the light that closeness is measured from (once the map is the person's, and its hint names it). */
+  centre?: boolean
   /** Layered above the characters (the conversation card). */
   children?: ReactNode
 }
 
 /**
- * Parts that appear after the landscape first renders walk in (trace →
- * figure) — but not while the world is waiting, so one motion idea plays
- * at a time. The demo map's parts are simply there.
+ * Parts that appear after the landscape first renders walk in from the
+ * moment they're named, while the guide may still be thinking. A CSS
+ * walk-in (trace → figure) is over after WALK_MS; a Rive one says when it
+ * stands on its spot (it may settle a little longer, under the next card).
+ * The demo map's parts are simply there.
  */
-function useEntrances(state: LandscapeState, waiting: boolean): Record<string, Entrance> {
+function useEntrances(state: LandscapeState) {
   // New ids since the last render (undo restoring a removed part isn't new: its id never left).
   const [seen, setSeen] = useState(state.order)
   const [arriving, setArriving] = useState<string[]>([])
+  let next = arriving
   if (seen !== state.order) {
     setSeen(state.order)
-    const fresh = state.order.filter((id) => !seen.includes(id))
-    if (fresh.length > 0) setArriving([...arriving, ...fresh])
+    next = [...next, ...state.order.filter((id) => !seen.includes(id))]
   }
+  // A part taken off the map mid-entrance has nothing left to finish, and an undo brings it back standing.
+  next = next.filter((id) => state.parts[id]?.removed === false)
+  if (next.length !== arriving.length || next.some((id, index) => id !== arriving[index])) setArriving(next)
 
-  // A walk starts when the waiting ends, and is over after WALK_MS.
-  const walking = arriving.join(' ')
+  // A CSS walk-in is over after WALK_MS.
+  const walking = next.filter((id) => !entersOnRive(state.parts[id].look)).join(' ')
   useEffect(() => {
-    if (waiting || walking === '') return
+    if (walking === '') return
     const done = walking.split(' ')
     const timer = setTimeout(() => setArriving((current) => current.filter((id) => !done.includes(id))), WALK_MS)
     return () => clearTimeout(timer)
-  }, [waiting, walking])
+  }, [walking])
 
-  return Object.fromEntries(arriving.map((id) => [id, waiting ? 'held' : 'walking']))
+  const arrived = useCallback((id: string) => setArriving((current) => current.filter((other) => other !== id)), [])
+  return { arriving: next, arrived }
 }
 
 /** Parts arrive one per answer, alternating sides: the first from the left, the next from the right. */
@@ -74,20 +88,29 @@ export function Landscape({
   onSelect,
   onPlace,
   onRename,
+  onChangeLook,
   onRemove,
   onRemoveLink,
   onGetToKnow,
   onClearWords,
   waiting = false,
+  onEntering,
   settling = false,
+  centre = false,
   children,
 }: LandscapeProps) {
   const ref = useRef<HTMLElement>(null)
   const hintId = useId()
   const parts = visibleParts(state)
-  const entrances = useEntrances(state, waiting)
+  const { arriving, arrived } = useEntrances(state)
+  const riveFiles = useRiveEntranceFiles()
+  const entering = arriving.length > 0
+  useEffect(() => onEntering?.(entering), [entering, onEntering])
   const [drafts, setDrafts] = useState<Record<string, Placement | null>>({})
   const glide = settling ? SETTLE_MS : GLIDE_MS
+  // Removed parts keep their figures, so undoing a removal never shows two alike.
+  const taken = new Set(Object.values(state.parts).map((part) => part.look))
+  const freeLooks = LOOKS.filter((look) => !taken.has(look))
 
   const byId = new Map(parts.map((visible) => [visible.part.id, visible]))
   const end = (id: string) => {
@@ -96,7 +119,7 @@ export function Landscape({
     return { point: draft ?? placement, glide: draft ? 0 : glide, name: part.name }
   }
   // A link appears once both of its parts have arrived.
-  const links = visibleLinks(state).filter((link) => link.between.every((id) => !entrances[id]))
+  const links = visibleLinks(state).filter((link) => link.between.every((id) => !arriving.includes(id)))
 
   const style = { '--walk': `${WALK_MS}ms`, '--glide': `${glide}ms` } as CSSProperties
 
@@ -112,6 +135,7 @@ export function Landscape({
       <World waiting={waiting} />
       <Curtains />
       <Atmosphere />
+      {centre && <CentreLight />}
 
       <p id={hintId} className="visually-hidden">
         {copy.partHint}
@@ -126,6 +150,7 @@ export function Landscape({
           from={end(link.between[0])}
           to={end(link.between[1])}
           selected={selectedId === link.id}
+          whatIf={state.mode === 'whatIf'}
           onSelect={() => onSelect(link.id)}
           onRemove={() => onRemoveLink(link.id)}
         />
@@ -137,13 +162,18 @@ export function Landscape({
           part={part}
           placement={placement}
           selected={selectedId === part.id}
-          entrance={entrances[part.id]}
+          whatIf={state.mode === 'whatIf'}
+          entering={arriving.includes(part.id)}
+          onArrived={() => arrived(part.id)}
+          riveFile={riveFiles[part.look]}
           side={sideOf(state, part.id)}
           hintId={hintId}
           landscapeRef={ref}
           onSelect={() => onSelect(part.id)}
           onPlace={(next) => onPlace(part.id, next)}
           onRename={(name) => onRename(part.id, name)}
+          freeLooks={freeLooks}
+          onChangeLook={(look) => onChangeLook(part.id, look)}
           onRemove={() => onRemove(part.id)}
           onGetToKnow={onGetToKnow && (() => onGetToKnow(part.id))}
           onClearWords={() => onClearWords(part.id)}
@@ -155,3 +185,20 @@ export function Landscape({
     </main>
   )
 }
+
+/**
+ * The point closeness is measured from (MAP_CENTRE), made visible: a pool of
+ * light on the meadow, as wide as "close" reaches, so "nearer the light, the
+ * closer it feels" points at something on screen. Flatter than the zone it
+ * stands for, so it lies on the grass instead of rising past the horizon.
+ */
+function CentreLight() {
+  const style = {
+    left: `${MAP_CENTRE.x * 100}%`,
+    top: `${MAP_CENTRE.y * 100}%`,
+    width: `${CLOSE_BELOW * 200}%`,
+    height: `${CLOSE_BELOW * 80}%`,
+  } as CSSProperties
+  return <div className="centre-light" style={style} aria-hidden="true" />
+}
+

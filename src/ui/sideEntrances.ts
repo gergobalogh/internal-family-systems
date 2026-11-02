@@ -8,32 +8,10 @@ import wanderPlan from '../assets/rive/kaleidoscope-backwards.json'
 import tiptoePlan from '../assets/rive/stack-tiptoe.json'
 import pirouettePlan from '../assets/rive/ribbon-pirouette.json'
 import washPlan from '../assets/rive/shell-wave.json'
+import { keyedAt, type SidePlan } from './riveEntrances'
 
-export interface SidePlan {
-  fps: number
-  artboard: { width: number; height: number }
-  figureBox: { x: number; y: number; size: number }
-  feetY: number
-  shadow: { x: number; w: number }
-  /** The edge it comes in from. */
-  from: string
-  /** Artboard x the figure reaches to either side, over the whole entrance. */
-  content: { left: number; right: number }
-  /**
-   * A gait that loops (`Approach`) before `Enter`, as many times as the
-   * screen needs: `travel` artboard px a cycle, nominally, with `profile`
-   * keys of [frame, fraction of a cycle's travel done].
-   */
-  cycle?: { frames: number; travel: number; profile: number[][] }
-  enterFrames: number
-  /**
-   * [frame of `Enter`, fixed artboard px, fraction of the rest, cycles]: how
-   * far it has come. The fixed part is measured from the edge; the fraction
-   * is of whatever distance the screen leaves; the cycles are the gait's
-   * travel, which carries on out of the last loop.
-   */
-  travel: number[][]
-}
+// The app's entrances share these (src/ui/riveEntrances.ts); the spikes import them from here.
+export { keyedAt, type SidePlan }
 
 export interface SideEntrance {
   src: string
@@ -83,17 +61,6 @@ export const sideEntrances = {
 } satisfies Record<string, SideEntrance>
 
 export type SideEntranceName = keyof typeof sideEntrances
-
-/** Keyed values at `frame`, linear between keys of [frame, ...values]. */
-export function keyedAt(keys: number[][], frame: number) {
-  const next = keys.findIndex(([f]) => f > frame)
-  if (next === -1) return keys[keys.length - 1].slice(1)
-  if (next === 0) return keys[0].slice(1)
-  const [f0, ...a] = keys[next - 1]
-  const [f1, ...b] = keys[next]
-  const t = (frame - f0) / (f1 - f0)
-  return a.map((value, i) => value + (b[i] - value) * t)
-}
 
 /** The side entrance the URL asks for (`?<name>` or `?<name>pose=<frame>`), if any. */
 export function requestedSideEntrance(params: URLSearchParams): SideEntranceName | null {

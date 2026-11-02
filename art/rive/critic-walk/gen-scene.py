@@ -747,6 +747,8 @@ def main():
         "cycleFrames": CYCLE,
         "cycleTravel": round(SPEED * CYCLE, 4),
         "stopTravel": [round(p["travel"], 4) for p in stop[: brake + 1]],
+        # Frames Stop goes on after the travel ends, settling into Idle's first pose.
+        "settleFrames": SETTLE,
     }
     with open(os.path.join(HERE, "gait.json"), "w") as handle:
         json.dump(gait, handle, indent=2)

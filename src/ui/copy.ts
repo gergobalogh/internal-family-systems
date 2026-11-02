@@ -1,11 +1,12 @@
-import type { Mode } from '../model/types'
+import type { Look, Mode } from '../model/types'
 
 /** All on-screen wording in one place: short, calm, warm, non-clinical. */
 export const copy = {
   modes: {
     current: {
       title: 'How it is',
-      hint: 'Arrange these as they feel right now.',
+      /** What size and place mean, from the moment the map is handed over. Draft copy. */
+      hint: 'Size shows how much space a part takes up. Nearer the light, the closer it feels.',
     },
     whatIf: {
       title: 'What if…',
@@ -15,11 +16,41 @@ export const copy = {
   modeSwitch: 'Mode',
   undo: 'Undo',
   reset: 'Start over from how it is',
+  /** In the top bar after the conversation, "How it is" only. Draft copy. */
+  addPart: 'Add a part',
+  /** In the top bar after a full run, "What if…" only. Draft copy. */
+  tryExperiment: 'Try an experiment',
   hedge: 'one way to see this',
   rename: 'Rename',
+  /** Size in the part's box, in both modes: the same step as the plus and minus keys. Draft copy. */
+  smaller: 'Smaller',
+  larger: 'Larger',
+  sizeLabel: (name: string) => `Size of ${name}`,
+  /** JEV's pick is an interpretation; the person has the last word on how a part looks. Draft copy. */
+  changeFigure: 'Change figure',
+  figureChoices: (name: string) => `Figures for ${name}`,
+  keepFigure: 'Keep this one',
+  /** Each figure by what it looks like, never by a role ("the Critic"): the person decides what it means. */
+  figureLabels: {
+    lantern: 'A figure holding a lantern',
+    sprout: 'A figure with a sprout on its head, holding a flower',
+    sleeper: 'A figure asleep on a cushion',
+    defender: 'A figure with its arms spread wide',
+    pod: 'A figure wrapped in a soft pod',
+    curled: 'A figure hugging its knees',
+    selfhug: 'A figure hugging itself',
+    ribbon: 'A figure twirling a ribbon',
+    kaleidoscope: 'A figure looking through a kaleidoscope',
+    stack: 'A figure balancing a stack of blocks',
+    map: 'A figure reading a map',
+    doodle: 'A figure drawing',
+    shell: 'A figure holding a shell',
+  } satisfies Record<Look, string>,
   renameLabel: (name: string) => `New name for ${name}`,
   renamePlaceholder: 'What would you call it?',
   remove: 'Not one of my parts',
+  /** In "What if…", in place of Rename, Not one of my parts and Clear what it said: experiments never change who a part is. Draft copy. */
+  changeInHowItIs: 'To rename or remove it, go back to How it is.',
   /** Get to know it (docs/slice-4-handoff.md). Draft copy. */
   getToKnow: 'Get to know it',
   /** Clears a part's voice and intent from the map. Draft copy. */
@@ -34,16 +65,24 @@ export const copy = {
   talk: {
     label: 'Conversation',
     replyLabel: 'Your answer',
+    feelingChoices: 'Feelings mentioned in your words',
     send: 'Send',
     waiting: 'One moment…',
-    /** Turn 4b: same weight as Send, never more — the app doesn't invite agreement. */
+    /** Turn 4: same weight as Send, never more — the app doesn't invite agreement. */
     noChanges: 'No changes',
+    /** On the closing card: the optional part that rarely gets heard. Draft copy. */
+    addQuieter: 'Add a quieter part',
     close: 'Close',
     closeLabel: 'Close the conversation',
     /** After the entry conversation (docs/slice-4-handoff.md). Draft copy. */
     notNow: 'Not now',
     letsTry: "Let's try",
     triedIt: "I've tried it",
+    /** After "Nothing's moved yet". Draft copy. */
+    keepTrying: 'Keep trying',
+    finishUntried: 'Finish without changes',
+    /** Noticing's way out: it won't ask about this part again, so not "Not now". Draft copy. */
+    skip: 'Skip this one',
     enough: "That's enough for now",
     support: 'Find support near you',
     supportLabel: 'Find support near you (opens a helpline directory in a new tab)',
@@ -58,6 +97,8 @@ export const copy = {
     label: (a: string, b: string) => `${a} and ${b}, pulling in different directions, one way to see this`,
     words: 'pulling in different directions',
     remove: 'Remove this link',
+    /** In "What if…", in place of Remove this link. Draft copy. */
+    removeInHowItIs: 'To take it down, go back to How it is.',
     removed: 'Link taken down.',
   },
 }

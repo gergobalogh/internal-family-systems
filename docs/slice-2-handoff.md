@@ -43,9 +43,11 @@ user's name for the part substituted in.
    right now? No need to be organized."* Nothing reads this answer for
    map attributes. It is context for the Turn 1 reflection only.
 2. **Turn 1.** LLM reflection on the free-write, then *"Which feeling has
-   been loudest lately — what would you call it?"* The full answer
-   becomes part 1's name, unaltered. Part 1 appears on the map the moment
-   the answer is sent, at the largest size.
+   been loudest lately — what would you call it?"* The naming words in
+   the answer become part 1's name (the model picks the phrase; the code
+   accepts it only when it appears word for word in the answer, otherwise
+   the answer is used as sent). Part 1 appears on the map the moment the
+   answer is sent, at the largest size.
 3. **Turn 2.** LLM reflection on the Turn 1 answer, then *"And how do you
    feel toward [their name] — curious about it, frustrated with it, or
    something else?"* JEV classifies the answer.
@@ -54,11 +56,13 @@ user's name for the part substituted in.
      branch (step 5).
    - **anything else** (warm/curious, unclear, below threshold, or JEV
      failed) → closing (step 6) with one part.
-5. **Polarization branch.** Fixed reflection *"Sounds like another part
-   has strong feelings about this one."*, then the part 2 naming question,
-   which carries an exit clause (see Locked resolutions §6). A name → part
-   2 appears at default size, clearly separated from part 1. An exit
-   phrase → no part 2.
+5. **Polarization branch.** One sentence reflecting the toward answer,
+   then the fixed line *"There may be another feeling here too."*, then
+   the part 2 naming question *"If it feels separate, what would you call
+   it — or is it part of the same feeling?"*, which carries an exit
+   clause (see Locked resolutions §6). A name → part 2 appears at default
+   size, clearly separated from part 1. An exit phrase → no part 2. A
+   bare "separate" or "yes" → the follow-up *"What would you call it?"*
 6. **Closing.** One fixed line on both paths (see Locked resolutions §8).
    The map is then the user's to work with.
 
@@ -70,11 +74,21 @@ Every pinned question gets the blank-answer rule (Locked resolutions §5).
    in a single reveal at the end. Drag, resize, modes, rename, remove, and
    undo all work on conversation-created parts, including during the
    conversation.
-2. **User-owned names.** The app never invents, extracts, or trims a name.
-   Reflections never introduce a label either: they may only mirror part-names the user already wrote.
+2. **User-owned names.** The app never invents a name. It shortens a
+   naming answer to the naming words: the model picks the phrase, and the
+   code accepts it only when it appears word for word, in one piece, in
+   the answer (ignoring case, spacing and punctuation) — otherwise the
+   answer is used as sent. The name is then cut from the answer itself,
+   so it keeps the person's spelling. A shortening that copies the name
+   of a part already on the map is never used: on the part 2 question it
+   means the same feeling (no part 2); when adding a part, the answer is
+   used as sent. Reflections never introduce a label either:
+   they may only mirror part-names the user already wrote.
 3. **Provenance.** Every attribute records the user text it came from and
    a confidence tag:
-   - Part names → the verbatim answer, tagged high.
+   - Part names → the naming words, tagged high when the answer came back
+     unchanged, extracted when shortened; the full answer stays the source
+     either way.
    - Part 1's size → the answer to the "loudest" question, tagged high.
    - The toward-check result → the Turn 2 answer, with JEV's label and
      probability. Below the threshold → tagged low. JEV failure → tagged
@@ -96,8 +110,8 @@ Every pinned question gets the blank-answer rule (Locked resolutions §5).
    Fallbacks are silent in the UI (no error notices mid-conversation);
    the record shows what happened via the confidence tags.
 
-   Names never depend on AI, so they are unaffected. While a call is
-   pending, show a calm waiting state.
+   Names fall back to the verbatim answer when AI is off or fails. While
+   a call is pending, show a calm waiting state.
 6. **Reflections.** One or two short sentences, non-clinical, hedged ("it
    sounds like…"). Check the output before showing it; on any failure,
    show the fallback line instead. The checks are explicit, documented,
@@ -153,7 +167,8 @@ relationship links, finished art, persistence, accounts, sound.
 ## Acceptance checks
 
 1. **Warm path.** Free-write → name "the worry" → "I'm curious about it"
-   → one part, largest, named exactly "the worry", closing line.
+   → one part, largest, named exactly "the worry" (short names come back
+   unchanged), closing line.
 2. **"I hate it" path.** The same through Turn 1 → "honestly I hate it"
    → polarization reflection → name "the one who yells" → two parts,
    separated, and part 2 is not taken for an exit phrase.
@@ -165,9 +180,10 @@ relationship links, finished art, persistence, accounts, sound.
    labels.
 6. **AI outage.** With the dev switch on, the conversation completes:
    fallback reflections, raw-text name, single-part path, closing line.
-7. **Traceability.** Every name traces to verbatim user text; every
-   non-default attribute traces to user text with a confidence tag;
-   defaults carry the default tag and no source phrase.
+7. **Traceability.** Every name traces to user text — verbatim, or
+   contiguous words of it tagged extracted; every non-default attribute
+   traces to user text with a confidence tag; defaults carry the default
+   tag and no source phrase.
 8. **Blank answers.** A blank answer to any question re-asks the same
    question with "Take your time." in front. No placeholder names.
 9. **Live edits.** Drag part 1 during Turn 2, then get part 2 → part 1
@@ -176,7 +192,8 @@ relationship links, finished art, persistence, accounts, sound.
 10. **Slice 1 behavior.** Slice 1's acceptance checks still pass on the
     demo map.
 11. **Exit-lookalike name.** On the branch, "just one more" becomes a part
-    named exactly that — exit detection never fires inside a longer answer.
+    named exactly that — exit detection never fires inside a longer answer,
+    and the extractor returns it unchanged.
 12. **User-echo.** Turn 1 answer "anxiety" → the Turn 2 reflection may
     repeat "anxiety" instead of falling back. The word lists block only
     terms the app introduces.
@@ -211,11 +228,13 @@ relationship links, finished art, persistence, accounts, sound.
 5. **Blank answers.** Re-ask the identical question with "Take your time."
    in front, until answered. This applies to all four scripted questions:
    Turn 0, Turn 1, the toward-check, and the part 2 naming question.
-6. **Exit clause.** The part 2 naming question is pinned as: *"What would
-   you call that part — or is it all one feeling?"* (Confirmed
-   2026-10-13. The exit clause offers a second valid answer to one
-   question, not a second question, so it complies with the
-   fused-question guardrail.)
+6. **Exit clause.** The part 2 naming question is pinned as: *"If it
+   feels separate, what would you call it — or is it part of the same
+   feeling?"* (Reworded 2026-10-16; was *"What would you call that part
+   — or is it all one feeling?"* The exit clause offers a second valid
+   answer to one question, not a second question, so it complies with the
+   fused-question guardrail.) A bare "separate" or "yes" gets the
+   follow-up *"What would you call it?"*
    - **Detection:** the normalized answer (lowercased, trimmed, squeezed
      whitespace, trailing punctuation stripped) must EQUAL a documented
      exit form. Never substring matching, so a name like "just one more"
@@ -225,9 +244,13 @@ relationship links, finished art, persistence, accounts, sound.
    - Padded exits ("I think it's all one, really") fall through and become
      parts the user removes (they're declining a second part, so removal —
      not rename — is the correction); JEV-based exit detection is a slice 3
-     hardening item.
-7. **Names are stored verbatim and displayed truncated.** The full text
-   is never altered. The 40-character rename cap is a known, documented
+     hardening item. One padded form is caught (2026-10-16): an answer
+     naming part 1 ("it's just the same as not feeling good enough")
+     shortens to part 1's name, which counts as the exit.
+7. **Names are stored as the naming words and displayed truncated.**
+   The extraction is accepted only when it appears word for word in the
+   answer; anything else is stored verbatim. The full text is never
+   rewritten. The 40-character rename cap is a known, documented
    limit.
 8. **Closing line** is scripted, not generated, and the same on both
    paths: "Here's what I'm seeing so far — it's yours to rearrange."

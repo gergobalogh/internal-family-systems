@@ -1,7 +1,7 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react'
 import type { ChangeEvent, KeyboardEvent, MouseEvent, RefObject } from 'react'
 import { ANSWERED_STEPS } from '../conversation/flow'
-import type { ConversationState, Line, Step } from '../conversation/flow'
+import type { ConversationState, Line, Step, Turn1Ask } from '../conversation/flow'
 import type { Talk } from '../conversation/useConversation'
 import { copy } from './copy'
 import type { Phase } from './useChoreography'
@@ -10,7 +10,10 @@ import type { Phase } from './useChoreography'
 export const SUPPORT_URL = 'https://findahelpline.com/'
 
 /** What the person can do on a card, from the conversation hook. */
-type CardActions = Pick<Talk, 'answer' | 'noChanges' | 'dismiss' | 'decline' | 'accept' | 'tried'>
+type CardActions = Pick<
+  Talk,
+  'answer' | 'chooseTurn1' | 'noChanges' | 'dismiss' | 'decline' | 'accept' | 'tried' | 'keepTrying' | 'addQuieter'
+>
 
 interface ConversationProps {
   state: ConversationState
@@ -52,7 +55,15 @@ export function Conversation({ state, shown, phase, actions }: ConversationProps
       </p>
       {shown !== null && (
         <div className="card-slot">
-          <Card key={shown} lines={lines} step={state.step} phase={phase} current={current} actions={actions} />
+          <Card
+            key={shown}
+            lines={lines}
+            step={state.step}
+            turn1={state.turn1}
+            phase={phase}
+            current={current}
+            actions={actions}
+          />
         </div>
       )}
     </>
@@ -63,15 +74,17 @@ interface CardProps {
   lines: Line[]
   /** The conversation's step when this card appeared. */
   step: Step
+  turn1: Turn1Ask | null
   phase: Phase
   /** This card is the conversation's current one, and settled on screen. */
   current: boolean
   actions: CardActions
 }
 
-function Card({ lines, step: stepNow, phase, current, actions }: CardProps) {
+function Card({ lines, step: stepNow, turn1: turn1Now, phase, current, actions }: CardProps) {
   // The card keeps its own shape while it ghosts: no layout jump.
   const [step] = useState(stepNow)
+  const [turn1] = useState(turn1Now)
   const cardRef = useRef<HTMLElement>(null)
   const slim = step === 'trying'
 
@@ -91,7 +104,7 @@ function Card({ lines, step: stepNow, phase, current, actions }: CardProps) {
       </div>
 
       {ANSWERED_STEPS.includes(step) ? (
-        <Reply step={step} phase={phase} interactive={current} cardRef={cardRef} actions={actions} />
+        <Reply step={step} turn1={turn1} phase={phase} interactive={current} cardRef={cardRef} actions={actions} />
       ) : (
         <div className="card__actions">
           {step === 'invite' && (
@@ -110,12 +123,27 @@ function Card({ lines, step: stepNow, phase, current, actions }: CardProps) {
               {copy.talk.triedIt}
             </button>
           )}
+          {step === 'nothingMoved' && (
+            <>
+              <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.keepTrying}>
+                {copy.talk.keepTrying}
+              </button>
+              <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.decline}>
+                {copy.talk.finishUntried}
+              </button>
+            </>
+          )}
           {step === 'paused' && (
             <a className="card__button" href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" aria-label={copy.talk.supportLabel}>
               {copy.talk.support}
             </a>
           )}
-          {(step === 'closed' || step === 'paused') && (
+          {step === 'closing' && (
+            <button type="button" className="card__button card__button--quiet" disabled={!current} data-opens-card onClick={actions.addQuieter}>
+              {copy.talk.addQuieter}
+            </button>
+          )}
+          {(step === 'closing' || step === 'closed' || step === 'paused') && (
             <button type="button" className="card__button card__button--quiet" aria-label={copy.talk.closeLabel} onClick={actions.dismiss}>
               {copy.talk.close}
             </button>
@@ -128,6 +156,7 @@ function Card({ lines, step: stepNow, phase, current, actions }: CardProps) {
 
 interface ReplyProps {
   step: Step
+  turn1: Turn1Ask | null
   phase: Phase
   interactive: boolean
   cardRef: RefObject<HTMLElement | null>
@@ -135,7 +164,7 @@ interface ReplyProps {
 }
 
 /** The field and its buttons, for a question that waits for a typed answer. */
-function Reply({ step, phase, interactive, cardRef, actions }: ReplyProps) {
+function Reply({ step, turn1, phase, interactive, cardRef, actions }: ReplyProps) {
   const [draft, setDraft] = useState('')
   const fieldRef = useRef<HTMLTextAreaElement>(null)
   const fieldId = useId()
@@ -198,9 +227,11 @@ function Reply({ step, phase, interactive, cardRef, actions }: ReplyProps) {
       ? { label: copy.talk.noChanges, onClick: () => actions.noChanges(copy.talk.noChanges) }
       : step === 'intent'
         ? { label: copy.talk.enough, onClick: actions.decline }
-        : step === 'experiment' || step === 'voice' || step === 'noticing'
-          ? { label: copy.talk.notNow, onClick: actions.decline }
-          : null
+        : step === 'noticing'
+          ? { label: copy.talk.skip, onClick: actions.decline }
+          : step === 'unheard' || step === 'newPart' || step === 'experiment' || step === 'voice'
+            ? { label: copy.talk.notNow, onClick: actions.decline }
+            : null
 
   return (
     <form
@@ -210,6 +241,22 @@ function Reply({ step, phase, interactive, cardRef, actions }: ReplyProps) {
         submit(draft)
       }}
     >
+      {step === 'loudest' && turn1?.kind === 'choose' && (
+        <div className="card__choices" role="group" aria-label={copy.talk.feelingChoices}>
+          {turn1.phrases.map((phrase) => (
+            <button
+              key={phrase}
+              type="button"
+              className="card__button card__button--quiet card__choice"
+              disabled={!interactive}
+              onMouseDown={keepFocus}
+              onClick={() => actions.chooseTurn1(phrase)}
+            >
+              {`‘${phrase}’`}
+            </button>
+          ))}
+        </div>
+      )}
       <label className="visually-hidden" htmlFor={fieldId}>
         {copy.talk.replyLabel}
       </label>

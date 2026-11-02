@@ -1,5 +1,6 @@
 import { POSITION_MAX, POSITION_MIN, SCALE_MAX, SCALE_MIN } from '../model/landscape'
 import type { LandscapeState, Placement } from '../model/types'
+import type { PartKind } from './contract'
 
 /**
  * Where the conversation puts parts, and how Turn 3 and corrections move
@@ -38,6 +39,34 @@ export const STARTING_SPOTS = [
   { x: 0.23, y: 0.6 },
   { x: 0.36, y: 0.8 },
 ] as const
+
+/**
+ * Kind-based starting rings. These are only opening positions: they never
+ * count as the person saying a part feels close or far, and dragging wins.
+ * All candidates stay left of the conversation card on wide screens.
+ */
+export const KIND_SPOTS: Record<PartKind, readonly Point[]> = {
+  guards: [
+    { x: 0.275, y: 0.64 },
+    { x: 0.285, y: 0.695 },
+    { x: 0.285, y: 0.585 },
+  ],
+  escapes: [
+    { x: 0.2, y: 0.64 },
+    { x: 0.42, y: 0.86 },
+    { x: 0.42, y: 0.42 },
+  ],
+  hurts: [
+    { x: 0.08, y: 0.76 },
+    { x: 0.18, y: 0.91 },
+    { x: 0.12, y: 0.44 },
+  ],
+  other: STARTING_SPOTS,
+}
+
+/** Confident kinds choose a ring; an unsure reading keeps the neutral spots. */
+export const startingSpotsForKind = (kind: PartKind | null): readonly Point[] =>
+  kind === null ? STARTING_SPOTS : KIND_SPOTS[kind]
 
 /** The unheard part's spots: at the meadow's edges (Brief 2: "rarely heard" → edge + small). */
 export const EDGE_SPOTS = [

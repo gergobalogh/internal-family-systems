@@ -3,7 +3,7 @@ import { MIN_VISIBLE_GAP, bucketOf, radiusOf } from './geometry'
 import { script } from './script'
 
 /**
- * Turn 4b's map summary: a deterministic template, never LLM prose, so it
+ * Turn 4's map summary: a deterministic template, never LLM prose, so it
  * can't misreport. Sizes and positions describe the live layout ("How it
  * is", or "What if…" for the map note), but only where they come from an
  * answer or the person's own edits —
@@ -29,7 +29,7 @@ export interface SummaryPart {
   sizeFromAnswer: boolean
   /** Turn 3 answered its distance (one-part question). */
   positionFromAnswer: boolean
-  /** The part that rarely gets heard (Turn 4a). */
+  /** The part that rarely gets heard (added from the closing card). */
   unheard: boolean
 }
 

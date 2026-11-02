@@ -15,17 +15,17 @@ export type Phase = 'card' | 'waiting' | 'arriving'
 
 /**
  * The input ritual's timing (docs/input-choreography-plan.md): send → ghost
- * → world waits → trace walks in → next card. One motion idea at a time:
- * the next card is held back while the world moves.
+ * → world waits, and a part named meanwhile walks in → next card. The next
+ * card is held back while the world moves, and while any part is still
+ * entering (`entering`, from the landscape: a Rive walk-in takes as long as
+ * its gait needs).
  */
-export function useChoreography(state: ConversationState) {
+export function useChoreography(state: ConversationState, entering: boolean) {
   const waiting = state.pending !== null
   const [shown, setShown] = useState(state.card)
   const [arriving, setArriving] = useState(false)
   /** When the world's current motion ends (performance.now() time). */
   const motionUntil = useRef(0)
-  /** A part was named while waiting: its walk starts when the waiting ends. */
-  const walkOwed = useRef(false)
   // Effects from before the first render (the dev jump) are already on the map, not motion to wait for.
   const seen = useRef(state.effects.length)
 
@@ -33,23 +33,19 @@ export function useChoreography(state: ConversationState) {
     const fresh = state.effects.slice(seen.current)
     seen.current = state.effects.length
     const now = performance.now()
+    // A part walks in from the moment it's named, waiting or not. The
+    // landscape's `entering` covers the walk itself; this covers the render
+    // before it reports.
     if (fresh.some((action) => action.type === 'addPart')) {
-      if (waiting) walkOwed.current = true
-      else motionUntil.current = Math.max(motionUntil.current, now + WALK_MS)
+      motionUntil.current = Math.max(motionUntil.current, now + WALK_MS)
     }
     if (fresh.some((action) => action.type === 'place' || action.type === 'remove' || action.type === 'unlink')) {
       motionUntil.current = Math.max(motionUntil.current, now + SETTLE_MS)
     }
-  }, [state.effects, waiting])
+  }, [state.effects])
 
   useEffect(() => {
-    if (waiting || !walkOwed.current) return
-    walkOwed.current = false
-    motionUntil.current = Math.max(motionUntil.current, performance.now() + WALK_MS)
-  }, [waiting])
-
-  useEffect(() => {
-    if (waiting || state.card === shown) return
+    if (waiting || entering || state.card === shown) return
     const delay = motionUntil.current - performance.now()
     const show = () => {
       setArriving(false)
@@ -62,7 +58,7 @@ export function useChoreography(state: ConversationState) {
     setArriving(true)
     const timer = setTimeout(show, delay)
     return () => clearTimeout(timer)
-  }, [waiting, state.card, shown])
+  }, [waiting, entering, state.card, shown])
 
   // The new card is owed from the render the waiting ends: never un-ghost the old one first.
   const phase: Phase = waiting ? 'waiting' : arriving || state.card !== shown ? 'arriving' : 'card'

@@ -4,7 +4,8 @@
 It backs in with the toy waddle, its eye still to the kaleidoscope, leaning
 back to look up through it: not looking where it is going. It stops short
 with a small bump, as if it had backed into something, and keeps looking. It
-is a review spike: hidden unless the URL has `?kaleidoscope`, or
+plays in the app when a part gets the Kaleidoscope. The review spike is
+still there: hidden unless the URL has `?kaleidoscope`, or
 `?kaleidoscopepose=<frame>` to hold one frame of the rock (0–72) in the
 middle of the screen. The method is in
 [rive-entrance-playbook.md](rive-entrance-playbook.md).
@@ -29,12 +30,20 @@ assets.
 
 The same as Self-hug's waddle ([selfhug-waddle-notes.md](selfhug-waddle-notes.md)),
 mirrored: `from: "right"` in `wander.json`, the `kaleidoscope` entry in
-`src/ui/sideEntrances.ts`. `Approach` is one slow rock (72 frames), `Enter`
+`src/ui/sideEntrances.ts` (in the app, `src/ui/RiveEntrance.tsx` with
+`sideRoute` in `src/ui/riveEntrances.ts`). `Approach` is one slow rock (72 frames), `Enter`
 (136 frames) keeps backing up for 20 frames, stops in 6 and settles, and
 `Idle Glance` (600 frames) loops after that. `Idle` (360 frames) slowly scans
 up and down. It is what the page plays alone with reduced motion, and the
 first and last halves of `Idle Glance`. Its feet pivot at the outer corners
 of the soles, (186, 602) and (322, 592) in the tile.
+
+In the app the route backs it in from its far edge: whole rocks, at most
+three (as many as fit the Lantern's 5 s walk), and the far edge is further
+than that on every screen, so it always starts on the map and fades in. A
+part from the right is mirrored, so it backs in from the map's left
+instead. The next card comes when the bump stops it (frame 26 of `Enter`),
+and the still figure takes over when `Enter` ends.
 
 ## The glance
 

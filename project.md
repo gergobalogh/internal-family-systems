@@ -144,3 +144,201 @@ This decision will determine the tone of the responses, what happens after a cha
 - **Wish:** Turn 4b's wish is quoted in the person's words, never paraphrased.
 - **Safety:** every free-text answer, entry conversation included, is screened (local phrase list + AI check) before anything reads it; a hit drops the answer, shows a fixed pause with a helpline directory link, and quiets the guide for the session. This is a sanctioned change to slices 2–3.
 - Spec: [docs/slice-4-handoff.md](docs/slice-4-handoff.md). All new copy is draft.
+
+### 2026-10-15 — Figures fit their parts
+
+- **Reverses slice 2's rule** that "figures carry no meaning, never matched to a part's character". A shuffled pick of three gave ‘the worry’ the Sleeper and ‘the one who yells’ the Sprout, and a figure that contradicts the part reads as a misreading of the person. This follows the character principle above: appearance can suggest a posture without declaring what a part "really is".
+- **JEV picks the figure** when a part is named, from the name (and Turn 0's words when the name says little), as a Choice over each character's role. The part gets the most probable figure no part of the session has had. With AI off or failing, the session's shuffled order stands in.
+- **All 13 characters** from [docs/character-entrances.md](docs/character-entrances.md) are map figures now (this lifts 2026-10-14's "no bigger cast yet"), each scaled to the same felt area as the first three, because on the map size means influence.
+
+### 2026-10-16 — The quieter part is optional
+
+- **Why:** a review counted the ordinary run at six responses (Turns 0, 1, 2, 3, 4a, 4b), up to eight with the two naming follow-ups, against "about 4 turns" in docs/how-it-works.md and "three or four exchanges" above. With no progress sign and no way to finish early, that starts to feel like an intake form.
+- **Change:** the entry conversation is four questions (what's weighing on you, the loudest feeling, how you feel toward it, where it sits), then the map check. The old Turn 4a, "Is there a part that rarely gets heard?", moves to the closing card as an optional "Add a quieter part" button. It asks only for the name, so the bare-"yes" follow-up is gone; "no" or "not sure" adds nothing. The part still joins small, at the edge.
+- **Numbering:** Turn 4b is now Turn 4. Slice handoff docs keep the old numbers.
+- This changes the script pinned in slices 2–3. The new lines are draft copy.
+
+### 2026-10-16 — "What if…" only rearranges
+
+- **Why:** a review found "How it is stays as it is" wasn't true. Removing a part in "What if…" removed it from "How it is" too, and "How it is"'s Undo couldn't bring it back (each mode has its own undo); only "What if…"'s Undo could.
+- **Change:** in "What if…" a part can be moved and resized, nothing else. Rename, Not one of my parts, Clear what it said, and Remove this link appear only in "How it is"; in "What if…" a line points back there. Get to know it stays in both: it adds the person's words rather than changing the map.
+- **Not taken:** the review's "Leave out of this What if" (a part absent from one experiment). Slice 1 ruled that out: wishing a part gone would rehearse exiling it, against the no-bad-parts principle. Making a part smaller and further away covers that wish. Presence stays global.
+- The state model is unchanged; the rule is enforced where the map offers the actions. The new lines are draft copy.
+
+### 2026-10-16 — Optional steps stay open
+
+- **Why:** a review found several "Not now"s meant "never again this session", and the closing card's "Add a quieter part" meant "decide now or lose it". That's quiet pressure.
+- **Experiment:** the app still invites once, on first entering "What if…". After that, "Try an experiment" stays in the "What if…" bar after a full run, as often as the person likes. Tapping it goes straight to "Take your time." because the tap is the permission. "Nothing's moved yet" now offers Keep trying or Finish without changes; before, the only way out of the trying bar was to move something.
+- **Noticing:** still asks once per part. Its way out says "Skip this one" instead of "Not now". A snooze was not taken: it would bring an app-started question back uninvited.
+- **Adding parts:** "Add a part" stays in the "How it is" bar after the conversation, until all 13 figures are used. It asks for a name; the part joins at the usual size at a starting spot. The closing card keeps "Add a quieter part" (small, at the edge, "rarely gets heard"): the question that surfaces quiet parts is worth asking once, and it's no longer the only way in.
+- All new lines are draft copy.
+
+### 2026-10-16 — The person has the last word on a part's figure; the second part is a question
+
+- **Change figure:** JEV's pick reads meaning into a part, so a wrong one is a misreading the person should be able to fix as easily as a name. The part's box (in "How it is", like every identity change) offers the figures no other part has, as still thumbnails, and Undo changes it back. Each is labelled by what it looks like ("A figure holding a lantern"), never by a role. Removed parts keep their figures, so undoing a removal never shows two alike; new parts get a figure no part on the map has.
+- **The second part:** "Sounds like another part has strong feelings about this one." stated a conclusion and said "part" before the person had. It's now "There may be another feeling here too. If it feels separate, what would you call it — or is it part of the same feeling?" The review suggested a separate "separate or same?" step first; not taken, because it adds a turn on that path, and people often find out whether a feeling is separate by trying to name it. A bare "separate" or "yes" gets "What would you call it?"; "same", "part of the same feeling" or "no" keeps one part.
+- This changes the script pinned in slice 2. The new lines are draft copy.
+
+### 2026-10-16 — The map explains itself; size has buttons
+
+- **Why:** a review asked for a line explaining what size and distance mean, and visible size controls (the plus/minus keys are undiscoverable, and the round handle is an unlabelled 18px dot).
+- **The centre is visible now.** The review's wording, "distance from the house", would have been untrue: closeness is measured from `MAP_CENTRE`, left of the house (so parts placed "close" in Turn 3 don't hide behind the card), and nothing on screen marked it. A soft pool of light now sits there from the moment the map is handed over, in both modes. It's as wide as "close" reaches, flatter so it lies on the grass.
+- **The "How it is" hint says it:** "Size shows how much space a part takes up. Nearer the light, the closer it feels." It replaces "Arrange these as they feel right now." It's in the bar rather than on the closing card, so it stays.
+- **[Smaller] [Larger]** on their own row at the top of the part's box, in both modes (size is what "What if…" is for), with the plus/minus keys' step; undoable, and disabled at the limits.
+- The new lines are draft copy, and the light's strength is a first pass.
+
+### 2026-10-16 — Names are quoted in every question
+
+- **Why:** the comment at `script.ts:10` says names inside the guide's sentences are quoted, but Turn 2's toward-check and both Turn 3 wordings interpolated the name raw. Fine for "the worry", unreadable once a sentence-long answer became a name.
+- **Change:** all three use `quoted()`. This changes the script pinned in slice 2; the new lines are draft copy.
+
+### 2026-10-16 — The lantern judges; the curled feels
+
+- **Why:** "not good enough", "feeling judged" and "shame" all picked the lantern — the critic who holds standards. But Turn 1 asks for the *feeling*, and the one who feels judged isn't the one judging. Moving one phrase would leave "feeling controlled" and "feeling like a failure" on the same trap.
+- **Change:** inadequacy and shame words moved to curled's criterion; the lantern keeps judging, criticizing, correcting, pushing to do better, the inner critic, perfectionism, self-judgement and the harsh inner voice. The figure question now also says: when the name says how something feels, match the one who feels it, not the one causing it. Checked on twelve names before and after: the felt states moved to curled, the critics stayed on the lantern, and the Map, Defender and control names didn't move.
+
+### 2026-10-16 — Naming answers are shortened to the name
+
+- **Why:** an annoyed repeat ("as i've told you. not feeling good enough.") became the part's name verbatim — on the map and inside later questions.
+- **Change:** reverses slice 2's "never extracts or trims" (invents is still banned). The model picks the naming phrase; the code accepts it only when it appears word for word, in one piece, in the answer — otherwise the answer is used as sent. It runs side by side with the figure call, so no extra wait. Short names come back unchanged; AI off or failing falls back to verbatim. Shortened names are tagged `extracted`, with the full answer as the source.
+- The slice-2 handoff is updated (the flow, Behaviors §§2–3 and 5, Locked §§6–7, checks #1, #7 and #11), including its already-stale polarization lines.
+- **No copies:** a review found that "honestly it's just the same as not feeling good enough", on the part 2 question, shortened to part 1's exact name: a duplicate part, and Turn 3 asking "Which feels closer — ‘not feeling good enough’ or ‘not feeling good enough’?" A shortening that copies a part on the map is never used. On the part 2 question it counts as "part of the same feeling" (no part 2, tagged `extracted`): not creating a part is the safe direction. When adding a part, the answer is used as sent. Duplicates the person types in full still render as-is (slice 3's rule).
+- **Their spelling:** the code checks the model's phrase ignoring case and punctuation, so the stored name is now cut from the answer itself rather than taken from the model's copy.
+
+### 2026-10-16 — The frustrated path reflects first
+
+- **Why:** it was the only path that asked the next question without reflecting on the answer just given — "Frustrated with it." met "There may be another feeling here too." with no acknowledgement in between.
+- **Change:** a new `toward` reflection turn (one sentence on how they feel toward the part) comes before the fixed line and the naming question. The fixed line stays: "it" in the naming question refers to it. If part 1 leaves while reflecting, the answer is reflected as Turn 3 instead. This changes the script pinned in slice 2; the new lines are draft copy.
+
+
+### 2026-10-16 — The four-turn journey: every answer brings someone (planned)
+
+- **Why:** trying the app, Turn 1 asked "Which feeling has been loudest lately?" right after the person had named it, and a session ended with one or two parts. The goal is 3–4 characters on the map in about four answers, standing in a way that says something true.
+- **Shape:** each turn is a row of reviewed lines; JEV picks one from what's known so far, with today's line as the default. Rows only move forward. Not a tree: a tree of three versions over four turns is 40 lines, and later lines depend on what's known, not on the path taken.
+- **Turn 1** confirms a feeling the free-write already named ("Would you call it ‘X’ — or something else?", their words, checked word for word) or offers their several feelings as buttons. **Turn 3** replaces "close or off to the side?" with "what else is here?": the free-write's other feelings as one-tap adds, or a quieter-feeling question, worded "standing in front of" when a part on the map guards or escapes. **Turn 4** invites dragging parts nearer the light.
+- **Kind:** JEV sorts each part as guards, escapes, hurts or other, used only for its starting spot (guards near the light, hurts on the far ring) and Turn 3's wording. Never shown: the no-labels rule stands.
+- **Retires:** closeness as a question (slice 3), the quieter part as closing-card-only (earlier today; the closing card keeps it too), and "nothing reads Turn 0 for map attributes" (slice 2).
+- **Rive entrances come first**, one character at a time.
+- Plan: [docs/four-turn-journey-plan.md](docs/four-turn-journey-plan.md). All new lines are draft copy.
+
+### 2026-10-16 — Rive entrances in the app: the Critic first
+
+- **Change:** the Critic's Rive walk plays in the app when a part gets the lantern, replacing the CSS walk-in for that figure (`src/ui/LanternWalk.tsx`; which figures enter on Rive is listed in `src/ui/riveEntrances.ts`). The rest follow one at a time. Reduced motion: no walk, the part appears.
+- **Timing:** the next card now waits until every part has finished entering, reported by the landscape, instead of a fixed 2.6 s. A walk is capped at 5 s (`WALK_MAX_MS`): further than that from its edge, it starts on the map and fades in as it walks. Measured: on a phone, part 1 walks all the way from the edge in 4.3 s; on desktop it would need 5.7 s, and a part 2 from the right 19 s.
+- **Handover:** the still figure fades in over the walk's last frame for 500 ms. The scene was built from a cleaned copy of the figure (no grass rim at the feet, the far leg evened), about 2% of the figure's pixels differ, all at the feet, and a straight swap showed it.
+- **Not changed then:** parts named while the world waits still held until the waiting ended. With a longer walk, sending an answer to the next card grew to 10–13 s (changed the same day, below).
+
+### 2026-10-16 — A part walks in while the guide thinks
+
+- **Why:** with the Rive walk, sending a naming answer to seeing the next card took 10–13 s, because each step waited for the one before: risk check, then figure and name, then the reflection, then the walk.
+- **Change:** after the risk check (which stays first, so nothing reads an answer before it's screened), the figure, the name shortening and the reflection that follows the naming all start together; the flow uses the early reflection when its turn comes. A part walks in the moment it's named, while the world is still waiting, instead of holding until the reflection arrives. This bends the input choreography's "the world waits, then one part walks". Each Rive entrance's scene loads once when the map first shows, so a walk starts at once.
+- **Measured** (AI on): answer to next card 8.0 s on desktop (was 10.0), 7.5 s on a phone (was 13.3), 7.4 s for a part 2 from the right (was 11.0). One reflection call per naming, not two. The walk starts 20 ms after the part is named.
+- **What's left:** the name shortening (Claude, 1.8–2.4 s) is now what the part waits for; the figure takes 0.2–0.25 s.
+
+### 2026-10-16 — Curled peeks in, in the app
+
+- **Change:** a part that gets Curled comes in on its Rive entrance: it peeks in from the edge, backs off, and comes the rest of the way in three slides. The Lantern's walk component became one for every Rive entrance (`src/ui/RiveEntrance.tsx`); each figure's route is in `src/ui/riveEntrances.ts`, the Lantern's from its gait and Curled's from its side plan.
+- **Scale:** the map's later ten figures are their scene tiles shrunk to the same felt area (Curled to 77%). `scripts/app-figures.py` now writes those scales to `src/assets/figures/figure-scales.json`, and the entrance scales its canvas the same way about the figure's feet, so the last frame matches the still figure (0.2–0.4% of pixels off, against the Lantern's 2%).
+- **Distance:** Curled takes 6.2 s however far it comes. Its three slides stretch to the screen up to 2000 artboard px in all; further than that they'd look yanked, so the part starts on the map and fades in as it peeks, like a capped Lantern. On desktop that happens to a part 2 from the right; a part 1 and every part on a phone come from the edge.
+- **Measured** (AI on): answer to next card 8.9 s for a desktop part 1, 8.9 s on a phone, 8.4 s for a part 2 from the right, a second or so more than the Lantern, because its entrance is longer. The next card comes when Curled settles.
+
+### 2026-10-16 — The Map walks its route in the app; the next card comes on arrival
+
+- **Change:** a part that gets the Map walks its planned route on the map, with the stitched trail behind it. The route became a point in two dimensions, so the Map's legs fit the same component as the Lantern and Curled; each route also says which of the machine's inputs to set when (the Lantern's `arrive`, the Map's `check` and `arrive`), and may leave a trail. The trail is drawn in the part's figure box, so a part from the right gets it mirrored, and it fades as the Map arrives.
+- **Cap:** at most four rocks over both legs (`ROCKS_MAX`). Its stop at the corner and its last check take 5 s whatever the route, so a part further away starts on the map and fades in, like the other two. On desktop a part 1 needed five.
+- **The next card comes on arrival:** an entrance now reports when the figure stands on its spot, and the next card comes then, while it finishes settling (the Lantern 0.7 s, Curled 1 s, the Map 2 s, its last look at the map). Before, the card waited for the settle, which for the Map would have held it 2 s longer. The still figure still takes over at the very end.
+- **Measured** (AI on): answer to next card 8.1 s for a desktop part 1 and 8.3 s for a part 2 from the right, with the Map arriving 6 s after it's named; on a phone 9.7 s, in a run where the name took 4.4 s to come back. Its last frame matches the still figure to 0.1–0.7% of pixels on desktop, 2.5% on a phone.
+
+### 2026-10-16 — The Defender and the Sleeper come down from above, in the app
+
+- **Change:** a part that gets the Defender floats down by parachute, and one that gets the Sleeper drifts down like a leaf, on their Rive entrances. The route takes the room above the part as well as across it, and a route can keep the shadow on the ground (gathering as the figure comes down) instead of under the feet. Each descent's plan now records how long its landing lasts (`landFrames`, from its gen-scene.py; the Pod's too), so the hand-over to the still figure waits for the Defender's canopy to collapse and fade, and the Sleeper's breath. The scenes regenerate unchanged.
+- **Cap:** made for a larger figure, the drop would take 6–11 s at the app's sizes. A descent takes at most two swings and comes down at most twice as fast as its spike; further than that, it starts lower and fades in. On desktop that happens to the Sleeper, on a phone to the Defender.
+- **Measured** (AI on): touchdown 6.0 s after the part is named (Defender and Sleeper, desktop and phone); the next card comes then, and the Defender's canopy collapses beside it for 3 s more. Last frames match the still figures to 0.0–1.2% of pixels.
+
+### 2026-10-16 — Self-hug rocks in, in the app
+
+- **Change:** a part that gets Self-hug rocks in from its side like a wind-up toy, glides to a stop and leans toward the space beside it, on its Rive entrance. It is the first side entrance with a gait that loops: the side route now loops whole rocks of `Approach`, as many as come nearest the gait's own travel, sets `arrive` during the last, and carries the glide out of it on at their speed, as the spike does. The Kaleidoscope's plan has the same shape, so it can use this route too.
+- **Cap:** at most as many rocks as fit the Lantern's 5 s walk with the glide out of the last (four for Self-hug), covering at most half a rock more than they would at its own pace. Its feet slip anyway, so a rock fitted a little faster doesn't show. Further than that, it starts on the map and fades in. On desktop a part 1 starts just inside the map (20 px in), and a part 2 from the right fades in, like the Lantern. On a phone it comes from the edge in three rocks.
+- **Measured** (AI on): it stands on its spot 4.9 s after it starts on desktop, 3.8 s on a phone, and 5.1 s as a part 2 from the right; the next card comes then. Its lean plays on under the card for 3.3 s more, and the still figure takes over 8.2 s after it started. Its last frame matches the still figure to 0.2% of pixels on desktop and 0.9–1.1% on a phone or mirrored. In these runs the name shortening took 3.0–6.0 s, so answer to next card was 6.8–11.1 s.
+
+### 2026-10-16 — The Pod drops in, in the app
+
+- **Change:** a part that gets the Pod drops in from just above the map on its Rive entrance, and its padding swallows the landing: a deep squash with no bounce, a hold, and a slow rise. Unlike the Defender and the Sleeper it falls rather than drifts, so it has a route of its own (`fallRoute`): it speeds up evenly to the one touchdown speed its squash was made for (20 artboard px a frame), over whole `Fall` cycles, and stops dead on touchdown, since `Land` has no flare. The descents' gathering shadow became a helper the two routes share.
+- **Cap:** at most six cycles (2.4 s), which is what a desktop part 1 takes at its spike's pace (starting at a quarter of the touchdown speed). Falling further in the same time would mean speeding up too gently to read as a drop, so a longer fall comes into view already falling at up to half the touchdown speed; further than that, it starts lower and fades in, like the Defender on a phone. A phone part needs 3,600 artboard px and a desktop part 2 3,500, so both fade in.
+- **Measured** (AI on): touchdown 2.3–2.5 s after it starts (desktop part 1, phone, part 2 from the right), and the next card comes then; its landing plays on under the card for 2.1 s. Its last frame matches the still figure to 1.1% of pixels on desktop, 0.4% for the part 2, and 2.8% on a phone, all a sub-pixel outline from the scene's breathing and resampling (no offset). Answer to next card was 4.9–8.8 s, with the name shortening taking 2.3–5.4 s.
+
+### 2026-10-16 — The Stack and Ribbon come in, in the app
+
+- **Change:** a part that gets the Stack tiptoes in from its side, stops, and catches its tower as it teeters; one that gets Ribbon pirouettes in on one foot, hops one last turn and lands balanced. Both are on their Rive entrances (mirrored for a part from the right). Their plans have Self-hug's shape, so they use the same side route with no new code beyond their entries, and their map figures are their scene tiles at full size (scale 1), so the canvas isn't shrunk.
+- **Cap:** the same as Self-hug's: as many cycles as fit the Lantern's 5 s walk with the travel out of the last (twelve for the Stack, two steps each; eight turns for Ribbon), covering at most half a cycle more than they would at their own pace. Both are quicker over the ground than Self-hug, so they reach further in that time (1,212 and 1,398 artboard px). A desktop part 1 and every phone part come from the edge; a desktop part 2 from the right fades in.
+- **Fix:** an entrance fitted exactly to the screen sometimes faded in as if capped. Fitting divides the distance by the cycles and multiplies it back, so the total could come out a rounding error short of the distance, and "total < distance" read as capped (about 6% of distances for Ribbon; it showed in the first desktop run). Every route (side, descent, fall) now fades only when its cap actually bites.
+- **Measured** (AI on): the Stack stands on its spot 4.2 s after it starts on desktop, 2.6 s on a phone, 4.9 s as a part 2 from the right; Ribbon 4.3, 3.2 and 4.8 s. The next card comes then (0–0.1 s later), and the teeter plays on under it for 3.8 s, the wobble for 2.2 s. Last frames match the still figures to 0.1–0.6% of pixels on desktop and 1.5–2.3% for a part 2, an outline only; on a phone 3.2–3.8%, also an outline, because the headless canvas renders at 1× and is compared at 2×. Answer to next card was 5.0–9.0 s, with the name shortening taking 2.1–3.2 s.
+
+### 2026-10-17 — A wave washes Shell ashore, in the app; entrances start on a frame
+
+- **Change:** a part that gets Shell comes in on its Rive entrance (mirrored for a part from the right): waist-deep in a felt wave behind the crest, the wave crests as it stops, draws back the way it came and fades, and Shell settles onto the ground. Its plan has Curled's shape (no gait, all its travel stretched to the screen over the first 170 frames), so it uses the same side route. Its map figure is its tile at 80%, so the canvas is scaled to match; the canvas is 2.4 tiles wide, the wave reaching back behind Shell and the crest ahead.
+- **Cap:** Curled's 2000 artboard px, kept: it is about Shell's spike's own pace on a 1280 px screen (1,990 px there). A desktop part 1 (about 1,510 px) and a phone part (about 1,120 px) come from the edge; a desktop part 2 from the right (about 5,040 px: it stands left of centre) fades in, like the other side entrances.
+- **The card waits for Shell's feet:** the travel stops at frame 170 with Shell still afloat in a full wave; its feet touch down at 262 as the water goes. Its plan now carries `stands: 262` (written by its gen-scene.py; the scene itself rebuilt byte-identical), and the side route takes arrival from `stands` when a plan has one. So the card comes when Shell stands, as for every other figure, 1.5 s later than the travel alone would say; the end of the retreat and the fade play under it for 1.3 s.
+- **Fix:** every Rive entrance skipped its start by however long the page had gone without drawing before it began. Rive's `play()` times its first frame by `document.timeline.currentTime`, the last frame the page drew, so the next frame reported all the time since: 0.77 s for Shell in headless Chrome when 98 ms had passed, which put its wave a third of the way in at its first frame. `RiveEntrance` now starts its clock and calls `play()` inside a `requestAnimationFrame` callback, where that time is current. In a real browser the busy time is shorter, but not zero.
+- **Measured** (AI on, headless Chrome, no screenshots): Shell stands on its spot 4.42–4.49 s after it starts on desktop, 4.42–4.44 s on a phone and 4.55 s as a part 2; the next card comes 0.06–0.2 s later, and the still figure takes over at 5.7–6.4 s. Its last frame matches the still figure to 0.76% of the figure's pixels on desktop, 1.14% for a part 2 and 2.75% on a phone (a 112 px figure), an outline with no offset. (These comparisons map the canvas to the page with separate x and y scales, since its backing size is rounded; one scale put a false 1 px offset on Shell. They are a share of the figure's pixels and read higher than earlier entries' figures for the same entrances: Curled is 0.45%.) The other nine, re-run on desktop after the fix, all arrive, hand over and raise no errors; a before/after on the Stack (5.0–5.1% both ways) and the Map (3.9% before, 4.1% after) shows the handover unchanged, while one Stack run before the fix stood on its spot at 3.50 s against 4.25–4.36 s after, the skip it no longer takes. Answer to next card was 7.8–11.4 s (the AI calls vary; the entrance starts 3.3–6.9 s after the answer); the name shortening took 2.7–2.9 s and the entrance waits for it.
+
+### 2026-10-17 — The Kaleidoscope backs in, in the app
+
+- **Change:** a part that gets the Kaleidoscope backs in from its far edge on its Rive entrance (mirrored for a part from the right, so it backs in from the map's left instead): still looking up through its scope and leaning back, it stops short with a small bump and keeps looking. Its plan has Self-hug's shape (a looping gait), so it uses the same side route, which now also runs from the right: the canvas travels the same distance the other way, and the room is measured from the far edge with the figure's left reach. From the near edge it would face the way it walks; backing in from the far edge keeps it backwards on both sides and lands its last frame on the still figure. The scene is unchanged.
+- **Cap:** at most three slow rocks (as many 72-frame rocks as fit the Lantern's 5 s walk), covering at most half a rock more than they would at its own pace of 150 artboard px. The far edge is further on every screen, so it always starts on the map and fades in. The bump stops it at frame 26 of `Enter`, and the next card comes then; the jolt springing back plays under the card for 1.8 s.
+- **Measured** (AI on, headless Chrome, no screenshots): it stands on its spot 3.8–4.1 s after it starts (desktop part 1, phone, part 2 from the right), and the still figure takes over about 6 s after it starts. Its last frame lines up with the still figure with no offset; the felt grain shimmers at the pixel level, as it does for Self-hug on the same full-resolution comparison (13.5% of crop pixels over a threshold of 12, against 16.7% for Self-hug — a harsher metric than last session's shares, so they don't compare across sessions). The Map, Self-hug and Shell, re-run on desktop after the shared-route change, and the Lantern, Stack, Ribbon, Pod and Sleeper, drawn across five AI-off runs, all arrive, hand over and raise no errors. Answer to next card was 7.2–9.8 s (the entrance starts 3.0–5.2 s after the answer).
+
+### 2026-10-18 — The Sprout rises out of the ground, in the app
+
+- **Change:** a part that gets Sprout now uses its Rive rise in the app. It is the first entrance that happens wholly on the final spot: the route returns zero movement while the scene heaves up a felt mound, brings the folded leaves through it, opens them, lets the Sprout gather and pop out into a hop, sinks the mound and bows the figure toward its flower. The page follows the scene's keyed shadow, widening and shifting it under the mound, then gathering it to the Sprout. A part from the right mirrors the whole scene as usual.
+- **Arrival and handover:** the generated plan now records `stands: 108`, when the hop lands. That reports arrival while the mound sinks and the bow plays on; `riseFrames: 222` ends the entrance after 3.7 s of Rive time, when the still figure fades in. The Rive project itself is unchanged apart from that plan field and rebuilds cleanly.
+- **Measured** (deterministic local AI responses, headless Chrome, no screenshots for timing): on a desktop part 1, a phone and a mirrored part 2, arrival was reported 2.0–2.2 s after the part appeared, including scene setup; the next card appeared 2.2–2.6 s after it, and the still figure took over 3.9–4.1 s after it. Visual captures at each stage show the mound and figure at the right map scale; the Rive and still boxes coincide exactly and the handover has no visible offset. Reduced motion has no Rive entrance. One separate AI-off run reached the closing card; the unchanged `?sprout` spike also completes. No errors in the clean timing runs, only the pre-existing Rive inputs deprecation warning.
+
+### 2026-10-19 — Turn 1 follows what was already said
+
+- **Change:** after Turn 0 passes the safety check, JEV reads its form
+  (`one_feeling`, `several_feelings`, `situation`, `little`) while Claude
+  lifts up to four candidate feeling names. The browser accepts a phrase
+  only when it finds the same words in one contiguous run in the free-write,
+  at the name length cap. One feeling is confirmed; several are tap choices;
+  weak, contradictory or failed readings keep the old question.
+- **Calibration:** `scripts/calibrate-turn1.ts` runs the app's exact JEV
+  question over 72 messy made-up free-writes. It read 71/72 as intended,
+  with no several-feeling answer collapsed into one. The only miss scored
+  0.56, so the 0.70 action threshold sent it to the default row.
+- **Ownership and speed:** a confirmed or tapped phrase keeps Turn 0 as its
+  source and the Turn 1 answer as confirmation. Because its name is already
+  verified, it skips Claude's name-shortening call; typed alternatives keep
+  the existing extractor. AI-off keeps the old question.
+- **Reflection:** the Turn 1 reflection receives the exact next card and
+  its choice labels, so it reflects context without naming the choices just
+  before they appear.
+- **Checked:** adaptive one- and several-feeling paths in the browser, four
+  choices at 390×844, full runs to closing with AI on at desktop width and
+  AI off at phone width, 27 tests, lint and production build. No browser
+  errors; the existing bundle-size warning remains.
+
+### 2026-10-19 — A part's hidden kind chooses its starting ring
+
+- **One wait, two readings:** `/api/figure` now asks JEV for the figure and
+  a hidden `guards` / `escapes` / `hurts` / `other` kind in one System One
+  request. The two results fail independently; name extraction still runs
+  beside them as before.
+- **Placement:** confident guards begin on the close ring, escapes on the
+  middle ring to the side, and hurts on the far ring. `other`, a result
+  below 0.70, an unavailable result, and `?ai=off` use the previous neutral
+  spots. A quieter part still starts small at the edge regardless of kind.
+  The kind and its confidence are kept in provenance and conversation
+  state, but never shown, narrated, or sent to a reflection. A later figure
+  change does not change it.
+- **Card clearance:** the first desktop check put the close point under the
+  card. The close candidates now use the left arc of the same ring, where
+  the figure and its name remain visible on desktop and phone.
+- **Calibration:** `scripts/calibrate-kind.ts` sends 40 critic/planner,
+  escape/numbing, hurt/fear, and playful/creative examples through the
+  exact combined request. It read 40/40 as intended, with no confident
+  wrong placements; median response was 273 ms and slowest 441 ms.
+- **Checked:** all four starting outcomes on desktop, guard and AI-off
+  fallback at 390×844, complete entry journeys to closing with AI on and
+  off, 31 tests, lint, and production build. No browser errors; the existing
+  bundle-size warning remains.

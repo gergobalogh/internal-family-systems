@@ -10,6 +10,7 @@
     "size": 640
   },
   "feetY": 624.0,
+  "stands": 108,
   "riseFrames": 222,
   "shadow": {
     "x": 0.5,

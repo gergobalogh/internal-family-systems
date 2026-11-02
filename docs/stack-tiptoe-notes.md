@@ -4,7 +4,8 @@
 quick, tiny steps a cycle, the tower of blocks swaying a little behind. It
 stops, and the tower carries on. It teeters forward, the Stack leans in
 under it to catch it, it swings back and is caught again, smaller, and
-steadies. It is a review spike: hidden unless the URL has `?stack`, or
+steadies. It plays in the app when a part gets the Stack. The review spike
+is still there: hidden unless the URL has `?stack`, or
 `?stackpose=<frame>` to hold one frame of `Enter` (0–260; 34 is the teeter
 caught) in the middle of the screen. The method is in
 [rive-entrance-playbook.md](rive-entrance-playbook.md).
@@ -20,7 +21,9 @@ The photo is the second take, `art/out/figure-stack-2.jpg` (the one with
 bead eyes). The cut is `cut()` from `scripts/cutout-figures.py`, cropped like
 a set of one, with the Stack opted in to `PALE_FELT` (the cream blocks),
 `ENCLOSED` (the backdrop between its arms and its head), `FELT_BLUR`,
-`FLOOR_GLARE` and `DEFRINGE`.
+`FLOOR_GLARE` and `DEFRINGE`. The app's still Stack is made from this
+cutout too (`scripts/app-figures.py`), at full size, so rerun that after a
+new cutout.
 
 The closed-eye overlay, `blink.png`, is cut by `scripts/blink-overlay.py`
 from a generated edit, `art/out/figure-stack-blink-1.jpg`
@@ -31,8 +34,13 @@ twice every ten seconds, through the entrance too (the blink recipe in
 ## Who owns what
 
 The waddle's arrangement ([selfhug-waddle-notes.md](selfhug-waddle-notes.md)),
-with the `stack` entry in `src/ui/sideEntrances.ts`. `Approach` is a
-22-frame cycle (two steps), `Enter` is 260 frames and `Idle` 300. The rig:
+with the `stack` entry in `src/ui/sideEntrances.ts` (in the app,
+`src/ui/RiveEntrance.tsx` with `sideRoute` in `src/ui/riveEntrances.ts`).
+`Approach` is a 22-frame cycle (two steps), `Enter` is 260 frames and
+`Idle` 300. In the app it takes at most twelve cycles (as many as fit the
+Lantern's 5 s walk with the glide out of the last); the next card comes
+when it stops (frame 34 of `Enter`), and the teeter plays under it for
+3.8 s before the still figure takes over. The rig:
 
 ```
 Right Foot  (at the outer corner of the right sole: max(tip, 0))

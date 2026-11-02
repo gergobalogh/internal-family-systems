@@ -1,12 +1,34 @@
 /** "current" is shown as "How it is"; "whatIf" as "What if…". */
 export type Mode = 'current' | 'whatIf'
 
+/**
+ * The felt figures a part can be, one per character in
+ * docs/character-entrances.md ('lantern' is the Critic). JEV picks one from
+ * the person's words when a part is named.
+ */
+export const LOOKS = [
+  'lantern',
+  'sprout',
+  'sleeper',
+  'defender',
+  'pod',
+  'curled',
+  'selfhug',
+  'ribbon',
+  'kaleidoscope',
+  'stack',
+  'map',
+  'doodle',
+  'shell',
+] as const
+
 /** Which sculpted figure stands for a part; consistent across modes and scales. */
-export type Look = 'lantern' | 'sprout' | 'sleeper'
+export type Look = (typeof LOOKS)[number]
 
 /**
  * A part's identity. Shared by both modes: renaming or removing a part is a
- * correction of the map, never a "What if" experiment.
+ * correction of the map, never a "What if" experiment, so the map offers
+ * them only in "How it is" (an experiment can't change the current map).
  */
 export interface Part {
   id: string
@@ -35,7 +57,8 @@ export type Layout = Record<string, Placement>
 /**
  * A relationship the conversation recorded between two parts (today only
  * Turn 2's "pulling in different directions"). Shared by both modes, like a
- * part's identity. Drawn while both parts are on the map.
+ * part's identity, and taken down only in "How it is". Drawn while both
+ * parts are on the map.
  */
 export interface Link {
   id: string
@@ -48,6 +71,7 @@ export interface Link {
 export type Entry =
   | { kind: 'place'; partId: string; before: Placement }
   | { kind: 'rename'; partId: string; before: string }
+  | { kind: 'look'; partId: string; before: Look }
   | { kind: 'remove'; partId: string }
   | { kind: 'unlink'; linkId: string }
   | { kind: 'words'; partId: string; before: Words }
@@ -88,6 +112,8 @@ export type Action =
   | { type: 'returnToCurrent' }
   | { type: 'place'; partId: string; placement: Placement }
   | { type: 'rename'; partId: string; name: string }
+  /** The person picks a different figure: one no other part has (removed ones included, so undo never shows two alike). */
+  | { type: 'setLook'; partId: string; look: Look }
   | { type: 'remove'; partId: string }
   | { type: 'resetWhatIf' }
   | { type: 'undo' }

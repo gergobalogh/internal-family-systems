@@ -33,8 +33,11 @@ twice every ten seconds, through the entrance too (the blink recipe in
 
 ## Who owns what
 
-The page component is its own, `src/ui/MapRouteSpike.tsx`, since the travel
-is in two dimensions and has a stop in the middle. It reads `route.json`
+The spike's page component is its own, `src/ui/MapRouteSpike.tsx`, since the travel
+is in two dimensions and has a stop in the middle. In the app,
+`src/ui/RiveEntrance.tsx` plays it from the route in `src/ui/riveEntrances.ts`
+(`mapRoute`, the same fitting, capped at four rocks), and draws the trail
+in the part's figure box. It reads `route.json`
 (copied to `src/assets/rive/map-route.json`).
 
 - **Rive**, in the `Motion` machine: `Approach` loops one rock (44 frames).

@@ -1,22 +1,33 @@
 import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from 'react'
 import type { Dispatch } from 'react'
 import type { Action, LandscapeState } from '../model/types'
-import { checkCentrality, checkRisk, checkToward, parseCorrections, reflect } from './ai'
+import { analyzeFreeWrite, checkCentrality, checkRisk, checkToward, chooseFigure, extractName, parseCorrections, reflect } from './ai'
 import { conversationReducer, startConversation } from './flow'
 import type { ConversationEvent, ConversationState, Pending } from './flow'
+import type { ReflectRequest } from './contract'
 
 /** An event before the map snapshot is attached. */
 type WithoutMap<E> = E extends unknown ? Omit<E, 'map'> : never
 type Outcome = Extract<
   WithoutMap<ConversationEvent>,
-  { type: 'reflected' | 'towardChecked' | 'centralityChecked' | 'corrected' | 'riskChecked' }
+  { type: 'reflected' | 'freeWriteRead' | 'towardChecked' | 'centralityChecked' | 'corrected' | 'riskChecked' | 'figured' }
 >
 
+/** Reflections started ahead of their turn, by request (key order aside), until the flow asks for one. */
+type Early = Map<string, Promise<string | null>>
+
+const keyOf = (request: ReflectRequest) => JSON.stringify(request, Object.keys(request).sort())
+
 /** Runs one AI job; resolves to the event that feeds its result back (null-safe throughout). */
-async function run(job: Pending, signal: AbortSignal): Promise<Outcome> {
+async function run(job: Pending, signal: AbortSignal, early: Early): Promise<Outcome> {
   switch (job.kind) {
-    case 'reflect':
-      return { type: 'reflected', seq: job.seq, text: await reflect(job.request, signal) }
+    case 'freeWrite':
+      return { type: 'freeWriteRead', seq: job.seq, result: await analyzeFreeWrite(job.request, signal) }
+    case 'reflect': {
+      const started = early.get(keyOf(job.request))
+      early.clear()
+      return { type: 'reflected', seq: job.seq, text: await (started ?? reflect(job.request, signal)) }
+    }
     case 'towardCheck':
       return { type: 'towardChecked', seq: job.seq, result: await checkToward(job.request, signal) }
     case 'centrality':
@@ -25,6 +36,21 @@ async function run(job: Pending, signal: AbortSignal): Promise<Outcome> {
       return { type: 'corrected', seq: job.seq, ops: await parseCorrections(job.request, signal) }
     case 'risk':
       return { type: 'riskChecked', seq: job.seq, atRisk: await checkRisk(job.request, signal) }
+    case 'figure': {
+      // The reflection after the naming starts now and outlives this job
+      // (its own timeout still applies); the flow asks for it next.
+      early.clear()
+      if (job.next) early.set(keyOf(job.next), reflect(job.next, new AbortController().signal))
+      // Side by side: the part already waits for its figure, so the
+      // extraction costs no extra wait. The figure judges the raw answer.
+      const [result, extracted] = await Promise.all([
+        chooseFigure(job.request, signal),
+        job.extract === false
+          ? Promise.resolve(null)
+          : extractName({ question: job.request.question, answer: job.request.name }, signal),
+      ])
+      return { type: 'figured', seq: job.seq, result, extracted }
+    }
   }
 }
 
@@ -52,11 +78,12 @@ export function useConversation(landscape: LandscapeState, dispatch: Dispatch<Ac
   }, [state.effects, dispatch])
 
   // Run the pending AI call. Unmounting (or a newer call) abandons it unseen.
+  const early = useRef<Early>(new Map())
   useEffect(() => {
     const job = state.pending
     if (!job) return
     const controller = new AbortController()
-    void run(job, controller.signal).then((outcome) => {
+    void run(job, controller.signal, early.current).then((outcome) => {
       if (!controller.signal.aborted) send({ ...outcome, map: map() } as ConversationEvent)
     })
     return () => controller.abort()
@@ -68,11 +95,16 @@ export function useConversation(landscape: LandscapeState, dispatch: Dispatch<Ac
   return {
     state,
     answer: useCallback((text: string) => say({ type: 'answer', text }), [say]),
+    chooseTurn1: useCallback((phrase: string) => say({ type: 'turn1Choice', phrase }), [say]),
     noChanges: useCallback((text: string) => say({ type: 'noChanges', text }), [say]),
     dismiss: useCallback(() => say({ type: 'dismiss' }), [say]),
     decline: useCallback(() => say({ type: 'decline' }), [say]),
     accept: useCallback(() => say({ type: 'accept' }), [say]),
+    tryExperiment: useCallback(() => say({ type: 'tryExperiment' }), [say]),
     tried: useCallback(() => say({ type: 'tried' }), [say]),
+    keepTrying: useCallback(() => say({ type: 'keepTrying' }), [say]),
+    addQuieter: useCallback(() => say({ type: 'addQuieter' }), [say]),
+    newPart: useCallback(() => say({ type: 'newPart' }), [say]),
     enteredWhatIf: useCallback(() => say({ type: 'enteredWhatIf' }), [say]),
     getToKnow: useCallback((partId: string) => say({ type: 'getToKnow', partId }), [say]),
     notice: useCallback((before: LandscapeState, partId: string | null) => say({ type: 'notice', before, partId }), [say]),

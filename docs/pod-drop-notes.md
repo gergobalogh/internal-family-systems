@@ -2,9 +2,10 @@
 
 `art/rive/pod-drop` drops the Pod in from above the top of the page. Its
 padding swallows the landing: a deep, slow squash with no bounce, then a
-slow rise back to its shape with no overshoot. It is a review spike: hidden
-unless the URL has `?pod`, or `?podpose=<frame>` to hold one frame of the
-landing (0–126) in the middle of the screen. The method is in
+slow rise back to its shape with no overshoot. It plays in the app when a
+part gets the Pod. The review spike is still there: hidden unless the URL
+has `?pod`, or `?podpose=<frame>` to hold one frame of the landing (0–126)
+in the middle of the screen. The method is in
 [rive-entrance-playbook.md](rive-entrance-playbook.md).
 
 ## Rebuild
@@ -13,9 +14,11 @@ landing (0–126) in the middle of the screen. The method is in
 art/rive/pod-drop/build-assets.sh
 ```
 
-The Pod is not in the app yet, so this cuts it out of
-`art/out/figure-pod-1.jpg` with the project's own `cutout.py`, and crops it
-like a set of one. It then runs `gen-scene.py`, compiles the `.riv` and copies
+This cuts the Pod out of `art/out/figure-pod-1.jpg` with the project's own
+`cutout.py`, and crops it like a set of one. The app's still Pod is made
+from this cutout too: `scripts/app-figures.py` shrinks it to 88% about its
+feet, so rerun that after a new cutout, and the entrance scales its canvas
+to match. It then runs `gen-scene.py`, compiles the `.riv` and copies
 it and `drop.json` into `src/assets/rive/`. Without the photo (`art/out` is
 gitignored), the committed `assets/pod.webp` is used as it is.
 
@@ -31,7 +34,8 @@ python3 gen-scene.py   # back to the shipping scene
 ## Who owns what
 
 The page component is the descents' (`src/ui/DescentSpike.tsx`), with the
-`pod` entry in `src/ui/descents.ts`. Its motion is `{ fall: 0.25 }`: the canvas
+`pod` entry in `src/ui/descents.ts` (in the app, `src/ui/RiveEntrance.tsx`
+with `fallRoute` in `src/ui/riveEntrances.ts`). Its motion is `{ fall: 0.25 }`: the canvas
 speeds up evenly from a quarter of the touchdown speed to all of it (20
 artboard px a frame) over whole `Fall` cycles, and there is no flare
 (`flareFrames: 0`), so it hits the ground at full speed. `land` is set in the
@@ -39,6 +43,13 @@ last cycle. Rive's `Motion` machine plays `Fall` (24 frames, 3% taller and 2%
 narrower), then `Land` (126 frames), then `Idle Blinking`. That is `Idle`
 (slow breaths, 240 frames) three times over, blinking at frames 155 and 479.
 The page plays `Idle` alone with reduced motion, and then it doesn't blink.
+
+In the app the route does the same, from just above the map, but takes at
+most six cycles (2.4 s; a desktop part 1 needs six at the spike's pace). A
+longer fall comes into view already falling at up to half the touchdown
+speed; further than that, it starts on the map and fades in (a phone, or a
+desktop part 2). The next card comes on touchdown, and the still figure
+takes over when `Land` ends, 2.1 s later.
 
 The rig is one node and a mesh:
 

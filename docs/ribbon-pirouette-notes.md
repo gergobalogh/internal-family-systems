@@ -4,10 +4,10 @@
 standing foot as it travels, the ribbon going round with it. It turns once
 more on the ground, sinking into it, then springs into a hop that turns once
 more in the air. It lands facing out, as in the photo, squashes, slides to a
-stop and wobbles on its one foot, arm out, until it has its balance. It is a
-review spike: hidden unless the URL has `?ribbon`, or `?ribbonpose=<frame>`
-to hold one frame of `Enter` (0–200; 42 is mid-air) in the middle of the
-screen. The method is in
+stop and wobbles on its one foot, arm out, until it has its balance. It
+plays in the app when a part gets Ribbon. The review spike is still there:
+hidden unless the URL has `?ribbon`, or `?ribbonpose=<frame>` to hold one
+frame of `Enter` (0–200; 42 is mid-air) in the middle of the screen. The method is in
 [rive-entrance-playbook.md](rive-entrance-playbook.md).
 
 ## Rebuild
@@ -21,7 +21,9 @@ The cut is `cut()` from `scripts/cutout-figures.py` on
 `art/out/figure-ribbon-1.jpg`, cropped like a set of one, with Ribbon opted
 in to `FLOOR_GLARE` (pale floor under both feet, the raised one too) and
 `DEFRINGE` (a light line along the ribbon and the body). The ribbon's loops
-are open to the backdrop, so it needs no `ENCLOSED`.
+are open to the backdrop, so it needs no `ENCLOSED`. The app's still
+Ribbon is made from this cutout too (`scripts/app-figures.py`), at full
+size, so rerun that after a new cutout.
 
 The closed-eye overlay, `blink.png`, is cut by `scripts/blink-overlay.py`
 from a generated edit, `art/out/figure-ribbon-blink-1.jpg`
@@ -32,8 +34,13 @@ twice every ten seconds, through the entrance too (the blink recipe in
 ## Who owns what
 
 The waddle's arrangement ([selfhug-waddle-notes.md](selfhug-waddle-notes.md)),
-with the `ribbon` entry in `src/ui/sideEntrances.ts`. `Approach` is one turn
-(28 frames), travelling evenly, so `cycle.profile` is a straight line.
+with the `ribbon` entry in `src/ui/sideEntrances.ts` (in the app,
+`src/ui/RiveEntrance.tsx` with `sideRoute` in `src/ui/riveEntrances.ts`).
+`Approach` is one turn (28 frames), travelling evenly, so `cycle.profile`
+is a straight line. In the app it takes at most eight turns before
+`Enter`'s turn and hop (as many as fit the Lantern's 5 s walk with them);
+the next card comes when it stops (frame 70 of `Enter`), and the wobble
+plays under it for 2.2 s before the still figure takes over.
 `Enter` (200 frames) keeps the speed through the turn and the hop, then
 slides to a stop in 14 frames. `Idle` (240 frames) sways very slightly on
 its one foot. The rig is a single node:
