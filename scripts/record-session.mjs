@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Plays one whole session of the app the way a person would, AI on:
-// free-write → parts → closing → quieter part → Get to know it → a move
+// free-write → parts → who came → Go on → Get to know it → a move
 // (noticing) → What if… experiment. Records a video, a still of every card,
 // and a timeline of what each card said and when.
 //
@@ -108,24 +108,17 @@ try {
   for (let guard = 0; guard < 8; guard++) {
     c = await record('entry')
     const text = c.lines.join(' ')
-    if (/picture so far|seeing so far/.test(text)) break
+    if (/who came/.test(text)) break
     if (/feel toward/.test(text)) await answer('honestly, frustrated with it')
     else if (/another feeling|What would you call it\?/.test(text)) await answer('the one who wants to hide')
     else if (/also mentioned|quieter feeling/.test(text)) {
       if (c.choices.length) await page.click('.card__choice >> nth=0')
       else await answer('the tired one')
-    } else if (/what would you change/.test(text)) await answer('I wish it were further away')
-    else await answer('yes')
+    } else await answer('yes')
   }
 
-  // ── Closing card → quieter part ──────────────────────────────────
-  if (c.buttons.includes('Add a quieter part')) {
-    await press('Add a quieter part')
-    await record('quieter-ask')
-    await answer('the tired one')
-    await record('quieter-here')
-  }
-  await page.click('.card button[aria-label="Close the conversation"]')
+  // ── Act 1's close: who came → Go on ───────────────────────────────
+  await press('Go on')
   await page.waitForTimeout(2500)
   log('map handed over', { file: await shot('map-handed-over') })
 

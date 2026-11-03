@@ -8,9 +8,10 @@ person's: one invited "What if" experiment, "Get to know it" (a part's voice
 and what it might be trying to do), a question when a "How it is" edit
 changes what the map says, and a safety pause across the whole app. It
 builds on [slice 3](docs/slice-3-handoff.md)'s whole entry conversation
-(Turns 0–4; Turn 3 now asks who else is here, per
-[docs/four-turn-journey-plan.md](docs/four-turn-journey-plan.md), and the
-closing card offers the part that rarely gets heard when Turn 3 didn't), [slice 2](docs/slice-2-handoff.md)'s Turns 0–2 and
+(now reshaped by the story redesign,
+[docs/redesign/story-redesign.md](docs/redesign/story-redesign.md): Turn 3
+asks who else is here, and Act 1 closes with "These are the ones who
+came." in place of Turn 4's summary question and the closing card), [slice 2](docs/slice-2-handoff.md)'s Turns 0–2 and
 [slice 1](docs/slice-1-handoff.md)'s "How it is" / "What if…" landscape.
 The conversation is one glass card under the house, per
 [docs/input-choreography-plan.md](docs/input-choreography-plan.md).
@@ -25,13 +26,11 @@ npm run lint
 
 Missing or failing AI never blocks the conversation: reflections fall back
 to scripted lines, the toward-check takes the single-part path, Turn 3
-moves nothing unless the answer matches a fixed list, an unparsed
-correction points to the map instead (so the experiment invitation is the
-generic one), and the risk check falls back to the local phrase list. In
+moves nothing unless the answer matches a fixed list, and the risk check
+falls back to the local phrase list. In
 dev, `?ai=off` forces every AI call down its fallback path, and
-`?jump=after` starts at the closing card of a scripted full run (two linked
-parts, an unheard part, a wish) to try everything after the entry
-conversation; the two combine.
+`?jump=after` starts at Act 1's close of a scripted full run (two linked
+parts) to try everything after the entry conversation; the two combine.
 
 Every typed answer is screened before anything reads it: a local list of
 risk phrases (`RISK_PHRASES` in `src/conversation/checks.ts`), then an AI
@@ -53,18 +52,16 @@ session, and the map stays editable.
 - `src/conversation/` — the entry conversation: the pinned script
   (`script.ts`), the state machine and provenance record (`flow.ts`),
   answer lists and reflection checks (`checks.ts`), map distances
-  (`geometry.ts`), the deterministic Turn 4 summary (`summary.ts`),
-  verifying and applying parsed corrections (`corrections.ts`), the
+  (`geometry.ts`), the deterministic map summary (`summary.ts`), the
   browser side of the AI calls (`ai.ts`, `contract.ts`), and the dev-only
-  jump to closing (`devJump.ts`). After closing, `flow.ts` also runs the
+  jump to Act 1's close (`devJump.ts`). After Go on, `flow.ts` also runs the
   invitation and experiment, Get to know it, noticing, and the safety
   pause.
-- `server/ai.ts` — the AI routes (`/api/reflect` and `/api/corrections` →
-  Claude, `/api/risk` → OpenAI moderation + JEV, `/api/figure` → one JEV
+- `server/ai.ts` — the AI routes (`/api/reflect` → Claude, `/api/risk` → OpenAI moderation + JEV, `/api/figure` → one JEV
   request for figure + hidden kind, `/api/toward-check` → JEV, and
   `/api/free-write` → JEV form reading + Claude phrase lifting),
   mounted on Vite's dev and preview servers. API keys are read here only
-  and never reach the browser; any other host needs the same seven routes.
+  and never reach the browser; any other host needs the same six routes.
 - `src/ui/` — the landscape (world → links → characters → mode frame),
   the conversation card and its timing (`Conversation.tsx`,
   `useChoreography.ts`: send → ghost → the world waits → a new part walks

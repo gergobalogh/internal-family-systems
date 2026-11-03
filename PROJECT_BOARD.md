@@ -5,12 +5,12 @@
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
 - **URL:** none
 - **Post where:** not decided yet
-- **Next:** Option A, step 2: no arriving part is covered (the card steps back while a part walks in), then Act 1's close, "These are the ones who came." ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md))
-- **Updated:** 2026-11-02
+- **Next:** Option A, step 4: Act 2, tap a figure to sit with it (camera move, its words, thanks; Fears behind Skip) ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md))
+- **Updated:** 2026-11-03
 
 ## Build
 - [x] The entry conversation, with all thirteen parts walking in on Rive
-- [x] Act 1: every answer brings someone (Turn 3)
+- [x] Act 1: every answer brings someone (Turn 3), closing with who came
 - [ ] Act 2: sit with one part (its words, what it's trying to do, thanks)
 - [ ] Act 3 and the ending: step back, one "what if", a picture to keep
 - [ ] The meadow is saved on the device, and the next visit opens on it
@@ -36,10 +36,10 @@ only tracks the work.
   decisions are in project.md's log). One walk in three acts (meet who's
   here, sit with one, step back), ending with a picture to keep, and the
   meadow saved on the device for the next visit. Option B is the shape of
-  later visits. Step 1, Turn 3, is done. Next: no arriving part is covered,
-  then Act 1's close, Act 2 (Fears behind Skip until a therapist has
-  reviewed it), Act 3, the ending's picture, saving, then removing the
-  modes, top bar, map note, closing card and the label hedge. The doc's
+  later visits. Done: Turn 3, arrivals the card never covers, and Act 1's
+  close. Next: Act 2 (Fears behind Skip until a therapist has reviewed
+  it), Act 3, the ending's picture, saving, then removing the modes, top
+  bar, map note and the label hedge. The doc's
   section 6 has a five-person test script and the therapist questions.
 - **A reflection that follows resizing (brainstorm).** Idea: when a part is
   resized, call Claude so the reflection changes with the map. Possibly
@@ -88,8 +88,7 @@ only tracks the work.
 - **Noticing on the first nudge.** The summary only describes a part's
   place when the person moved it (Turn 3 no longer asks about closeness),
   so an untouched part gets no position words (`positionSpeaks` in
-  `summary.ts`). The quieter part (added at Turn 3 or from the closing
-  card) is the usual case: it starts at the edge, but the summary only says it "rarely
+  `summary.ts`). The quieter part (added at Turn 3) is the usual case: it starts at the edge, but the summary only says it "rarely
   gets heard". Nudge it a
   pixel and it counts as moved, gains "feels more off to the side", and
   noticing asks: "The map now shows that ‘the quiet one’ feels more off to
@@ -105,11 +104,13 @@ only tracks the work.
 
 ## Up next
 
-- **On a phone, part 2 walks in behind the card** (seen in both recorded
-  phone runs, 2026-11-02): its entrance is never seen. Some kind spots sit
-  in the top half of a phone screen, under the card: in the real-AI Turn 3
-  run an escaping part 3 took the escapes ring's (0.42, 0.42) and stayed
-  hidden behind the closing card. Next step of Option A.
+- **After Go on, labels crowd on a phone** (2026-11-03): the top bar
+  arrives and shrinks the map, so three name labels sit close at the
+  bottom. Step 8 removes the bar; check again then.
+- **Labels crowd when two parts share a side** (2026-11-03): with three
+  parts, two name labels can touch or overlap at the bottom of a phone,
+  or on the right on desktop. Starting spots now keep figures and labels
+  apart from each other's columns, but there are few spots on each side.
 - **"Nothing's moved yet" stays on screen after switching back to How it
   is** (phone, twice).
 - **Check a finger drag in "What if…" on a phone.** The recorder's drag
@@ -122,23 +123,18 @@ only tracks the work.
   "I'm not good enough and should push harder", 42 characters, over the
   40-character name cap, so only one phrase survives and the choose row
   needs two. Fix: ask the lifter for short names (a few words, under 40
-  characters) and re-run `scripts/calibrate-turn1.ts`. Both cost model
-  calls. The same phrases feed Turn 3's choices.
+  characters), then run the lifter on the 18 several-feeling free-writes
+  in `scripts/calibrate-turn1.ts` (that script itself only tests JEV's
+  reading, which isn't the problem). About 18 Claude calls. The same
+  phrases feed Turn 3's choices.
 - **A new part's reflection can borrow the free-write.** With AI on, naming
   ‘the one who yells’ got "the part that keeps replaying everything you
   said in meetings", which was ‘the worry’'s. Seen before this change too;
   the Turn 3 reflection prompt may need to keep Turn 0's words apart from
   the new name.
-- **On a phone, part 2 stands over part 1's label** (2026-11-02, every
-  Turn 3 run at 390×844): part 1 is large and its label hangs below it,
-  where part 2's neutral spot is. Third parts and two guards no longer
-  overlap (spare spots, see Done); part 2's spot needs the same care, and
-  it belongs with the "card steps back" work.
 - **Review slice 4's draft wording:** the invitation, the "Take your time"
   bar, the pause card, the Get to know it questions, "might be trying to:",
-  the quieter part's "Add a quieter part" / "What would you call the
-  part that rarely gets heard?" / "‘Z’ is here now, at the edge…", and
-  "What if…"'s "To rename or remove it, go back to How it is." / "To take
+  and "What if…"'s "To rename or remove it, go back to How it is." / "To take
   it down, go back to How it is.", and the bar's "Add a part" / "What
   would you call the part you'd like to add?" / "Try an experiment",
   "Keep trying" / "Finish without changes", "Skip this one", "Change
@@ -148,29 +144,55 @@ only tracks the work.
   mentioned these. Are any of them here too?" / "Is there a quieter
   feeling ‘X’ might be standing in front of?" / "Is there a quieter
   feeling here, one that rarely gets heard?" / "No one else" / "I don't
-  think so".
+  think so", and Act 1's close: "These are the ones who came." / "This is
+  the one who came." / "Go on".
 - **Card covers the selected part's box on desktop.** The card sits at a
-  fixed spot under the house, so a part there has its box hidden behind it.
-  A new part 2 lands there too: Curled walked in and settled under the
-  next card (desktop, AI on).
+  fixed spot under the house, so a part dragged there has its box hidden
+  behind it. (New parts no longer start there, 2026-11-03.) Idea: on
+  desktop too, the card could float in the sky, as on a phone.
 - **The four-turn journey** ([plan](docs/four-turn-journey-plan.md)).
   Every answer brings someone: 3–4 characters in about four answers.
   Turn 1 confirms a feeling already named or offers several as buttons;
   Turn 3 becomes "what else is here?" (replacing the closeness question);
-  Turn 4 invites dragging; JEV sorts each part's hidden kind for where it
-  starts. Build order:
+  JEV sorts each part's hidden kind for where it starts. Build order:
   1. Rive entrances in the real app — complete: all thirteen are in.
   2. Turn 1 rows — complete: calibrated on 72 free-writes and in the app.
   3. Kind — complete: 40/40 calibrated; combined with the figure request.
-  4. Turn 3 — complete (2026-11-02). 5. Turn 4's drag invite. 6. Turn 2's
-  "already said" skip. Under Option A, Turn 4's drag invite moves after
-  Act 2 (it becomes "Step back").
+  4. Turn 3 — complete (2026-11-02). 5. Turn 4 — replaced by Act 1's
+  close (2026-11-03); its drag invite moves after Act 2 (it becomes "Step
+  back"). 6. Turn 2's "already said" skip.
 - **Reflections echo the answer's filler.** Real run, 2026-11-02: "It
   sounds like, honestly, you feel frustrated with 'not good enough.'"
 - **Risk check: one known miss.** "I found a new home for my cat, for
   good" scores near zero on both moderation and JEV (Claude caught it).
 
 ## Done
+
+- **Act 1 closes with who came** (2026-11-03, Option A step 3, frame
+  A06). Turn 4's summary question, the typed corrections and the closing
+  card are gone. After Turn 3 the guide says "These are the ones who
+  came." with one "Go on", which hands the map over (the bar and the
+  summary note arrive then). The corrections route, its prompt and
+  `corrections.ts` are removed, along with the wish and "Add a quieter
+  part"; Turn 3's quieter question is now where a rarely heard part comes
+  in. Checked with scripted AI answers in the browser (no model calls),
+  six paths at 390×844 and 1440×900: all reached "These are the ones who
+  came.", Go on brought the bar and note, and "What if…" opened its
+  invitation without a wish. No page errors. Build and lint pass.
+  Wording is draft.
+
+- **Nothing covers an arriving part** (2026-11-03, Option A step 2, frame
+  A03). While a part walks in, the card steps back to a small "One
+  moment…" in the sky, and on a phone the keyboard goes down so the meadow
+  is clear; the next card is a tap away. No starting spot is under the
+  card any more: the two in the sky and the two under the desktop card
+  moved to open meadow left and right, a large part 1 read as hurting no
+  longer starts half off the edge, and spacing counts each part's label,
+  so part 2 no longer stands on part 1's name. Checked with scripted AI
+  answers in the browser (no model calls) at 390×844 and 1440×900: every
+  arrival showed the bar with the card fully hidden and the field let go;
+  no question card covered a part; adding a quieter part after the
+  hand-over put the bar under the map note. Build and lint pass.
 
 - **Turn 3 asks who else is here** (2026-11-02). The closeness question
   is gone, along with its route and JEV prompts. Turn 3 offers the

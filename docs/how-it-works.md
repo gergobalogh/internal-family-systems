@@ -55,7 +55,9 @@ them.
  START ─► 1. ENTRY CONVERSATION (the app asks 4 questions, then checks the map)
            │   each answer: card fades to a ghost → the world "waits"
            │   (light breathes, clouds drift), and a part named meanwhile
-           │   walks in while the guide thinks → next card with a short
+           │   walks in while the guide thinks: the card steps back to a
+           │   small "One moment…" in the sky and a phone's keyboard goes
+           │   down, so the whole meadow is clear → next card with a short
            │   reflection + the next question
            │
            ├─ Turn 0  "In your own words, what's weighing on you right now?"
@@ -101,30 +103,13 @@ them.
            │               one that rarely gets heard?" [I don't think so]
            │               a name ─► a small part walks in at the edge
            │
-           └─ Turn 4  "One way I'm seeing this is that ‘X’ takes up the
-                        most space; ‘X’ and ‘Y’ seem to be pulling in
-                        different directions; … — what would you
-                        change?"   [No changes]  [Send]
-                        ├─ a fix ("call it the boss", "that's not a part",
-                        │  "they're not fighting") ─► applied to the map
-                        └─ a wish ("I wish it were further away") ─► kept
-                           for later: "you could try that in ‘What if’"
-                                    │
-                                    ▼
-          CLOSING  "That's the picture so far — it's yours. Move anything
-                    that doesn't look right."
-                    [Add a quieter part]  [Close]
-                    (Add a quieter part only if Turn 3 didn't add one)
-                    ─► the top bar appears; the summary stays on the map
-                       as a note, and keeps itself true as you move things
-                    │
-                    └─ Add a quieter part (the closing card's prompt;
-                       any part can still be added later from the bar):
-                       "What would you call the part that rarely gets
-                        heard?"  [Not now]  [Send]
-                       ─► PART 3 walks in, SMALL, at the edge of the meadow
-                       "‘Z’ is here now, at the edge. Move it wherever
-                        feels right."  [Close]
+           └─ Act 1's close (frame A06): a reflection on Turn 3's answer,
+                        then "These are the ones who came."   [Go on]
+                        (Turn 4's summary question and the closing card
+                        are gone, 2026-11-03: the map is changed by hand)
+                        ─► the top bar appears; the summary stays on the
+                           map as a note, and keeps itself true as you
+                           move things (until Act 2 is built)
                                     │
                                     ▼
           2. THE MAP IS YOURS (you lead; the app asks only when invited)
@@ -227,9 +212,8 @@ again, so the button says so instead of "Not now".
 ```
    you switch to [What if…] for the first time
       ▼
-   "In your words: ‘I wish the worry were further away.’ Would it be
-    alright to try that here, and notice what shifts? Undo is one tap."
-   (no wish at Turn 4 → "…move anything so it feels a little better…")
+   "Would it be alright to try something small here — move anything so
+    it feels a little better, and notice what shifts? Undo is one tap."
    [Not now]                                     [Let's try]
       │
       │  or, any time after: [Try an experiment] in the "What if…" bar
@@ -279,4 +263,4 @@ Nothing blocks. Reflections fall back to fixed lines ("Thank you for
 putting that into words."), Turn 2 takes the one-part path, the
 invitation uses the generic wording, and the safety check falls back to
 the local phrase list. In dev, `?ai=off` forces all of this, and
-`?jump=after` starts at the closing card of a scripted full run.
+`?jump=after` starts at Act 1's close of a scripted full run.

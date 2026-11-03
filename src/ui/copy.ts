@@ -70,12 +70,11 @@ export const copy = {
     send: 'Send',
     waiting: 'One moment…',
     /** Turn 4: same weight as Send, never more — the app doesn't invite agreement. */
-    noChanges: 'No changes',
     /** Turn 3's quiet way out, beside Send: "You also mentioned these…" and the quieter question. Draft copy. */
     noOneElse: 'No one else',
     quieterNo: "I don't think so",
-    /** On the closing card: the optional part that rarely gets heard. Draft copy. */
-    addQuieter: 'Add a quieter part',
+    /** Act 1's close: on to the map (later, Act 2). Draft copy. */
+    goOn: 'Go on',
     close: 'Close',
     closeLabel: 'Close the conversation',
     /** After the entry conversation (docs/slice-4-handoff.md). Draft copy. */

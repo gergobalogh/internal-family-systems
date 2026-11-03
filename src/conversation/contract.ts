@@ -12,7 +12,6 @@ export const API = {
   reflect: '/api/reflect',
   freeWrite: '/api/free-write',
   towardCheck: '/api/toward-check',
-  corrections: '/api/corrections',
   risk: '/api/risk',
   figure: '/api/figure',
   extractName: '/api/extract-name',
@@ -77,50 +76,6 @@ export type ReflectTurn = ReflectRequest['turn']
 
 export interface ReflectResponse {
   text: string
-}
-
-/** What one instruction in a Turn 4 correction asks for. */
-export const OP_KINDS = [
-  'rename',
-  'remove',
-  'bigger',
-  'smaller',
-  'closer',
-  'further',
-  'unlink',
-  'wish',
-  'affirm',
-  'unclear',
-] as const
-export type OpKind = (typeof OP_KINDS)[number]
-
-/**
- * One instruction as the LLM reads it. Everything is copied from the
- * person's words — the browser verifies each op against their text before
- * anything is applied.
- */
-export interface ParsedOp {
-  kind: OpKind
-  /** The words of the correction that make up this instruction. */
-  quote: string
-  /** The words used for the part ("it", or a name as written); "" if none. */
-  refersTo: string
-  /** Rename only: the new name as written; otherwise "". */
-  newName: string
-}
-
-export interface CorrectionsRequest {
-  correction: string
-  /** Names of the parts on the map, in creation order. */
-  parts: string[]
-  /** Names of parts taken off the map. */
-  removed: string[]
-  /** The two names joined by the drawn link, if one is drawn. */
-  link: [string, string] | null
-}
-
-export interface CorrectionsResponse {
-  ops: ParsedOp[]
 }
 
 /** The safety path's AI check: one answer, with the question it answered. */
@@ -200,17 +155,6 @@ export function isFreeWriteAnalysis(value: unknown): value is FreeWriteAnalysis 
   )
 }
 
-export function isParsedOp(value: unknown): value is ParsedOp {
-  if (typeof value !== 'object' || value === null) return false
-  const { kind, quote, refersTo, newName } = value as Partial<ParsedOp>
-  return (
-    OP_KINDS.includes(kind as OpKind) &&
-    typeof quote === 'string' &&
-    typeof refersTo === 'string' &&
-    typeof newName === 'string'
-  )
-}
-
 export function isRiskResponse(value: unknown): value is RiskResponse {
   return typeof value === 'object' && value !== null && typeof (value as RiskResponse).atRisk === 'boolean'
 }
@@ -226,10 +170,4 @@ export function isFigureReading(value: unknown): value is FigureReading {
 
 export function isExtractResponse(value: unknown): value is ExtractResponse {
   return typeof value === 'object' && value !== null && typeof (value as ExtractResponse).label === 'string'
-}
-
-export function isCorrectionsResponse(value: unknown): value is CorrectionsResponse {
-  if (typeof value !== 'object' || value === null) return false
-  const { ops } = value as Partial<CorrectionsResponse>
-  return Array.isArray(ops) && ops.every(isParsedOp)
 }

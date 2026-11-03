@@ -1211,6 +1211,52 @@ button {
   pointer-events: none;
 }
 
+/* While a part walks in, the guide waits quietly in the sky (frame A03). */
+.card-pill {
+  position: absolute;
+  z-index: 1100;
+  top: 16px;
+  left: 50%;
+  translate: -50% 0;
+  margin: 0;
+  padding: 8px 22px;
+  border: 1.5px solid rgba(255, 252, 246, 0.7);
+  border-radius: 999px;
+  background: rgba(255, 250, 242, 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(58, 51, 64, 0.6);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: pill-in 450ms var(--ease-soft) both;
+}
+
+@keyframes pill-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Tall screens: at the top of the card's sky, under the map note if there is one. */
+@container (aspect-ratio < 0.9) {
+  .card-pill {
+    position: relative;
+    top: 0;
+    left: auto;
+    translate: none;
+    flex: none;
+    align-self: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-pill {
+    animation: none;
+  }
+}
+
 .card__lines {
   display: flex;
   flex-direction: column;

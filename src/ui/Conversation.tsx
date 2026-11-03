@@ -1,6 +1,6 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react'
 import type { ChangeEvent, KeyboardEvent, MouseEvent, RefObject } from 'react'
-import { ANSWERED_STEPS, canAddQuieter } from '../conversation/flow'
+import { ANSWERED_STEPS } from '../conversation/flow'
 import type { ConversationState, Line, Step } from '../conversation/flow'
 import type { Talk } from '../conversation/useConversation'
 import { copy } from './copy'
@@ -12,7 +12,7 @@ export const SUPPORT_URL = 'https://findahelpline.com/'
 /** What the person can do on a card, from the conversation hook. */
 type CardActions = Pick<
   Talk,
-  'answer' | 'choose' | 'noChanges' | 'dismiss' | 'decline' | 'accept' | 'tried' | 'keepTrying' | 'addQuieter'
+  'answer' | 'choose' | 'goOn' | 'dismiss' | 'decline' | 'accept' | 'tried' | 'keepTrying'
 >
 
 interface ConversationProps {
@@ -20,6 +20,8 @@ interface ConversationProps {
   /** Index of the first line of the card on screen, or null for none (see useChoreography). */
   shown: number | null
   phase: Phase
+  /** A part is walking in: the card steps back and a quiet "One moment…" waits in its place. */
+  steppedBack: boolean
   actions: CardActions
 }
 
@@ -49,7 +51,7 @@ function cardLines(lines: readonly Line[], start: number | null): Line[] {
  * After the entry conversation the same card carries the guide's
  * invitations and questions (docs/slice-4-handoff.md), or nothing at all.
  */
-export function Conversation({ state, shown, phase, actions }: ConversationProps) {
+export function Conversation({ state, shown, phase, steppedBack, actions }: ConversationProps) {
   const lines = cardLines(state.lines, shown)
   const current = shown === state.card && phase === 'card'
   // Announced underneath any animation: the wait, then each new card.
@@ -62,13 +64,18 @@ export function Conversation({ state, shown, phase, actions }: ConversationProps
       </p>
       {shown !== null && (
         <div className="card-slot">
+          {steppedBack && (
+            <p className="card-pill" aria-hidden="true">
+              {copy.talk.waiting}
+            </p>
+          )}
           <Card
             key={shown}
             lines={lines}
             step={state.step}
             choices={choicesFor(state)}
-            quieter={canAddQuieter(state)}
             phase={phase}
+            away={steppedBack}
             current={current}
             actions={actions}
           />
@@ -84,26 +91,25 @@ interface CardProps {
   step: Step
   /** Free-write phrases to tap, as the card first showed them. */
   choices: string[]
-  /** The closing card may still offer a quieter part (none was added at Turn 3). */
-  quieter: boolean
   phase: Phase
+  /** Stepped back while a part walks in. */
+  away: boolean
   /** This card is the conversation's current one, and settled on screen. */
   current: boolean
   actions: CardActions
 }
 
-function Card({ lines, step: stepNow, choices: choicesNow, quieter: quieterNow, phase, current, actions }: CardProps) {
+function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current, actions }: CardProps) {
   // The card keeps its own shape while it ghosts: no layout jump.
   const [step] = useState(stepNow)
   const [choices] = useState(choicesNow)
-  const [quieter] = useState(quieterNow)
   const cardRef = useRef<HTMLElement>(null)
   const slim = step === 'trying'
 
   return (
     <section
       ref={cardRef}
-      className={`card${slim ? ' card--slim' : ''}${phase === 'waiting' ? ' is-waiting' : ''}${phase === 'arriving' ? ' is-away' : ''}`}
+      className={`card${slim ? ' card--slim' : ''}${phase === 'waiting' ? ' is-waiting' : ''}${phase === 'arriving' || away ? ' is-away' : ''}`}
       aria-label={copy.talk.label}
       aria-busy={phase !== 'card'}
     >
@@ -116,7 +122,7 @@ function Card({ lines, step: stepNow, choices: choicesNow, quieter: quieterNow, 
       </div>
 
       {ANSWERED_STEPS.includes(step) ? (
-        <Reply step={step} choices={choices} phase={phase} interactive={current} cardRef={cardRef} actions={actions} />
+        <Reply step={step} choices={choices} phase={phase} away={away} interactive={current} cardRef={cardRef} actions={actions} />
       ) : (
         <div className="card__actions">
           {step === 'invite' && (
@@ -150,12 +156,12 @@ function Card({ lines, step: stepNow, choices: choicesNow, quieter: quieterNow, 
               {copy.talk.support}
             </a>
           )}
-          {step === 'closing' && quieter && (
-            <button type="button" className="card__button card__button--quiet" disabled={!current} data-opens-card onClick={actions.addQuieter}>
-              {copy.talk.addQuieter}
+          {step === 'gathered' && (
+            <button type="button" className="card__button" disabled={!current} onClick={actions.goOn}>
+              {copy.talk.goOn}
             </button>
           )}
-          {(step === 'closing' || step === 'closed' || step === 'paused') && (
+          {(step === 'closed' || step === 'paused') && (
             <button type="button" className="card__button card__button--quiet" aria-label={copy.talk.closeLabel} onClick={actions.dismiss}>
               {copy.talk.close}
             </button>
@@ -170,13 +176,14 @@ interface ReplyProps {
   step: Step
   choices: string[]
   phase: Phase
+  away: boolean
   interactive: boolean
   cardRef: RefObject<HTMLElement | null>
   actions: CardActions
 }
 
 /** The field and its buttons, for a question that waits for a typed answer. */
-function Reply({ step, choices, phase, interactive, cardRef, actions }: ReplyProps) {
+function Reply({ step, choices, phase, away, interactive, cardRef, actions }: ReplyProps) {
   const [draft, setDraft] = useState('')
   const fieldRef = useRef<HTMLTextAreaElement>(null)
   const fieldId = useId()
@@ -198,6 +205,13 @@ function Reply({ step, choices, phase, interactive, cardRef, actions }: ReplyPro
       (active instanceof HTMLElement && active.dataset.opensCard !== undefined)
     if (interactive && idle) fieldRef.current?.focus()
   }, [interactive, cardRef])
+
+  // A part walking in gets the whole meadow: on a phone the keyboard goes
+  // down with the card (it would cover the meadow), and the next card's
+  // field is a tap away.
+  useLayoutEffect(() => {
+    if (away && document.activeElement === fieldRef.current) fieldRef.current?.blur()
+  }, [away])
 
   // The sent answer stays in the ghosted field while the world waits.
   const submit = (text: string) => {
@@ -235,9 +249,7 @@ function Reply({ step, choices, phase, interactive, cardRef, actions }: ReplyPro
 
   /** The quiet way out beside Send, at the same weight (never more). */
   const aside =
-    step === 'confirm'
-      ? { label: copy.talk.noChanges, onClick: () => actions.noChanges(copy.talk.noChanges) }
-      : step === 'alsoHere'
+    step === 'alsoHere'
         ? { label: copy.talk.noOneElse, onClick: () => submit(copy.talk.noOneElse) }
         : step === 'quieter'
           ? { label: copy.talk.quieterNo, onClick: () => submit(copy.talk.quieterNo) }
@@ -245,7 +257,7 @@ function Reply({ step, choices, phase, interactive, cardRef, actions }: ReplyPro
         ? { label: copy.talk.enough, onClick: actions.decline }
         : step === 'noticing'
           ? { label: copy.talk.skip, onClick: actions.decline }
-          : step === 'unheard' || step === 'newPart' || step === 'experiment' || step === 'voice'
+          : step === 'newPart' || step === 'experiment' || step === 'voice'
             ? { label: copy.talk.notNow, onClick: actions.decline }
             : null
 

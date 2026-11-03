@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from 'react'
 import type { Dispatch } from 'react'
 import type { Action, LandscapeState } from '../model/types'
-import { analyzeFreeWrite, checkRisk, checkToward, chooseFigure, extractName, parseCorrections, reflect } from './ai'
+import { analyzeFreeWrite, checkRisk, checkToward, chooseFigure, extractName, reflect } from './ai'
 import { conversationReducer, startConversation } from './flow'
 import type { ConversationEvent, ConversationState, Pending } from './flow'
 import type { ReflectRequest } from './contract'
@@ -10,7 +10,7 @@ import type { ReflectRequest } from './contract'
 type WithoutMap<E> = E extends unknown ? Omit<E, 'map'> : never
 type Outcome = Extract<
   WithoutMap<ConversationEvent>,
-  { type: 'reflected' | 'freeWriteRead' | 'towardChecked' | 'corrected' | 'riskChecked' | 'figured' }
+  { type: 'reflected' | 'freeWriteRead' | 'towardChecked' | 'riskChecked' | 'figured' }
 >
 
 /** Reflections started ahead of their turn, by request (key order aside), until the flow asks for one. */
@@ -30,8 +30,6 @@ async function run(job: Pending, signal: AbortSignal, early: Early): Promise<Out
     }
     case 'towardCheck':
       return { type: 'towardChecked', seq: job.seq, result: await checkToward(job.request, signal) }
-    case 'corrections':
-      return { type: 'corrected', seq: job.seq, ops: await parseCorrections(job.request, signal) }
     case 'risk':
       return { type: 'riskChecked', seq: job.seq, atRisk: await checkRisk(job.request, signal) }
     case 'figure': {
@@ -94,14 +92,13 @@ export function useConversation(landscape: LandscapeState, dispatch: Dispatch<Ac
     state,
     answer: useCallback((text: string) => say({ type: 'answer', text }), [say]),
     choose: useCallback((phrase: string) => say({ type: 'choice', phrase }), [say]),
-    noChanges: useCallback((text: string) => say({ type: 'noChanges', text }), [say]),
+    goOn: useCallback(() => say({ type: 'goOn' }), [say]),
     dismiss: useCallback(() => say({ type: 'dismiss' }), [say]),
     decline: useCallback(() => say({ type: 'decline' }), [say]),
     accept: useCallback(() => say({ type: 'accept' }), [say]),
     tryExperiment: useCallback(() => say({ type: 'tryExperiment' }), [say]),
     tried: useCallback(() => say({ type: 'tried' }), [say]),
     keepTrying: useCallback(() => say({ type: 'keepTrying' }), [say]),
-    addQuieter: useCallback(() => say({ type: 'addQuieter' }), [say]),
     newPart: useCallback(() => say({ type: 'newPart' }), [say]),
     enteredWhatIf: useCallback(() => say({ type: 'enteredWhatIf' }), [say]),
     getToKnow: useCallback((partId: string) => say({ type: 'getToKnow', partId }), [say]),

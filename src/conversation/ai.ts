@@ -2,7 +2,6 @@ import {
   API,
   isFigureReading,
   TOWARD_LABELS,
-  isCorrectionsResponse,
   isExtractResponse,
   isFreeWriteAnalysis,
   isJudgement,
@@ -10,13 +9,11 @@ import {
   isRiskResponse,
 } from './contract'
 import type {
-  CorrectionsRequest,
   ExtractRequest,
   FigureReading,
   FigureRequest,
   FreeWriteAnalysis,
   FreeWriteRequest,
-  ParsedOp,
   ReflectRequest,
   RiskRequest,
   TowardCheck,
@@ -81,9 +78,4 @@ export async function chooseFigure(request: FigureRequest, signal: AbortSignal):
 export async function extractName(request: ExtractRequest, signal: AbortSignal): Promise<string | null> {
   const data = await post(API.extractName, request, signal)
   return isExtractResponse(data) ? data.label : null
-}
-
-export async function parseCorrections(request: CorrectionsRequest, signal: AbortSignal): Promise<ParsedOp[] | null> {
-  const data = await post(API.corrections, request, signal)
-  return isCorrectionsResponse(data) ? data.ops : null
 }

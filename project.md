@@ -395,3 +395,50 @@ This decision will determine the tone of the responses, what happens after a cha
   pass.
 - **No tests:** `src/conversation/flow.test.ts` is deleted, per the
   project rule; `src/model/landscape.test.ts` predates the rule and stays.
+
+### 2026-11-03 — The card steps back while a part walks in
+
+- **Change (Option A step 2, frame A03):** when a part is named, the card
+  fades out and a small "One moment…" waits in the sky until the part
+  stands on its spot and the next card is ready. On a phone the field lets
+  go of focus, so the keyboard goes down and the meadow is clear; the next
+  question's field takes one tap. Answers that bring no one keep the
+  ghosted card, and the keyboard, as before.
+- **Spots:** every starting spot is on the open meadow: below the sky on
+  a phone (the card floats there) and left or right of the card on a wide
+  screen. Moved: escapes (0.42, 0.42) and (0.42, 0.86), hurts (0.12,
+  0.44), and the second neutral spot (0.36, 0.8). Guards moved 0.03 left
+  so a large part 1's arms clear the desktop card. Hurts now starts at
+  (0.16, 0.8): at (0.08, 0.76) a large part 1 was cut off by the edge.
+- **Spacing:** clearance is measured between columns (a figure above its
+  spot and its label below, by size), not between spots, so a new part
+  doesn't stand on a large part's label.
+- **Checked:** scripted AI answers in the browser (no model calls), six
+  paths at 390×844 and 1440×900, sampling every arrival: the bar showed
+  and the card was fully hidden throughout, focus left the field, and the
+  next card took it back. No question card covered a part. Known left:
+  the closing card on a phone (replaced next) and label crowding with
+  three parts on one side.
+
+### 2026-11-03 — Act 1 closes with who came
+
+- **Change (Option A step 3, frame A06):** Turn 4's question and its
+  typed corrections are gone, and so is the closing card. After Turn 3's
+  reflection the guide says "These are the ones who came." ("This is the
+  one who came." for one part) with a single "Go on". Go on hands the map
+  over: the top bar and the summary note arrive then, as before. With
+  nobody on the map, the early close stays.
+- **Removed:** the corrections route (`/api/corrections`, its prompt,
+  schema and parser), `corrections.ts`, the confirm, closing and unheard
+  steps, the wish, "No changes" and "Add a quieter part". Turn 3's quieter
+  question is now the one place a rarely heard part is asked about; "Add a
+  part" stays in the bar. The "What if" invite no longer quotes a wish.
+- **Why:** Option A's Act 1 ends on a picture of who came, not a report to
+  check. Fixing the map in words was the stitched-on part of the journey;
+  Act 2 and Act 3 do that work by touch.
+- **Checked:** scripted AI answers in the browser (no model calls), the
+  same six paths at 390×844 and 1440×900: every one reached "These are the
+  ones who came.", Go on brought the bar and the note, and "What if…"
+  opened its invitation without a wish. No page errors. Build and lint
+  pass. Known left: after the hand-over on a phone, the bar shrinks the
+  map and three labels crowd (the bar goes in step 8).

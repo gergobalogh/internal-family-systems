@@ -2,11 +2,9 @@ import { NAME_MAX_LENGTH } from '../model/landscape'
 import { LOOKS } from '../model/types'
 import type { Action, LandscapeState, Look, Placement } from '../model/types'
 import {
-  AFFIRM_FORMS,
   LISTED_FORMS,
   NO_FORMS,
   SEPARATE_FORMS,
-  UNLINK_FORMS,
   UNSURE_FORMS,
   YES_FORMS,
   checkReflection,
@@ -19,14 +17,12 @@ import {
   wordRun,
 } from './checks'
 import type {
-  CorrectionsRequest,
   FigureChoice,
   FigureReading,
   FigureRequest,
   FreeWriteAnalysis,
   FreeWriteForm,
   FreeWriteRequest,
-  ParsedOp,
   PartKind,
   PartKindChoice,
   ReflectRequest,
@@ -35,8 +31,6 @@ import type {
   TowardCheck,
   TowardCheckRequest,
 } from './contract'
-import { applyCorrections } from './corrections'
-import type { CorrectionLink, CorrectionPart, Wish } from './corrections'
 import { EDGE_SPOTS, clearestSpot, startingSpot } from './geometry'
 import { script } from './script'
 import { arrangementChanges, arrangementDiffers, partPhrases, summarize, summaryClauses } from './summary'
@@ -87,8 +81,6 @@ export type Confidence =
   | { tag: 'low'; probability: number }
   /** JEV failed, timed out, or was skipped. */
   | { tag: 'notJudged' }
-  /** An LLM-parsed correction, verified against the person's words. */
-  | { tag: 'parsed' }
   /** The app's starting choice; no user source. */
   | { tag: 'default' }
 
@@ -107,7 +99,7 @@ export interface Attribute {
     | 'secondPart'
     | 'alsoHere'
     | 'unheard'
-    | 'confirmation'
+    | 'gathered'
     | 'safety'
     | 'invitation'
     | 'experiment'
@@ -155,16 +147,13 @@ export type Step =
   | 'alsoHere'
   /** Turn 3 with nothing left over: is there a quieter feeling? */
   | 'quieter'
-  | 'confirm'
-  /** The full run's closing card: Close, or add a part that rarely gets heard. */
-  | 'closing'
+  /** Act 1's close: "These are the ones who came." and Go on. */
+  | 'gathered'
   /** Nothing: the card has only lines and Close (an early close, a last reflection). */
   | 'closed'
   /** No card. */
   | 'idle'
   // After the entry conversation.
-  /** Add a quieter part: what they'd call the part that rarely gets heard. */
-  | 'unheard'
   /** Add a part: what they'd call it. */
   | 'newPart'
   /** The experiment invitation: Not now or Let's try. */
@@ -192,8 +181,6 @@ export const ANSWERED_STEPS: readonly Step[] = [
   'secondName',
   'alsoHere',
   'quieter',
-  'confirm',
-  'unheard',
   'newPart',
   'experiment',
   'voice',
@@ -203,7 +190,6 @@ export const ANSWERED_STEPS: readonly Step[] = [
 
 /** Steps with a way out that keeps the map as it is (Not now, That's enough for now, Skip this one, Finish without changes). */
 export const DECLINABLE_STEPS: readonly Step[] = [
-  'unheard',
   'newPart',
   'invite',
   'nothingMoved',
@@ -217,7 +203,6 @@ export type Job =
   | { kind: 'reflect'; request: ReflectRequest }
   | { kind: 'freeWrite'; request: FreeWriteRequest }
   | { kind: 'towardCheck'; request: TowardCheckRequest }
-  | { kind: 'corrections'; request: CorrectionsRequest }
   | { kind: 'risk'; request: RiskRequest }
   /**
    * A part is about to be named: which figure fits it and which hidden kind
@@ -281,8 +266,6 @@ export interface ConversationState {
   ended: boolean
   /** Risk language was seen: no more questions, invitations, or noticing this session. */
   paused: boolean
-  /** Turn 4's first usable wish, quoted in the experiment invitation. */
-  wish: Wish | null
   /** The experiment invitation has been shown, or they started one themselves: the app doesn't invite again. */
   invited: boolean
   /** How "What if" differed from "How it is" when they said they'd tried it. */
@@ -295,11 +278,9 @@ export interface ConversationState {
 
 export type ConversationEvent =
   | { type: 'answer'; text: string; map: LandscapeState }
-  | { type: 'noChanges'; text: string; map: LandscapeState }
   | { type: 'reflected'; seq: number; text: string | null; map: LandscapeState }
   | { type: 'freeWriteRead'; seq: number; result: FreeWriteAnalysis | null; map: LandscapeState }
   | { type: 'towardChecked'; seq: number; result: TowardCheck | null; map: LandscapeState }
-  | { type: 'corrected'; seq: number; ops: ParsedOp[] | null; map: LandscapeState }
   | { type: 'riskChecked'; seq: number; atRisk: boolean | null; map: LandscapeState }
   | { type: 'figured'; seq: number; result: FigureReading | null; extracted: string | null; map: LandscapeState }
   /** One of the verified free-write phrases on the card was tapped (Turn 1 or Turn 3). */
@@ -318,8 +299,8 @@ export type ConversationEvent =
   | { type: 'keepTrying'; map: LandscapeState }
   /** The person switched to "What if…". */
   | { type: 'enteredWhatIf'; map: LandscapeState }
-  /** Add a quieter part, on the closing card. */
-  | { type: 'addQuieter'; map: LandscapeState }
+  /** Go on, at Act 1's close: the map is theirs. */
+  | { type: 'goOn'; map: LandscapeState }
   /** Add a part, from the top bar in "How it is". */
   | { type: 'newPart'; map: LandscapeState }
   /** Get to know it, on a selected part. */
@@ -328,7 +309,6 @@ export type ConversationEvent =
   | { type: 'notice'; before: LandscapeState; partId: string | null; map: LandscapeState }
 
 const high: Confidence = { tag: 'high' }
-const parsed: Confidence = { tag: 'parsed' }
 const notJudged: Confidence = { tag: 'notJudged' }
 const byDefault: Confidence = { tag: 'default' }
 const jev = (probability: number): Confidence =>
@@ -357,11 +337,6 @@ function request(state: ConversationState, job: Job): ConversationState {
 
 function closeWith(state: ConversationState, closing: string): ConversationState {
   return { ...guide(state, closing), step: 'closed', asked: '', ended: true }
-}
-
-/** The full run's closing: the map is theirs, with a quieter part theirs to add. */
-function closeFullRun(state: ConversationState): ConversationState {
-  return { ...closeWith(state, script.closing), step: 'closing' }
 }
 
 /** The card has said its piece: lines and Close, nothing awaited. */
@@ -441,7 +416,7 @@ const partNow = (state: ConversationState, map: LandscapeState, id: string) =>
 const isHere = (state: ConversationState, map: LandscapeState, id: string) => partNow(state, map, id)?.removed === false
 
 /** The tension link as the map has it (including taken down), or null before part 2. */
-function linkNow(state: ConversationState, map: LandscapeState): CorrectionLink | null {
+function linkNow(state: ConversationState, map: LandscapeState): { id: string; between: [string, string]; removed: boolean } | null {
   if (!state.link) return null
   return map.links[state.link] ?? { id: state.link, between: [PART_1, PART_2], removed: false }
 }
@@ -641,7 +616,6 @@ const emptyConversation = (): ConversationState => ({
   link: null,
   ended: false,
   paused: false,
-  wish: null,
   invited: false,
   tried: [],
   subject: null,
@@ -918,12 +892,30 @@ function nameTurn3(
   return toTurn4(created, map, last)
 }
 
-// ---------- Turn 4: confirmation and one correction round ----------
+// ---------- Act 1's close (docs/redesign/story-redesign.md, frame A06) ----------
 
-/** Turn 4 opens with a reflection on Turn 3's answer — unless it added nobody, or wasn't asked. */
+/** After Turn 3: a reflection on its answer — unless it added nobody, or wasn't asked — then Act 1's close. */
 function toTurn4(state: ConversationState, map: LandscapeState, last: Exchange | null): ConversationState {
-  if (!last) return toConfirm(state, map)
+  if (!last) return gather(state, map)
   return request(state, { kind: 'reflect', request: { turn: 4, freeWrite: state.answers.freeWrite ?? '', ...last } })
+}
+
+/**
+ * "These are the ones who came.", over the meadow with everyone on it, and
+ * Go on. It replaces Turn 4's summary question and the closing card: the
+ * map is changed by hand, later. Without parts, the conversation closes early.
+ */
+function gather(state: ConversationState, map: LandscapeState): ConversationState {
+  const here = visibleNow(state, map)
+  if (here.length === 0) return closeWith(state, script.closingEarly)
+  const noted = note(state, { subject: 'conversation', attribute: 'gathered', value: here.map((part) => part.name).join(', '), source: null, confidence: byDefault })
+  return { ...guide(noted, script.gathered(here.length)), step: 'gathered', asked: '' }
+}
+
+/** Go on: the entry conversation is over and the map is the person's (until Act 2 is built, as Close did). */
+function onGoOn(state: ConversationState): ConversationState {
+  if (state.pending || state.step !== 'gathered') return state
+  return { ...idle(state), ended: true }
 }
 
 function summaryInput(state: ConversationState, map: LandscapeState): SummaryInput {
@@ -956,99 +948,24 @@ export function mapNote(state: ConversationState, map: LandscapeState): string |
   return script.noteWhatIf(summaryClauses({ ...input, parts }))
 }
 
-/** The map summary and "what would you change?". Without parts, the conversation closes early. */
-function toConfirm(state: ConversationState, map: LandscapeState): ConversationState {
-  if (visibleNow(state, map).length === 0) return closeWith(state, script.closingEarly)
-  return ask(state, 'confirm', script.confirm(summarize(summaryInput(state, map))))
-}
-
-const confirmation = (value: string, source: string, confidence: Confidence): Attribute => ({
-  subject: 'conversation',
-  attribute: 'confirmation',
-  value,
-  source,
-  confidence,
-})
-
-function onConfirmAnswer(state: ConversationState, map: LandscapeState, text: string): ConversationState {
-  if (matchesAny(text, AFFIRM_FORMS)) return closeFullRun(note(state, confirmation('affirmed', text, high)))
-  if (matchesAny(text, UNLINK_FORMS)) {
-    return settleCorrections(state, map, text, [{ kind: 'unlink', quote: text, refersTo: '', newName: '' }], high)
-  }
-  const parts = partsNow(state, map)
-  const link = drawnLink(state, map)
-  const name = (id: string) => parts.find((part) => part.id === id)!.name
-  return request(state, {
-    kind: 'corrections',
-    request: {
-      correction: text,
-      parts: parts.filter((part) => !part.removed).map((part) => part.name),
-      removed: parts.filter((part) => part.removed).map((part) => part.name),
-      link: link && [name(link[0]), name(link[1])],
-    },
-  })
-}
-
-/** Apply what verifies, narrate it, then the wish and map lines as needed, then close. */
-function settleCorrections(
-  state: ConversationState,
-  map: LandscapeState,
-  text: string,
-  ops: readonly ParsedOp[],
-  confidence: Confidence,
-): ConversationState {
-  const parts: CorrectionPart[] = partsNow(state, map)
-  const outcome = applyCorrections(text, ops, parts, linkNow(state, map))
-  const changed = outcome.applied.length > 0 || outcome.notes.length > 0
-  const affirmed = !changed && !outcome.wish && !outcome.unclear
-
-  let settled = act({ ...state, wish: outcome.firstWish }, map, ...outcome.actions)
-  settled = note(
-    settled,
-    ...outcome.changes.map((change): Attribute => ({ ...change, source: text, confidence })),
-    confirmation(affirmed ? 'affirmed' : 'corrected', text, confidence),
-  )
-  if (changed) settled = guide(settled, script.done.line(outcome.applied, outcome.notes))
-  if (outcome.wish) settled = guide(settled, script.wishLine)
-  if (outcome.unclear) settled = guide(settled, script.mapLine)
-  return closeFullRun(settled)
-}
-
-function onCorrected(state: ConversationState, seq: number, ops: ParsedOp[] | null, map: LandscapeState): ConversationState {
-  const job = state.pending
-  if (job?.kind !== 'corrections' || job.seq !== seq) return state
-  const settled = { ...state, pending: null }
-  const text = job.request.correction
-  // A failed parse is never a silent close.
-  if (!ops) {
-    return closeFullRun(guide(note(settled, confirmation('not understood', text, notJudged)), script.mapLine))
-  }
-  return settleCorrections(settled, map, text, ops, parsed)
-}
-
-function onNoChanges(state: ConversationState, text: string): ConversationState {
-  if (state.pending || state.step !== 'confirm') return state
-  return closeFullRun(note(answered(state, text), confirmation('affirmed', text, high)))
-}
-
 // ---------- After the entry conversation (docs/slice-4-handoff.md) ----------
 
-/** A full run reached Turn 4's confirmation (not an early close, not a pause before it). */
-const fullRun = (state: ConversationState) => state.record.some((entry) => entry.attribute === 'confirmation')
+/** A full run reached Act 1's close (not an early close, not a pause before it). */
+const fullRun = (state: ConversationState) => state.record.some((entry) => entry.attribute === 'gathered')
 
 /**
  * Whether the app may open a card of its own (the invitation, noticing):
  * never over a card that waits for the person, an answer in flight, or a pause.
- * The closing card, or any card with only Close, may be replaced.
+ * A card with only Close may be replaced.
  */
 function appMayOpen(state: ConversationState): boolean {
-  const replaceable: Step[] = ['closing', 'closed', 'idle']
+  const replaceable: Step[] = ['closed', 'idle']
   return state.ended && !state.paused && !state.pending && replaceable.includes(state.step)
 }
 
 /** Whether the person may start something (Get to know it, Add a part): their own request wins over the app's open cards. */
 export function canGetToKnow(state: ConversationState): boolean {
-  const replaceable: Step[] = ['closing', 'closed', 'idle', 'invite', 'noticing']
+  const replaceable: Step[] = ['closed', 'idle', 'invite', 'noticing']
   return state.ended && !state.paused && !state.pending && replaceable.includes(state.step)
 }
 
@@ -1072,18 +989,10 @@ function arranged(state: ConversationState, map: LandscapeState): ArrangedPart[]
   }))
 }
 
-// ---------- Adding parts after the conversation: a quieter part (closing card), or any part (top bar) ----------
+// ---------- Adding a part after the conversation (top bar) ----------
 
 /** Parts are numbered in the order they're named; removed ones keep their number. */
 const nextPartId = (state: ConversationState) => `part-${state.parts.length + 1}`
-
-/** The closing card offers a quieter part only when Turn 3 didn't bring one. */
-export const canAddQuieter = (state: ConversationState) => state.unheard === null
-
-function onAddQuieter(state: ConversationState): ConversationState {
-  if (state.pending || state.step !== 'closing' || !canAddQuieter(state)) return state
-  return ask(freshCard(state), 'unheard', script.unheard)
-}
 
 /** Adding changes who is on the map, so only in "How it is". */
 function onNewPart(state: ConversationState, map: LandscapeState): ConversationState {
@@ -1093,16 +1002,12 @@ function onNewPart(state: ConversationState, map: LandscapeState): ConversationS
 
 /** A name, or an explicit no/unsure — never an inferred one. A bare "yes" gets the question again. */
 function resolveNewName(state: ConversationState, text: string): ConversationState {
-  const declined = matchesAny(text, NO_FORMS) ? 'none' : matchesAny(text, UNSURE_FORMS) ? 'unsure' : null
-  if (declined && state.step === 'unheard') {
-    return idle(note(state, { subject: 'conversation', attribute: 'unheard', value: declined, source: text, confidence: high }))
-  }
-  if (declined) return idle(state)
+  if (matchesAny(text, NO_FORMS) || matchesAny(text, UNSURE_FORMS)) return idle(state)
   if (matchesAny(text, YES_FORMS)) return reask(state)
   return chooseFigure(state, text.trim())
 }
 
-/** A part that rarely gets heard joins the map small, at the edge (Turn 3, or the closing card). */
+/** A part that rarely gets heard joins the map small, at the edge (Turn 3's quieter feeling). */
 function unheardPart(
   state: ConversationState,
   map: LandscapeState,
@@ -1140,21 +1045,6 @@ function unheardPart(
   return { ...created, unheard: id }
 }
 
-/** The person named a part that rarely gets heard, from the closing card. */
-function nameUnheard(
-  state: ConversationState,
-  map: LandscapeState,
-  figure: Figure,
-  kind: KindReading,
-  name: string,
-  nameConfidence: Confidence,
-): ConversationState {
-  const text = state.answers.unheard!
-  const id = nextPartId(state)
-  const nameRecord: Attribute = { subject: id, attribute: 'name', value: name, source: text, confidence: nameConfidence }
-  return rest(guide(unheardPart(state, map, id, figure, kind, text, nameRecord), script.unheardAdded(name)))
-}
-
 /** Added from the top bar: it joins at a starting spot, at the usual size. */
 function nameNewPart(
   state: ConversationState,
@@ -1181,17 +1071,14 @@ function nameNewPart(
   return rest(guide(created, script.partAdded(name)))
 }
 
-/** The first time they enter "What if" after a full run: one invitation, in their wish's words if they made one. */
+/** The first time they enter "What if" after a full run: one invitation. */
 function onEnteredWhatIf(state: ConversationState, map: LandscapeState): ConversationState {
   if (state.invited || !appMayOpen(state) || !fullRun(state) || visibleNow(state, map).length === 0) return state
-  const { wish } = state
-  // A wish about a part that has since left the map gets the generic invitation.
-  const quote = wish && (wish.partId === null || isHere(state, map, wish.partId)) ? wish.quote : null
   const shown = note(
     { ...state, invited: true },
-    { subject: 'conversation', attribute: 'invitation', value: quote ? 'shown, with their wish' : 'shown', source: quote, confidence: quote ? high : byDefault },
+    { subject: 'conversation', attribute: 'invitation', value: 'shown', source: null, confidence: byDefault },
   )
-  return { ...guide(freshCard(shown), script.invite(quote)), step: 'invite', asked: '' }
+  return { ...guide(freshCard(shown), script.invite), step: 'invite', asked: '' }
 }
 
 /** The slim bar: they move things in "What if", then say when they've tried it. */
@@ -1329,7 +1216,6 @@ function onNoticingAnswer(state: ConversationState, text: string): ConversationS
 function onDecline(state: ConversationState): ConversationState {
   if (state.pending || !DECLINABLE_STEPS.includes(state.step)) return state
   const outcome: Partial<Record<Step, Attribute>> = {
-    unheard: { subject: 'conversation', attribute: 'unheard', value: 'not added', source: null, confidence: high },
     nothingMoved: { subject: 'conversation', attribute: 'experiment', value: 'finished without changes', source: null, confidence: high },
     invite: { subject: 'conversation', attribute: 'invitation', value: 'declined', source: null, confidence: high },
     experiment: { subject: 'conversation', attribute: 'experiment', value: 'not answered', source: null, confidence: high },
@@ -1341,7 +1227,7 @@ function onDecline(state: ConversationState): ConversationState {
 
 /** Close, on a card that waits for nothing. */
 function onDismiss(state: ConversationState): ConversationState {
-  const closable: Step[] = ['closing', 'closed', 'paused']
+  const closable: Step[] = ['closed', 'paused']
   if (state.pending || !closable.includes(state.step)) return state
   return idle(state)
 }
@@ -1418,10 +1304,6 @@ function proceed(state: ConversationState, text: string, map: LandscapeState): C
     case 'quieter':
       return onTurn3Answer(state, map, text)
 
-    case 'confirm':
-      return onConfirmAnswer(state, map, text)
-
-    case 'unheard':
     case 'newPart':
       return resolveNewName(state, text)
 
@@ -1543,8 +1425,6 @@ function onFigured(
     case 'alsoHere':
     case 'quieter':
       return nameTurn3(settled, map, figure, kind, name, confidence)
-    case 'unheard':
-      return nameUnheard(settled, map, figure, kind, name, confidence)
     case 'newPart':
       return nameNewPart(settled, map, figure, kind, name, confidence)
     default:
@@ -1583,7 +1463,7 @@ function onReflected(state: ConversationState, seq: number, text: string | null,
     case 3:
       return askTurn3(reflected, map)
     case 4:
-      return toConfirm(reflected, map)
+      return gather(reflected, map)
     case 'voice':
       return ask(reflected, 'intent', script.intent(partNow(settled, map, settled.subject!.id)!.name))
     case 'experiment':
@@ -1642,16 +1522,12 @@ export function conversationReducer(state: ConversationState, event: Conversatio
   switch (event.type) {
     case 'answer':
       return onAnswer(state, event.text, event.map)
-    case 'noChanges':
-      return onNoChanges(state, event.text)
     case 'reflected':
       return onReflected(state, event.seq, event.text, event.map)
     case 'freeWriteRead':
       return onFreeWriteRead(state, event.seq, event.result)
     case 'towardChecked':
       return onTowardChecked(state, event.seq, event.result, event.map)
-    case 'corrected':
-      return onCorrected(state, event.seq, event.ops, event.map)
     case 'riskChecked':
       return onRiskChecked(state, event.seq, event.atRisk, event.map)
     case 'figured':
@@ -1672,8 +1548,8 @@ export function conversationReducer(state: ConversationState, event: Conversatio
       return onKeepTrying(state, event.map)
     case 'enteredWhatIf':
       return onEnteredWhatIf(state, event.map)
-    case 'addQuieter':
-      return onAddQuieter(state)
+    case 'goOn':
+      return onGoOn(state)
     case 'newPart':
       return onNewPart(state, event.map)
     case 'getToKnow':

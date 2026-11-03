@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import type { ReactNode } from 'react'
-import { jumpRequested, jumpToClosing } from './conversation/devJump'
+import { jumpRequested, jumpToClose } from './conversation/devJump'
 import { canAddPart, canGetToKnow, canTryExperiment, mapNote } from './conversation/flow'
 import { useConversation } from './conversation/useConversation'
 import { canUndo, createLandscape, landscapeReducer } from './model/landscape'
@@ -22,8 +22,8 @@ import { StatusToast } from './ui/StatusToast'
 import { useChoreography } from './ui/useChoreography'
 import { useNoticing } from './ui/useNoticing'
 
-/** DEV ONLY (`?jump=after`): a full run already at its closing card. */
-const jump = import.meta.env.DEV && jumpRequested ? jumpToClosing() : null
+/** DEV ONLY (`?jump=after`): a full run already at Act 1's close. */
+const jump = import.meta.env.DEV && jumpRequested ? jumpToClose() : null
 const startingMap = jump?.landscape ?? createLandscape([])
 
 const walkParams = new URLSearchParams(window.location.search)
@@ -183,10 +183,11 @@ function TalkWorkspace() {
   const talk = useConversation(workspace.state, workspace.dispatch, jump?.conversation)
   const { state } = talk
   const [entering, setEntering] = useState(false)
-  const { shown, phase, waiting, settling } = useChoreography(state, entering)
+  const { shown, phase, waiting, settling, steppedBack } = useChoreography(state, entering)
 
-  // The last step: the bar and the map note arrive with the closing card (or
-  // a pause), when the map becomes the person's — and stay from then on.
+  // The last step: the bar and the map note arrive after Go on at Act 1's
+  // close (or with a pause, or an early close), when the map becomes the
+  // person's — and stay from then on.
   const [handedOver, setHandedOver] = useState(false)
   if (!handedOver && state.ended && shown === state.card && phase === 'card') setHandedOver(true)
 
@@ -207,8 +208,8 @@ function TalkWorkspace() {
     >
       {/* After a pause, the map keeps no summary of a conversation that stopped. */}
       {handedOver && !state.paused && <MapNote text={mapNote(state, workspace.state)} />}
-      <Conversation state={state} shown={shown} phase={phase} actions={talk} />
-      {jump && <p className="dev-badge">DEV · jumped to closing</p>}
+      <Conversation state={state} shown={shown} phase={phase} steppedBack={steppedBack} actions={talk} />
+      {jump && <p className="dev-badge">DEV · jumped to Act 1's close</p>}
     </Shell>
   )
 }

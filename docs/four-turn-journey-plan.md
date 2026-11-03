@@ -1,6 +1,6 @@
 # Four-turn journey plan — every answer brings someone
 
-**Status:** design agreed with user; steps 1–3 are complete (13/13 entrances, adaptive Turn 1 rows, and hidden kind placement).
+**Status:** design agreed with user; steps 1–4 are complete (13/13 entrances, adaptive Turn 1 rows, hidden kind placement, and Turn 3). Turn 4 is replaced by Act 1's close under the story redesign (step 5 below).
 **Date:** 2026-10-18.
 Wording is draft copy throughout. Build decisions not settled here belong
 to the build session.
@@ -147,6 +147,12 @@ With no closeness question, the summary speaks of closeness only for
 parts the person moved (today's `positionSpeaks` rule). The correction
 round, closing and everything after stay as they are.
 
+**Replaced (2026-11-03):** under the story redesign's Option A, Act 1
+closes with "These are the ones who came." and a single "Go on" instead
+of this summary question, the corrections and the closing card. The
+summary stays on the map as a note after the hand-over. See
+`project.md`, "Act 1 closes with who came".
+
 ## A part's kind (JEV, never shown)
 
 Asked alongside the figure, ideally as a second question in the same JEV
@@ -212,6 +218,8 @@ every answer, the pinned rule that the app never writes its own questions
    Under the redesign's Option A (`docs/redesign/story-redesign.md`),
    step 5's drag invite moves after Act 2.
 5. **Turn 4:** the drag invite and summary ordering for 3–4 parts.
+   **Replaced (2026-11-03)** by Act 1's close ("These are the ones who
+   came." · [Go on]); the drag invite moves after Act 2.
 6. **Turn 2 skip:** the "already said" check.
 
 ## Checks (in the running app; no test files)
@@ -243,5 +251,5 @@ every answer, the pinned rule that the app never writes its own questions
   [Something else…] · [No one else] · "Is there a quieter feeling ‘X’
   might be standing in front of?" · "Is there a quieter feeling here, one
   that rarely gets heard?"
-- Turn 4: "Move anyone nearer the light if they feel close — what would
-  you change?"
+- Turn 4 (replaced): "Move anyone nearer the light if they feel close —
+  what would you change?"

@@ -18,7 +18,9 @@ export type Phase = 'card' | 'waiting' | 'arriving'
  * → world waits, and a part named meanwhile walks in → next card. The next
  * card is held back while the world moves, and while any part is still
  * entering (`entering`, from the landscape: a Rive walk-in takes as long as
- * its gait needs).
+ * its gait needs). While a part walks in, the card steps back
+ * (`steppedBack`, docs/redesign/story-redesign.md, frame A03): nothing
+ * covers an arrival.
  */
 export function useChoreography(state: ConversationState, entering: boolean) {
   const waiting = state.pending !== null
@@ -28,6 +30,8 @@ export function useChoreography(state: ConversationState, entering: boolean) {
   const motionUntil = useRef(0)
   // Effects from before the first render (the dev jump) are already on the map, not motion to wait for.
   const seen = useRef(state.effects.length)
+  /** A part was just named: walking in, before the landscape reports it entering. */
+  const [named, setNamed] = useState(false)
 
   useEffect(() => {
     const fresh = state.effects.slice(seen.current)
@@ -38,11 +42,19 @@ export function useChoreography(state: ConversationState, entering: boolean) {
     // before it reports.
     if (fresh.some((action) => action.type === 'addPart')) {
       motionUntil.current = Math.max(motionUntil.current, now + WALK_MS)
+      setNamed(true)
     }
     if (fresh.some((action) => action.type === 'place' || action.type === 'remove' || action.type === 'unlink')) {
       motionUntil.current = Math.max(motionUntil.current, now + SETTLE_MS)
     }
   }, [state.effects])
+
+  // A walk's length; a longer Rive entrance keeps `entering` (reduced motion has none).
+  useEffect(() => {
+    if (!named) return
+    const timer = setTimeout(() => setNamed(false), WALK_MS)
+    return () => clearTimeout(timer)
+  }, [named])
 
   useEffect(() => {
     if (waiting || entering || state.card === shown) return
@@ -69,5 +81,7 @@ export function useChoreography(state: ConversationState, entering: boolean) {
     waiting,
     /** Parts glide slowly while the conversation is moving them. */
     settling: waiting || arriving || state.card !== shown,
+    /** A part is walking in while the guide waits: the card steps back, out of its way. */
+    steppedBack: (entering || named) && phase !== 'card',
   }
 }

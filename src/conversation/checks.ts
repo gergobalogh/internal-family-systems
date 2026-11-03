@@ -186,29 +186,6 @@ export const NO_FORMS = [
 ] as const
 export const UNSURE_FORMS = ['not sure', 'unsure', "i don't know", "don't know", 'maybe', 'no idea'] as const
 
-/** Turn 4: "what would you change?" answered with nothing to change. */
-export const AFFIRM_FORMS = [
-  'looks right',
-  'looks good',
-  'yes',
-  'yeah',
-  'nothing',
-  'all good',
-  'fine',
-  'no changes',
-] as const
-
-/** Turn 4: taking down the tension link, without the LLM (so it works AI-off). */
-export const UNLINK_FORMS = [
-  'not pulling apart',
-  'no pulling apart',
-  "they're fine together",
-  'they get along',
-  'remove the link',
-  'remove the tension',
-  'no tension',
-] as const
-
 /**
  * Every answer list. An answer equal to one of these is a fixed phrase that
  * can't carry risk language, so it needn't wait for the AI risk check.
@@ -219,8 +196,6 @@ export const LISTED_FORMS: readonly string[] = [
   ...YES_FORMS,
   ...NO_FORMS,
   ...UNSURE_FORMS,
-  ...AFFIRM_FORMS,
-  ...UNLINK_FORMS,
 ]
 
 /**
@@ -338,28 +313,3 @@ export function wordRun(text: string, needle: readonly string[]): { text: string
   return { text: text.slice(words[at].start, words[last].end), whole: at === 0 && last === words.length - 1 }
 }
 
-/**
- * Which of `names` (each as `nameWords`) occur in `words`, whole words only.
- * Longest match wins: inside "the worry about mom", "the worry" doesn't
- * count separately. Returns indexes into `names`.
- */
-export function namesIn(words: readonly string[], names: readonly (readonly string[])[]): number[] {
-  const occurrences = names
-    .flatMap((name, index) => {
-      const found: { index: number; start: number; length: number }[] = []
-      for (let start = findWords(words, name); start !== -1; start = findWords(words, name, start + 1)) {
-        found.push({ index, start, length: name.length })
-      }
-      return found
-    })
-    .sort((a, b) => b.length - a.length)
-  const taken = new Set<number>()
-  const matched = new Set<number>()
-  for (const { index, start, length } of occurrences) {
-    const span = Array.from({ length }, (_, offset) => start + offset)
-    if (span.some((position) => taken.has(position))) continue
-    span.forEach((position) => taken.add(position))
-    matched.add(index)
-  }
-  return [...matched]
-}

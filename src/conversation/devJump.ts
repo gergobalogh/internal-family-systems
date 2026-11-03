@@ -6,15 +6,15 @@ import type { ConversationEvent, ConversationState } from './flow'
 import type { PartKind } from './contract'
 
 /**
- * DEV ONLY: `?jump=after` starts at the closing card of a full run — two
- * linked parts and a Turn 4 wish, with "Add a quieter part" still on offer —
- * so everything after the entry conversation (docs/slice-4-handoff.md) can be
- * tried without typing the whole run. Ignored in production.
+ * DEV ONLY: `?jump=after` starts at Act 1's close of a full run — two
+ * linked parts, "These are the ones who came." and Go on — so everything
+ * after the entry conversation (docs/slice-4-handoff.md) can be tried
+ * without typing the whole run. Ignored in production.
  *
  * The run is played through the real reducers, with scripted AI results:
- * fallback reflections, a confident "frustrated" toward-check, the figures
- * JEV picks for these names, and a parse of the Turn 4 answer as one wish.
- * Nothing is invented that the flow wouldn't decide itself.
+ * fallback reflections, a confident "frustrated" toward-check, and the
+ * figures JEV picks for these names. Nothing is invented that the flow
+ * wouldn't decide itself.
  */
 export const jumpRequested =
   import.meta.env.DEV && new URLSearchParams(window.location.search).get('jump') === 'after'
@@ -27,9 +27,8 @@ const ANSWERS = [
   'the worry',
   "honestly I can't stand it",
   'the one who yells',
-  // Turn 3, the quieter question: nobody, so the closing card still offers one.
+  // Turn 3, the quieter question: nobody.
   'no',
-  'I wish the worry were further away',
 ]
 
 /** What JEV picks for the scripted names (Map, Defender). */
@@ -45,7 +44,7 @@ const certainKind = (kind: PartKind) => ({
   probabilities: { guards: kind === 'guards' ? 1 : 0, escapes: kind === 'escapes' ? 1 : 0, hurts: kind === 'hurts' ? 1 : 0, other: kind === 'other' ? 1 : 0 },
 })
 
-export function jumpToClosing(): { conversation: ConversationState; landscape: LandscapeState } {
+export function jumpToClose(): { conversation: ConversationState; landscape: LandscapeState } {
   let conversation = startConversation()
   let landscape = createLandscape([])
 
@@ -88,11 +87,6 @@ export function jumpToClosing(): { conversation: ConversationState; landscape: L
             extracted: job.request.name,
           })
           break
-        case 'corrections': {
-          const quote = job.request.correction
-          feed({ type: 'corrected', seq, ops: [{ kind: 'wish', quote, refersTo: 'the worry', newName: '' }] })
-          break
-        }
       }
     }
   }
