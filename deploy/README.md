@@ -11,10 +11,12 @@ visitor an hour, 2000 a day for everyone; a walk takes about 30).
 In `/home/www/internal-family-systems/.env` on the VPS (`chmod 600`):
 
 ```
-# Muse Spark writes the reflections, names and phrases (the standard model,
-# not a "contributor" one). Without it: Claude if ANTHROPIC_API_KEY is set,
-# else the app's fixed lines. MUSE_API_KEY works too.
+# Muse Spark writes the reflections, names and phrases: the contributor
+# model, muse-spark-1.3-contributor, cheap because Meta may train on what's
+# sent. Without it: Claude if ANTHROPIC_API_KEY is set, else the app's fixed
+# lines. MUSE_API_KEY works too.
 META_API_KEY=
+# Optional: MUSE_MODEL=muse-spark-1.3 for the standard model (no training, ~12x the price).
 # Figures, where parts start, the toward-check and the free-write's form.
 JEV_API_KEY=
 # The safety check, with JEV: keep both on while anyone tests with real words.

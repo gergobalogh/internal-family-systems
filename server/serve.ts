@@ -64,7 +64,7 @@ const server = createServer((req, res) => {
 })
 
 server.listen(PORT, '127.0.0.1', () => {
-  const words = config.metaApiKey ? 'Muse Spark' : config.anthropicApiKey ? 'Claude' : 'none (fixed lines)'
+  const words = config.metaApiKey ? config.museModel : config.anthropicApiKey ? 'Claude' : 'none (fixed lines)'
   const has = (key: string | undefined) => (key ? 'on' : 'off')
   console.log(
     `[ai] listening on 127.0.0.1:${PORT}; words: ${words}; JEV ${has(config.jevApiKey)}; ` +

@@ -34,6 +34,8 @@ export interface AiConfig {
   /** Meta's Model API (`META_API_KEY` or `MUSE_API_KEY`): when set, Muse Spark writes the reflections, names and phrases instead of Claude. */
   metaApiKey?: string
   metaBaseUrl: string
+  /** Which Muse Spark writes: the contributor one by default (see `MUSE_MODEL`). */
+  museModel: string
   jevApiKey?: string
   /** First-party API or a gateway in front of it. */
   jevBaseUrl: string
@@ -47,6 +49,7 @@ export function configFromEnv(env: Record<string, string | undefined>): AiConfig
     // Either name: Meta's own, or the one Muse (Meta's agent) goes by.
     metaApiKey: env.META_API_KEY || env.MUSE_API_KEY || undefined,
     metaBaseUrl: env.META_BASE_URL || 'https://api.meta.ai/v1',
+    museModel: env.MUSE_MODEL || MUSE_MODEL,
     jevApiKey: env.JEV_API_KEY || undefined,
     jevBaseUrl: env.JEV_BASE_URL || 'https://api.typesafe.ai',
     openaiApiKey: env.OPENAI_API_KEY || undefined,
@@ -56,11 +59,15 @@ export function configFromEnv(env: Record<string, string | undefined>): AiConfig
 const CLAUDE_MODEL = 'claude-opus-5-5'
 const CLAUDE_TIMEOUT_MS = 10_000
 /**
- * The standard Muse Spark, never a "contributor" one: those are cheaper
- * because what's sent may be used to train Meta's models.
+ * The contributor Muse Spark (the user's choice, for the price): about a
+ * twelfth of the standard one's, because Meta may train on what's sent and
+ * what it writes back. `MUSE_MODEL=muse-spark-1.3` in .env switches to the
+ * standard model, whose data isn't used for training.
  */
-const MUSE_MODEL = 'muse-spark-1.3'
+const MUSE_MODEL = 'muse-spark-1.3-contributor'
 const MUSE_TIMEOUT_MS = 10_000
+/** The user's choice: medium, not low. */
+const MUSE_EFFORT = 'medium'
 const JEV_MODEL = 'jev-1.13.0'
 const JEV_TIMEOUT_MS = 8_000
 const MODERATION_MODEL = 'omni-moderation-latest'
@@ -200,8 +207,8 @@ function museWriter(config: AiConfig): Writer {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.metaApiKey}` },
       body: JSON.stringify({
-        model: MUSE_MODEL,
-        reasoning_effort: 'low',
+        model: config.museModel,
+        reasoning_effort: MUSE_EFFORT,
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: prompt },

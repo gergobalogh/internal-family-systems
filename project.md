@@ -675,10 +675,12 @@ This decision will determine the tone of the responses, what happens after a cha
   search engines.
 - **Muse Spark instead of Claude** for the reflections, names and phrases,
   because it's cheaper: when `META_API_KEY` is set, those three go to
-  Meta's Model API (`muse-spark-1.3`, its OpenAI-compatible chat
-  completions, low reasoning effort). The standard model, never a
-  "contributor" one, which is cheaper because Meta may train on what's sent.
-  Claude stays the fallback on the laptop. JEV and OpenAI moderation are
+  Meta's Model API (its OpenAI-compatible chat completions, medium
+  reasoning effort, the user's choice over low). At first the standard `muse-spark-1.3`; then, the user's choice
+  for the price, `muse-spark-1.3-contributor` ($0.10 in / $0.20 out per
+  million tokens against $1.25 / $4.25), which Meta may train on: what's
+  sent and what it writes back. `MUSE_MODEL` in .env switches. Testers have
+  to be told. Claude stays the fallback on the laptop. JEV and OpenAI moderation are
   unchanged. Muse's wording hasn't been checked against the reflection
   checks yet.
 - **Limits:** the routes have no login, so each visitor gets 200 AI calls an
