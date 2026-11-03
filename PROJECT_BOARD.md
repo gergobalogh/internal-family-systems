@@ -5,7 +5,7 @@
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
 - **URL:** none
 - **Post where:** not decided yet
-- **Next:** Option A, step 8: remove the modes, the top bar and the map note, and drop the "one way to see this" label hedge ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md))
+- **Next:** Option A is built: try it on a real phone (Keep this picture's share sheet, the labels), then the five-person test and the therapist review ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md), section 6)
 - **Updated:** 2026-11-03
 
 ## Build
@@ -14,6 +14,7 @@
 - [x] Act 2: sit with one part (its words, what it's trying to do, thanks)
 - [x] Act 3 and the ending: step back, one "what if", a picture to keep
 - [x] The meadow is saved on the device, and the next visit opens on it
+- [x] No modes, top bar or map note: the parts keep their own few controls
 
 ## Polish
 - [ ] Phone first: nothing covers an arriving part; interface under 30% of the screen
@@ -31,22 +32,30 @@ only tracks the work.
 
 ## In progress
 
-- **The story redesign: building Option A** (picked 2026-11-02,
-  [docs/redesign/story-redesign.md](docs/redesign/story-redesign.md); the
-  decisions are in project.md's log). One walk in three acts (meet who's
-  here, sit with one, step back), ending with a picture to keep, and the
-  meadow saved on the device for the next visit. Option B is the shape of
-  later visits. Done: Turn 3, arrivals the card never covers, Act 1's
-  close, Act 2 (Fears built but off, `?fears`, until a therapist has
-  reviewed it), Act 3, the ending's picture, and saving with the next
-  visit. Next: removing the modes, top bar, map note and the label hedge. The doc's
-  section 6 has a five-person test script and the therapist questions.
+- **The story redesign: Option A is built; testing it next** (picked
+  2026-11-02, [docs/redesign/story-redesign.md](docs/redesign/story-redesign.md);
+  the decisions are in project.md's log). One walk in three acts (meet
+  who's here, sit with one, step back), ending with a picture to keep, and
+  the meadow saved on the device for the next visit. Option B is the shape
+  of later visits. All eight steps are done: Turn 3, arrivals the card
+  never covers, Act 1's close, Act 2 (Fears built but off, `?fears`, until
+  a therapist has reviewed it), Act 3, the ending's picture, saving with
+  the next visit, and no modes, top bar or map note (2026-11-03). Next: a
+  real phone, then the doc's section 6: a five-person test script and the
+  therapist questions.
 - **A reflection that follows resizing (brainstorm).** Idea: when a part is
   resized, call Claude so the reflection changes with the map. Possibly
   instead of the noticing fix below.
 
 ## Needs a decision
 
+- **What happens when the AI safety check fails?** (Codex review,
+  2026-11-03.) Now the local phrase list is the floor and the walk goes on
+  (`onRiskChecked` in `flow.ts`). Also, renaming a part isn't checked at
+  all; names typed for Someone new are. Decide before anyone tests with
+  their own material: pause, retry, or go on with a note. Test the checks
+  on lifelike examples and false alarms too (the "new home for my cat"
+  miss is ambiguous, not a clear risk).
 - **Skip the name shortening for short answers?** It's now the slowest
   thing before a part appears: 1.8–2.4 s at first, 2.3–6.0 s in the
   Self-hug and Pod runs, 2.1–3.2 s in the Stack and Ribbon runs, 2.7–2.9 s
@@ -95,8 +104,8 @@ only tracks the work.
   the side. Is anything different about it?" It was off to the side all
   along. Proposed fix: noticing compares where parts actually are (each
   part's distance band and size rank, before and after), not what the
-  summary chose to mention, so only a real change asks. The map note keeps
-  its current rule. May be folded into the resizing brainstorm above.
+  summary chose to mention, so only a real change asks. May be folded into
+  the resizing brainstorm above.
 - **A sense of progress, or a way to finish early.** The same review that
   made the quieter part optional also noted the entry conversation shows no
   progress and has no "finish with what we have" option. Not done yet. With
@@ -104,6 +113,15 @@ only tracks the work.
 
 ## Up next
 
+- **Before the five-person test: tell testers where their words go**
+  (Codex review, 2026-11-03). The test plan says "Nothing is stored beyond
+  their device" (story-redesign.md, section 6), but each answer is read by
+  Anthropic, OpenAI and JEV. Say so, and check each one's retention policy.
+  Also: in private mode or with storage blocked, nothing is saved, yet the
+  ending says "They'll be here when you come back".
+- **Before going public** (Codex review, 2026-11-03): the AI routes have
+  no login or rate limit (`server/ai.ts`), and there's no production host
+  for them yet; `?fears` works in a production build too.
 - **Try Keep this picture on a real phone** (2026-11-03). The browser
   checks only reach the download path; headless Chrome can't share files,
   so the share sheet (Save Image) is untested. Also look at the picture
@@ -113,32 +131,29 @@ only tracks the work.
   quieter part, and Fears shows only with `?fears`. The review (the
   redesign doc's questions 1, 3 and 5) decides whether Fears is on by
   default, and how Act 2 meets the parts it holds back.
-- **After Go on, labels crowd on a phone** (2026-11-03): the top bar
-  arrives and shrinks the map, so three name labels sit close at the
-  bottom. Step 8 removes the bar; check again then.
 - **Labels crowd when two parts share a side** (2026-11-03): with three
   parts, two name labels can touch or overlap at the bottom of a phone,
   or on the right on desktop. Starting spots now keep figures and labels
   apart from each other's columns, but there are few spots on each side.
-- **"Nothing's moved yet" stays on screen after switching back to How it
-  is** (phone, twice).
-- **Check a finger drag in "What if…" on a phone.** The recorder's drag
-  didn't count as a move on a phone (twice); the same drag counted on
-  desktop.
+  Rechecked after step 8: the bar no longer shrinks the map, but on a
+  phone ‘the one who wants to hide’ and ‘lying awake’ still touch at the
+  bottom.
+- **Check a finger drag at Act 3's dusk on a phone.** In the old "What
+  if…" mode the recorder's drag didn't count as a move on a phone (twice);
+  the same drag counted on desktop. Act 3's dusk uses the same layout.
 - **A new part's reflection can borrow the free-write.** With AI on, naming
   ‘the one who yells’ got "the part that keeps replaying everything you
   said in meetings", which was ‘the worry’'s. Seen before this change too;
   the Turn 3 reflection prompt may need to keep Turn 0's words apart from
   the new name.
-- **Review slice 4's draft wording:** the invitation, the "Take your time"
-  bar, the pause card, the Get to know it questions, "might be trying to:",
-  and "What if…"'s "To rename or remove it, go back to How it is." / "To take
-  it down, go back to How it is.", and the bar's "Add a part" / "What
-  would you call the part you'd like to add?" / "Try an experiment",
-  "Keep trying" / "Finish without changes", "Skip this one", "Change
-  figure" / "Keep this one" and the figure labels, the second part's
+- **Review the draft wording:** the pause card, Act 2's questions ("If ‘X’
+  had words, what would it say?" / "What might ‘X’ be trying to do for
+  you?"), "might be trying to:", "Skip this one", the part's box ("Smaller"
+  / "Larger", the "…", "Change figure" / "Keep this one", "Not one of my
+  parts", and for screen readers "Rename X" / "More for X") and the figure
+  labels, "Undo" in the corner, the second part's
   "There may be another feeling here too…" / "What would you call it?",
-  the "How it is" hint and "Smaller" / "Larger", and Turn 3's "You also
+  and Turn 3's "You also
   mentioned these. Are any of them here too?" / "Is there a quieter
   feeling ‘X’ might be standing in front of?" / "Is there a quieter
   feeling here, one that rarely gets heard?" / "No one else" / "I don't
@@ -182,6 +197,16 @@ only tracks the work.
   good" scores near zero on both moderation and JEV (Claude caught it).
 
 ## Done
+
+- **No modes, top bar or map note** (2026-11-03, Option A step 8). After
+  the walk the meadow has no menu: the How it is / What if… switch, Try an
+  experiment, the map note, Add a part and Get to know it are gone, with
+  the curtains. On a part: tap the name to rename, Smaller / Larger, and a
+  "…" for Change figure, Not one of my parts and Clear what it said.
+  Undo waits in the sky's corner while there's something to undo. "One
+  way to see this" is off the labels. Checked with scripted AI answers on
+  six paths on a phone and desktop, two with reduced motion, with no page
+  errors. Build and lint pass.
 
 - **The meadow is saved, and a later visit opens on it** (2026-11-03,
   Option A step 7, frame A15). From the ending on, the meadow is saved in

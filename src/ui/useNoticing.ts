@@ -11,7 +11,6 @@ export const NOTICE_IDLE_MS = 3500
  * as it was the last time it reported (the baseline), and which part was
  * edited last. The flow decides whether that is worth a question; either way
  * the baseline moves on, so a moment that couldn't be asked about is dropped.
- * Switching to "What if" drops a pending moment too.
  */
 export function useNoticing(
   landscape: LandscapeState,

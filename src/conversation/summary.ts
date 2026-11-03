@@ -3,12 +3,11 @@ import { MIN_VISIBLE_GAP, bucketOf, radiusOf } from './geometry'
 import { script } from './script'
 
 /**
- * Turn 4's map summary: a deterministic template, never LLM prose, so it
- * can't misreport. Sizes and positions describe the live layout ("How it
- * is", or "What if…" for the map note), but only where they come from an
- * answer or the person's own edits —
- * untouched defaults get no words. Names, the tension pair, and the unheard
- * part come from the conversation.
+ * What the map says about each part, as a deterministic template, never LLM
+ * prose: sizes and positions in the live layout, but only where they come
+ * from an answer or the person's own edits (untouched defaults get no
+ * words), and the part that rarely gets heard. Noticing a change uses it;
+ * Act 3 uses the arrangement helpers below.
  */
 
 /** Single-part size words: at least this big "takes up a lot of space"… */
@@ -61,10 +60,6 @@ function strictlyMost(parts: readonly SummaryPart[], sign: 1 | -1): SummaryPart 
     : null
 }
 
-export function summarize(input: SummaryInput): string {
-  return script.summary.lead(summaryClauses(input))
-}
-
 /** What the summary says about each part. */
 function describe({ parts }: SummaryInput): Map<string, Phrase[]> {
   const words = script.summary
@@ -99,47 +94,17 @@ export function partPhrases(input: SummaryInput): Map<string, Phrase[]> {
   return describe(input)
 }
 
-/** The summary's clauses, in creation order, before any lead-in. */
-export function summaryClauses(input: SummaryInput): string[] {
-  const { parts, link } = input
-  const words = script.summary
-  const phrases = describe(input)
-  const byId = new Map(parts.map((part) => [part.id, part]))
-
-  // Clauses in creation order; the tension clause follows the later of its two parts.
-  const clauses: string[] = []
-  const mentioned = new Set<string>()
-  const tensionAfter = link && parts.filter((part) => link.includes(part.id)).at(-1)?.id
-  for (const part of parts) {
-    const own = phrases.get(part.id)!.map((phrase) => phrase.text)
-    if (own.length > 0) {
-      clauses.push(words.part(part.name, own))
-      mentioned.add(part.id)
-    }
-    if (link && part.id === tensionAfter) {
-      const [a, b] = link.map((id) => byId.get(id)!)
-      clauses.push(words.tension(a.name, b.name))
-      link.forEach((id) => mentioned.add(id))
-    }
-  }
-
-  const unmentioned = parts.filter((part) => !mentioned.has(part.id)).map((part) => part.name)
-  if (unmentioned.length > 0) clauses.push(clauses.length === 0 ? words.here(unmentioned) : words.hereToo(unmentioned))
-
-  return clauses
-}
-
-/** A size change smaller than this factor gets no words in the experiment's reflection. */
+/** A size change smaller than this factor gets no words in Act 3's record. */
 export const SIZE_CHANGE = 1.05
 
-/** One visible part in both layouts, for the experiment. */
+/** One visible part in both layouts, for Act 3's "what if". */
 export interface ArrangedPart {
   name: string
   current: Placement
   whatIf: Placement
 }
 
-/** Whether "What if" differs from "How it is" at all: an experiment needs something tried. */
+/** Whether "What if" differs from "How it is" at all. */
 export function arrangementDiffers(parts: readonly ArrangedPart[]): boolean {
   return parts.some(
     ({ current, whatIf }) => differs(whatIf, current) || Math.abs(whatIf.scale - current.scale) > EPSILON,
@@ -148,7 +113,7 @@ export function arrangementDiffers(parts: readonly ArrangedPart[]): boolean {
 
 /**
  * How "What if" differs from "How it is", one line per changed part, in
- * creation order. For the experiment's reflection request only — never shown.
+ * creation order. For Act 3's record only (what Keep it kept), never shown.
  */
 export function arrangementChanges(parts: readonly ArrangedPart[]): string[] {
   const words = script.changes

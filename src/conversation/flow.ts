@@ -35,7 +35,7 @@ import type {
 import { EDGE_SPOTS, clearestSpot, startingSpot } from './geometry'
 import type { SavedMeadow } from './saved'
 import { script } from './script'
-import { arrangementChanges, arrangementDiffers, partPhrases, summarize, summaryClauses } from './summary'
+import { arrangementChanges, arrangementDiffers, partPhrases } from './summary'
 import type { ArrangedPart, SummaryInput } from './summary'
 
 /**
@@ -47,8 +47,8 @@ import type { ArrangedPart, SummaryInput } from './summary'
  * step back and arrange everyone, then try one "what if" at dusk. The ending:
  * a thank-you, and a picture of the meadow to keep. A later visit opens on
  * the saved meadow: "Welcome back. Who's around today?", a short Act 2 with
- * one part, then the ending (`startReturning`). Then what
- * the guide does after it (docs/slice-4-handoff.md). Async work (LLM
+ * one part, then the ending (`startReturning`). After the walk, the guide
+ * only notices a real change (`notice`). Async work (LLM
  * reflections, risk checks, JEV judgements) is
  * described by `pending`; the caller runs it and feeds the result back.
  * Every AI result may be null (failed or timed out): the talk always
@@ -114,7 +114,6 @@ export interface Attribute {
     | 'ending'
     | 'visit'
     | 'safety'
-    | 'invitation'
     | 'experiment'
     | 'voice'
     | 'intent'
@@ -162,24 +161,15 @@ export type Step =
   | 'quieter'
   /** Act 1's close: "These are the ones who came." and Go on. */
   | 'gathered'
-  // Act 2: sit with one (frames A07–A11), and Get to know it after the hand-over.
+  // Act 2: sit with one (frames A07–A11).
   /** Which one would like your attention first? The figures are the buttons. */
   | 'choose'
   /** Nothing: the card has only lines and Close (an early close, a last reflection). */
   | 'closed'
   /** No card. */
   | 'idle'
-  // After the entry conversation.
-  /** Add a part: what they'd call it. */
+  /** Someone new, on a later visit: what they'd call it. */
   | 'newPart'
-  /** The experiment invitation: Not now or Let's try. */
-  | 'invite'
-  /** The slim bar while they try: I've tried it. */
-  | 'trying'
-  /** "I've tried it" with nothing moved: Keep trying, or Finish without changes. */
-  | 'nothingMoved'
-  /** "What was that like?" */
-  | 'experiment'
   /** Sitting with one: what the part would say… */
   | 'voice'
   /** …what it might be trying to do… */
@@ -216,7 +206,6 @@ export const ANSWERED_STEPS: readonly Step[] = [
   'alsoHere',
   'quieter',
   'newPart',
-  'experiment',
   'voice',
   'intent',
   'fears',
@@ -231,9 +220,6 @@ export const DECLINABLE_STEPS: readonly Step[] = [
   'fears',
   'thanks',
   'newPart',
-  'invite',
-  'nothingMoved',
-  'experiment',
   'voice',
   'intent',
   'noticing',
@@ -304,13 +290,9 @@ export interface ConversationState {
 
   /** The entry conversation is over (its closing, or a pause): the map is the person's. */
   ended: boolean
-  /** Risk language was seen: no more questions, invitations, or noticing this session. */
+  /** Risk language was seen: no more questions or noticing this session. */
   paused: boolean
-  /** The experiment invitation has been shown, or they started one themselves: the app doesn't invite again. */
-  invited: boolean
-  /** How "What if" differed from "How it is" when they said they'd tried it. */
-  tried: string[]
-  /** The part being sat with (Act 2, Get to know it), and its words once given. */
+  /** The part being sat with (Act 2), and its words once given. */
   subject: { id: string; voice: string | null; intent: string | null } | null
   /** Parts the person has thanked: they glow. */
   thanked: string[]
@@ -339,21 +321,9 @@ export type ConversationEvent =
   | { type: 'dismiss'; map: LandscapeState }
   /** Not now, That's enough for now. */
   | { type: 'decline'; map: LandscapeState }
-  /** Let's try. */
-  | { type: 'accept'; map: LandscapeState }
-  /** Try an experiment, from the top bar in "What if…". */
-  | { type: 'tryExperiment'; map: LandscapeState }
-  /** I've tried it. */
-  | { type: 'tried'; map: LandscapeState }
-  /** Keep trying, after "Nothing's moved yet". */
-  | { type: 'keepTrying'; map: LandscapeState }
-  /** The person switched to "What if…". */
-  | { type: 'enteredWhatIf'; map: LandscapeState }
   /** Go on, at Act 1's close: the map is theirs. */
   | { type: 'goOn'; map: LandscapeState }
-  /** Add a part, from the top bar in "How it is". */
-  | { type: 'newPart'; map: LandscapeState }
-  /** Get to know it, on a selected part; or, at Act 2's first question, a tapped figure. */
+  /** A figure (or its name) chosen at Act 2's first question, or at a later visit's welcome. */
   | { type: 'getToKnow'; partId: string; map: LandscapeState }
   /** Thank it. */
   | { type: 'thank'; map: LandscapeState }
@@ -683,8 +653,6 @@ const emptyConversation = (): ConversationState => ({
   link: null,
   ended: false,
   paused: false,
-  invited: false,
-  tried: [],
   subject: null,
   noticed: [],
   thanked: [],
@@ -717,8 +685,6 @@ export function startReturning(saved: SavedMeadow, map: LandscapeState, { askFea
     ...emptyConversation(),
     askFears,
     returning: true,
-    // The first visit had its "what if"; the experiment doesn't invite again.
-    invited: true,
     parts,
     unheard: saved.parts.find((part) => part.quieter)?.id ?? null,
     link: saved.links[0]?.id ?? null,
@@ -744,7 +710,6 @@ function onStartOver(state: ConversationState): ConversationState {
 }
 
 /** Still at the welcome's questions (not the map handed over after them). */
-const welcoming = (state: ConversationState) => state.returning && !state.ended
 
 // ---------- Turns 0–2 ----------
 
@@ -1055,19 +1020,15 @@ function toAct2(state: ConversationState, map: LandscapeState): ConversationStat
   return { ...guide(guide(freshCard(state), question), hint), step: 'choose', asked: '' }
 }
 
-/**
- * Act 2 is over: on to Act 3, or on a later visit straight to the ending.
- * After the hand-over (Get to know it), the card simply goes.
- */
+/** Act 2 is over: on to Act 3, or on a later visit straight to the ending. */
 function endSitting(state: ConversationState, map: LandscapeState): ConversationState {
-  if (state.ended) return idle(state)
   return state.returning ? toEnding(idle(state), map) : toAct3(idle(state), map)
 }
 
 // ---------- Act 3: step back, and one "what if" (frames A12–A13) ----------
 
-/** The walk is over: no card, and the map is the person's. Act 3's "what if" was the invitation. */
-const finishWalk = (state: ConversationState): ConversationState => ({ ...idle(state), ended: true, invited: true, duskPart: null })
+/** The walk is over: no card, and the map is the person's. */
+const finishWalk = (state: ConversationState): ConversationState => ({ ...idle(state), ended: true, duskPart: null })
 
 /** "Step back and look at all of them." Moving and sizing live here. */
 function toAct3(state: ConversationState, map: LandscapeState): ConversationState {
@@ -1154,27 +1115,13 @@ function summaryInput(state: ConversationState, map: LandscapeState): SummaryInp
   }
 }
 
-/**
- * The note a full run leaves on the map: Turn 4's summary, kept true to
- * the map as the person rearranges it, about whichever mode is showing.
- * Null when nothing is left to describe.
- */
-export function mapNote(state: ConversationState, map: LandscapeState): string | null {
-  const input = summaryInput(state, map)
-  if (input.parts.length === 0) return null
-  const whatIf = map.mode === 'whatIf' ? map.layouts.whatIf : null
-  if (!whatIf) return script.note(summarize(input))
-  const parts = input.parts.map((part) => ({ ...part, placement: whatIf[part.id] ?? part.placement }))
-  return script.noteWhatIf(summaryClauses({ ...input, parts }))
-}
-
-// ---------- After the entry conversation (docs/slice-4-handoff.md) ----------
+// ---------- After the walk: noticing ----------
 
 /** A full run reached Act 1's close (not an early close, not a pause before it). */
 const fullRun = (state: ConversationState) => state.returning || state.record.some((entry) => entry.attribute === 'gathered')
 
 /**
- * Whether the app may open a card of its own (the invitation, noticing):
+ * Whether the app may open a card of its own (noticing):
  * never over a card that waits for the person, an answer in flight, or a pause.
  * A card with only Close may be replaced.
  */
@@ -1182,19 +1129,6 @@ function appMayOpen(state: ConversationState): boolean {
   const replaceable: Step[] = ['closed', 'idle']
   return state.ended && !state.paused && !state.pending && replaceable.includes(state.step)
 }
-
-/** Whether the person may start something (Get to know it, Add a part): their own request wins over the app's open cards. */
-export function canGetToKnow(state: ConversationState): boolean {
-  const replaceable: Step[] = ['closed', 'idle', 'invite', 'noticing']
-  return state.ended && !state.paused && !state.pending && replaceable.includes(state.step)
-}
-
-/** Add a part, while a figure is still free (each part has its own). */
-export const canAddPart = (state: ConversationState) => canGetToKnow(state) && state.parts.length < LOOKS.length
-
-/** Try an experiment: after a full run, whenever the invitation isn't already on screen. */
-export const canTryExperiment = (state: ConversationState) =>
-  canGetToKnow(state) && state.step !== 'invite' && fullRun(state)
 
 const subjectHere = (state: ConversationState, map: LandscapeState) =>
   state.subject !== null && isHere(state, map, state.subject.id)
@@ -1209,21 +1143,15 @@ function arranged(state: ConversationState, map: LandscapeState): ArrangedPart[]
   }))
 }
 
-// ---------- Adding a part after the conversation (top bar) ----------
+// ---------- Someone new (a later visit) ----------
 
 /** Parts are numbered in the order they're named; removed ones keep their number (a saved meadow keeps only those still there). */
 const nextPartId = (state: ConversationState) =>
   `part-${Math.max(state.parts.length, ...state.parts.map((part) => Number(part.id.replace('part-', '')) || 0)) + 1}`
 
-/** Adding changes who is on the map, so only in "How it is". */
-function onNewPart(state: ConversationState, map: LandscapeState): ConversationState {
-  if (!canAddPart(state) || map.mode !== 'current') return state
-  return ask(freshCard(state), 'newPart', script.newPart)
-}
-
 /** A name, or an explicit no/unsure — never an inferred one. A bare "yes" gets the question again. */
 function resolveNewName(state: ConversationState, map: LandscapeState, text: string): ConversationState {
-  if (matchesAny(text, NO_FORMS) || matchesAny(text, UNSURE_FORMS)) return welcoming(state) ? toWelcome(state, map) : idle(state)
+  if (matchesAny(text, NO_FORMS) || matchesAny(text, UNSURE_FORMS)) return toWelcome(state, map)
   if (matchesAny(text, YES_FORMS)) return reask(state)
   return chooseFigure(state, text.trim())
 }
@@ -1266,7 +1194,7 @@ function unheardPart(
   return { ...created, unheard: id }
 }
 
-/** Added from the top bar: it joins at a starting spot, at the usual size. */
+/** Someone new, on a later visit: it joins at a starting spot, at the usual size. */
 function nameNewPart(
   state: ConversationState,
   map: LandscapeState,
@@ -1289,8 +1217,7 @@ function nameNewPart(
     { subject: id, attribute: 'name', value: name, source: text, confidence: nameConfidence },
     { subject: id, attribute: 'size', value: String(DEFAULT_SCALE), source: null, confidence: byDefault },
   )
-  if (!welcoming(created)) return rest(guide(created, script.partAdded(name)))
-  // Someone new, on a later visit: it walks in, and they sit with it (unless it's held back; then the ending).
+  // It walks in, and they sit with it (unless it's held back; then the ending).
   if (kind.kind === 'hurts') return toEnding(created, map)
   const sitting = note(
     { ...guide(freshCard(created), script.arrived(name)), subject: { id, voice: null, intent: null } },
@@ -1299,76 +1226,12 @@ function nameNewPart(
   return ask(sitting, 'voice', script.voice(name))
 }
 
-/** The first time they enter "What if" after a full run: one invitation. */
-function onEnteredWhatIf(state: ConversationState, map: LandscapeState): ConversationState {
-  if (state.invited || !appMayOpen(state) || !fullRun(state) || visibleNow(state, map).length === 0) return state
-  const shown = note(
-    { ...state, invited: true },
-    { subject: 'conversation', attribute: 'invitation', value: 'shown', source: null, confidence: byDefault },
-  )
-  return { ...guide(freshCard(shown), script.invite), step: 'invite', asked: '' }
-}
-
-/** The slim bar: they move things in "What if", then say when they've tried it. */
-function startTrying(state: ConversationState, map: LandscapeState): ConversationState {
-  // Started from "How it is" (they switched back meanwhile): the trying happens in "What if".
-  const there = map.mode === 'whatIf' ? state : act(state, map, { type: 'enterWhatIf' })
-  return { ...guide(freshCard(there), script.trying), step: 'trying', asked: '' }
-}
-
-function onAccept(state: ConversationState, map: LandscapeState): ConversationState {
-  if (state.pending || state.step !== 'invite') return state
-  return startTrying(note(state, { subject: 'conversation', attribute: 'invitation', value: 'accepted', source: null, confidence: high }), map)
-}
-
-/** Their own request, any time after a full run: no invitation needed, and none comes later. */
-function onTryExperiment(state: ConversationState, map: LandscapeState): ConversationState {
-  if (!canTryExperiment(state) || visibleNow(state, map).length === 0) return state
-  const started = note(
-    { ...state, invited: true },
-    { subject: 'conversation', attribute: 'experiment', value: 'started by them', source: null, confidence: high },
-  )
-  return startTrying(started, map)
-}
-
-function onTried(state: ConversationState, map: LandscapeState): ConversationState {
-  if (state.pending || state.step !== 'trying') return state
-  const parts = arranged(state, map)
-  if (!arrangementDiffers(parts)) return { ...guide(freshCard(state), script.nothingMoved), step: 'nothingMoved', asked: '' }
-  return ask(freshCard({ ...state, tried: arrangementChanges(parts) }), 'experiment', script.whatWasThatLike)
-}
-
-function onKeepTrying(state: ConversationState, map: LandscapeState): ConversationState {
-  if (state.pending || state.step !== 'nothingMoved') return state
-  return startTrying(state, map)
-}
-
-function onExperimentAnswer(state: ConversationState, text: string): ConversationState {
-  const noted = note(state, {
-    subject: 'conversation',
-    attribute: 'experiment',
-    value: state.tried.length > 0 ? state.tried.join('; ') : 'small changes',
-    source: text,
-    confidence: high,
-  })
-  return request(noted, {
-    kind: 'reflect',
-    request: { turn: 'experiment', freeWrite: state.answers.freeWrite ?? '', changes: state.tried, question: state.asked, answer: text },
-  })
-}
-
-/** A figure tapped at Act 2's first question, or Get to know it on a selected part: the same scenes. */
+/** A figure (or its name) chosen at Act 2's first question, or at a later visit's welcome. */
 function onGetToKnow(state: ConversationState, partId: string, map: LandscapeState): ConversationState {
   const chosen = (state.step === 'choose' || state.step === 'welcome') && !state.pending && offeredIds(state, map).includes(partId)
-  if (!chosen && (!canGetToKnow(state) || !isHere(state, map, partId))) return state
+  if (!chosen) return state
   const name = partNow(state, map, partId)!.name
-  const noted = note(state, {
-    subject: partId,
-    attribute: 'sitWith',
-    value: chosen ? 'chosen' : 'get to know it',
-    source: null,
-    confidence: high,
-  })
+  const noted = note(state, { subject: partId, attribute: 'sitWith', value: 'chosen', source: null, confidence: high })
   return ask(freshCard({ ...noted, subject: { id: partId, voice: null, intent: null } }), 'voice', script.voice(name))
 }
 
@@ -1497,8 +1360,7 @@ function onDecline(state: ConversationState, map: LandscapeState): ConversationS
     case 'startOver':
       return toWelcome(note(state, said('visit', 'kept the meadow')), map)
     case 'newPart':
-      if (welcoming(state)) return toWelcome(note(state, said('visit', 'no one new')), map)
-      break
+      return toWelcome(note(state, said('visit', 'no one new')), map)
     case 'fears':
       return askThanks(freshCard(note(state, said('fears', 'skipped'))))
     case 'choose':
@@ -1510,9 +1372,6 @@ function onDecline(state: ConversationState, map: LandscapeState): ConversationS
       return endSitting(note(state, said('thanks', 'not yet')), map)
   }
   const outcome: Partial<Record<Step, Attribute>> = {
-    nothingMoved: { subject: 'conversation', attribute: 'experiment', value: 'finished without changes', source: null, confidence: high },
-    invite: { subject: 'conversation', attribute: 'invitation', value: 'declined', source: null, confidence: high },
-    experiment: { subject: 'conversation', attribute: 'experiment', value: 'not answered', source: null, confidence: high },
     noticing: { subject: 'conversation', attribute: 'noticing', value: 'not answered', source: null, confidence: high },
   }
   const declined = outcome[state.step]
@@ -1600,9 +1459,6 @@ function proceed(state: ConversationState, text: string, map: LandscapeState): C
 
     case 'newPart':
       return resolveNewName(state, map, text)
-
-    case 'experiment':
-      return onExperimentAnswer(state, text)
 
     case 'voice':
       return onVoiceAnswer(state, map, text)
@@ -1767,8 +1623,6 @@ function onReflected(state: ConversationState, seq: number, text: string | null,
       return settled.askFears ? ask(reflected, 'fears', script.fears) : askThanks(reflected)
     case 'fears':
       return askThanks(reflected)
-    case 'experiment':
-      return rest(guide(reflected, script.experimentDone))
     case 'noticing':
       return rest(reflected)
   }
@@ -1838,20 +1692,8 @@ export function conversationReducer(state: ConversationState, event: Conversatio
       return onDismiss(state)
     case 'decline':
       return onDecline(state, event.map)
-    case 'accept':
-      return onAccept(state, event.map)
-    case 'tryExperiment':
-      return onTryExperiment(state, event.map)
-    case 'tried':
-      return onTried(state, event.map)
-    case 'keepTrying':
-      return onKeepTrying(state, event.map)
-    case 'enteredWhatIf':
-      return onEnteredWhatIf(state, event.map)
     case 'goOn':
       return onGoOn(state, event.map)
-    case 'newPart':
-      return onNewPart(state, event.map)
     case 'getToKnow':
       return onGetToKnow(state, event.partId, event.map)
     case 'thank':

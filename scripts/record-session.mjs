@@ -2,8 +2,8 @@
 // Plays one whole session of the app the way a person would, AI on:
 // free-write → parts → who came → Go on → Act 2 (tap one, its words, thanks)
 // → Act 3 (step back, a move, the dusk "what if", Keep it) → the ending (the
-// picture, kept) → Get to know it → a move (noticing) → What if… experiment
-// → a later visit (reload: the saved meadow and its welcome, then Not now). Records a video, a still of every card,
+// picture, kept) → a part's box (rename by its name, the "…") → a move
+// (noticing) → Undo in the corner → a later visit (reload: the saved meadow and its welcome, then Not now). Records a video, a still of every card,
 // and a timeline of what each card said and when.
 //
 //   node scripts/record-session.mjs http://localhost:5173/ 390x844 docs/redesign/today/phone
@@ -168,23 +168,24 @@ try {
   await page.waitForTimeout(2500)
   log('map handed over', { file: await shot('map-handed-over') })
 
-  // ── Select a part → its box → Get to know it ──────────────────────
+  // ── Select a part → its box: rename by tapping its name, then the "…" ─
   await page.locator('.part__body').first().click({ force: true })
   await page.waitForTimeout(800)
   log('part selected', {
     file: await shot('part-box'),
-    box: await page.evaluate(() => [...document.querySelectorAll('.part.is-selected button')].map((b) => b.textContent.trim()).filter(Boolean)),
+    box: await page.evaluate(() => [...document.querySelectorAll('.part.is-selected .part__tag button')].map((b) => b.getAttribute('aria-label') ?? b.textContent.trim())),
   })
-  await page.click('.part.is-selected button:has-text("Get to know it")')
-  await record('know-voice')
-  await answer("you can't stop now or everything falls apart")
-  await record('know-intent')
-  await answer('keep me from being let go, I think')
-  await record('know-thanks')
-  await press('Not yet')
-  await page.waitForTimeout(1500)
+  await page.click('.part.is-selected .part__name--edit')
+  await page.fill('.part__rename', 'the driver')
+  await page.keyboard.press('Enter')
+  await page.waitForTimeout(600)
+  await page.click('.part.is-selected .part__more')
+  await page.waitForTimeout(400)
+  log('part renamed, more open', { file: await shot('part-box-more') })
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(600)
 
-  // ── A move in How it is → noticing ───────────────────────────────
+  // ── A move → noticing ────────────────────────────────────────────
   await drag(0, width * 0.25, -20)
   log('dragged part 1')
   try {
@@ -197,34 +198,13 @@ try {
   }
   await page.waitForTimeout(1500)
 
-  // ── What if… experiment (Act 3 was its invitation: start it from the bar) ─
-  await page.click('.mode-switch button:has-text("What if")')
-  try {
-    await page.waitForTimeout(1500)
-    await page.click('button:has-text("Try an experiment")')
-    await page.waitForTimeout(1500)
-    log('trying bar', { file: await shot('whatif-trying') })
-    await drag(1, -width * 0.15, 10)
-    await page.waitForTimeout(800)
-    await press("I've tried it")
-    c = await record('whatif-after')
-    if (c.buttons.includes('Finish without changes')) log('the drag did not count as a move')
-    else {
-      await answer('lighter, like there was more room to breathe')
-      await record('whatif-reflection')
-      await press('Close')
-    }
-  } catch (e) {
-    log('experiment step failed', { error: String(e).slice(0, 200), file: await shot('whatif-failed') })
-  }
-  await page.waitForTimeout(1500)
-  log('end what-if', { file: await shot('end-whatif') })
-  await page.click('.mode-switch button:has-text("How it is")')
-  await page.waitForTimeout(1500)
-  log('end how-it-is', {
-    file: await shot('end-howitis'),
-    note: await page.evaluate(() => document.querySelector('.map-note__text')?.textContent.trim()),
-  })
+  // ── Undo in the corner: takes back the move ──────────────────────
+  const undo = page.locator('.corner-undo')
+  if (await undo.count()) {
+    await undo.click()
+    await page.waitForTimeout(1200)
+    log('undone from the corner', { file: await shot('end-undone') })
+  } else log('no corner undo', { file: await shot('end-no-undo') })
 
   // ── A later visit: the meadow saved on this device, and its welcome ─
   await page.reload()

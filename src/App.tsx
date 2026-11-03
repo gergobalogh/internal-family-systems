@@ -2,7 +2,7 @@ import { useCallback, useEffect, useReducer, useState } from 'react'
 import type { ReactNode } from 'react'
 import { jumpRequested, jumpToClose } from './conversation/devJump'
 import { fearsRequested } from './conversation/features'
-import { canAddPart, canGetToKnow, canTryExperiment, mapNote, offeredIds, startReturning } from './conversation/flow'
+import { offeredIds, startReturning } from './conversation/flow'
 import type { ConversationState } from './conversation/flow'
 import { forgetMeadow, landscapeOf, loadMeadow, meadowOf, saveMeadow } from './conversation/saved'
 import { useConversation } from './conversation/useConversation'
@@ -20,8 +20,6 @@ import { SproutRiseSpike } from './ui/SproutRiseSpike'
 import { copy } from './ui/copy'
 import { Landscape } from './ui/Landscape'
 import type { LandscapeProps } from './ui/Landscape'
-import { MapNote } from './ui/MapNote'
-import { ModeBar } from './ui/ModeBar'
 import { keepPicture, postcardOf, usePicture } from './ui/picture'
 import { Postcard } from './ui/Postcard'
 import { StatusToast } from './ui/StatusToast'
@@ -109,21 +107,15 @@ type WorkspaceState = ReturnType<typeof useWorkspace>
 
 interface ShellProps {
   workspace: WorkspaceState
-  /** The mode bar (title, mode switch, Undo): kept away until the map is handed over. */
-  bar: boolean
+  /** After the walk the map is the person's: the centre light shows. */
+  handedOver: boolean
+  /** Undo in the corner, while there's something to undo: after the walk, with no card up. */
+  cornerUndo?: boolean
   waiting?: boolean
   /** Whether any part is still entering, for the conversation's timing. */
   onEntering?: (entering: boolean) => void
   settling?: boolean
-  /** After switching to "What if…" (the experiment invitation). */
-  onEnteredWhatIf?: () => void
-  /** Get to know it, when the guide can ask. */
-  onGetToKnow?: (partId: string) => void
-  /** Add a part, when the guide can ask. */
-  onAddPart?: () => void
-  /** Try an experiment, when one can start. */
-  onTryExperiment?: () => void
-  /** Sitting with one part (Act 2, Get to know it): see Landscape. */
+  /** Sitting with one part (Act 2): see Landscape. */
   focus?: LandscapeProps['focus']
   /** Act 2's first question: the figures to tap. */
   offered?: readonly string[] | null
@@ -141,14 +133,11 @@ interface ShellProps {
 
 function Shell({
   workspace,
-  bar,
+  handedOver,
+  cornerUndo = false,
   waiting,
   onEntering,
   settling,
-  onEnteredWhatIf,
-  onGetToKnow,
-  onAddPart,
-  onTryExperiment,
   focus,
   offered,
   onChoose,
@@ -158,13 +147,6 @@ function Shell({
   children,
 }: ShellProps) {
   const { state, act, selectedId, setSelectedId, notice, setNotice } = workspace
-  /** The camera goes to the part, so its box closes. */
-  const sitWith = (open?: (partId: string) => void) =>
-    open &&
-    ((partId: string) => {
-      setSelectedId(null)
-      open(partId)
-    })
   const dismissNotice = useCallback(() => setNotice(null), [setNotice])
   const removed = (message: string) => {
     setSelectedId(null)
@@ -173,27 +155,10 @@ function Shell({
 
   return (
     <div className="app" data-mode={state.mode} data-beat={beat}>
-      {bar && (
-        <div className="modebar-slot">
-          <ModeBar
-            mode={state.mode}
-            canUndo={canUndo(state)}
-            onModeChange={(mode) => {
-              const entering = mode === 'whatIf' && state.mode !== 'whatIf'
-              act({ type: mode === 'whatIf' ? 'enterWhatIf' : 'returnToCurrent' })
-              if (entering) onEnteredWhatIf?.()
-            }}
-            onUndo={() => act({ type: 'undo' })}
-            onReset={() => act({ type: 'resetWhatIf' })}
-            onAddPart={onAddPart}
-            onTryExperiment={onTryExperiment}
-          />
-        </div>
-      )}
       <div className="stage">
         <Landscape
           state={state}
-          centre={bar}
+          centre={handedOver}
           selectedId={selectedId}
           onSelect={setSelectedId}
           onPlace={(partId, placement) => act({ type: 'place', partId, placement })}
@@ -207,20 +172,32 @@ function Shell({
             act({ type: 'unlink', linkId })
             removed(copy.link.removed)
           }}
-          onGetToKnow={sitWith(onGetToKnow)}
           onClearWords={(partId) => act({ type: 'clearWords', partId })}
           waiting={waiting}
           onEntering={onEntering}
           settling={settling}
           focus={focus}
           offered={offered}
-          onChoose={sitWith(onChoose)}
+          onChoose={
+            onChoose &&
+            ((partId) => {
+              // The camera goes to the part, so its box closes.
+              setSelectedId(null)
+              onChoose(partId)
+            })
+          }
           thanked={thanked}
           marked={marked}
         >
           {children}
         </Landscape>
       </div>
+      {/* A removal's notice carries its own Undo. */}
+      {cornerUndo && !notice && canUndo(state) && (
+        <button type="button" className="corner-undo" onClick={() => act({ type: 'undo' })}>
+          <span aria-hidden="true">↶</span> {copy.undo}
+        </button>
+      )}
       <StatusToast
         noticeKey={notice?.key ?? null}
         message={notice?.message ?? ''}
@@ -237,7 +214,7 @@ function TalkWorkspace({ onStartOver }: { onStartOver: () => void }) {
   const talk = useConversation(workspace.state, workspace.dispatch, start.conversation)
   const { state } = talk
   const [entering, setEntering] = useState(false)
-  // Act 2 and Get to know it: the camera goes to the part being sat with,
+  // Act 2: the camera goes to the part being sat with,
   // and, once it's thanked, stays while its glow is seen up close.
   const cameraMoving = useCamera(state.subject?.id ?? null)
   const { shown, phase, waiting, settling, steppedBack } = useChoreography(state, entering, cameraMoving || state.step === 'thanked')
@@ -250,9 +227,8 @@ function TalkWorkspace({ onStartOver }: { onStartOver: () => void }) {
   const sitting = state.subject
   const thanking = state.step === 'thanks' || state.step === 'thanked'
 
-  // The last step: the bar and the map note arrive once Act 2 is over and
-  // the camera is back (or with a pause, or an early close), when the map
-  // becomes the person's — and stay from then on.
+  // The walk is over and the camera is back (or with a pause, or an early
+  // close): the map becomes the person's, and stays so from then on.
   const [handedOver, setHandedOver] = useState(false)
   if (!handedOver && state.ended && shown === state.card && phase === 'card') setHandedOver(true)
 
@@ -276,15 +252,13 @@ function TalkWorkspace({ onStartOver }: { onStartOver: () => void }) {
   return (
     <Shell
       workspace={workspace}
-      bar={handedOver}
+      handedOver={handedOver}
+      // In the sky, clear of the names on the meadow; a card (noticing) can float there on a phone.
+      cornerUndo={handedOver && shown === null}
       waiting={waiting}
       onEntering={setEntering}
       // Parts glide slowly only while the entry conversation moves them, never under the person's own hand.
       settling={settling && !handedOver}
-      onEnteredWhatIf={talk.enteredWhatIf}
-      onGetToKnow={canGetToKnow(state) ? talk.getToKnow : undefined}
-      onAddPart={canAddPart(state) ? talk.newPart : undefined}
-      onTryExperiment={canTryExperiment(state) ? talk.tryExperiment : undefined}
       focus={
         sitting && {
           id: sitting.id,
@@ -304,8 +278,6 @@ function TalkWorkspace({ onStartOver }: { onStartOver: () => void }) {
       marked={state.step === 'dusk' ? state.duskPart : null}
       beat={state.step === 'dusk' ? 'dusk' : ending ? 'ending' : undefined}
     >
-      {/* After a pause, the map keeps no summary of a conversation that stopped. */}
-      {handedOver && !state.paused && <MapNote text={mapNote(state, workspace.state)} />}
       {ending && <Postcard picture={picture} />}
       <Conversation
         state={state}

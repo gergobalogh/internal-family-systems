@@ -68,7 +68,7 @@ export const startingSpotsForKind = (kind: PartKind | null): readonly Point[] =>
 /**
  * A new part lands at least this far from every other part, so it never
  * walks in on top of one. A ring's spots sit close together, so a third
- * part (Turn 3, or Add a part) often finds its ring taken.
+ * part (Turn 3, or Someone new) often finds its ring taken.
  */
 export const MIN_CLEARANCE = 0.12
 

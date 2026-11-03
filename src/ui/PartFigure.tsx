@@ -16,7 +16,7 @@ interface PartFigureProps {
   part: Part
   placement: Placement
   selected: boolean
-  /** In "What if…" the part can be moved and resized, but who it is (name, presence, words) changes only in "How it is". */
+  /** In Act 3's "what if" the part can be moved and resized, but who it is (name, figure, presence) stays. */
   whatIf: boolean
   /** A new part coming in from its side, from the moment it's named until it stands on its spot. */
   entering: boolean
@@ -34,8 +34,7 @@ interface PartFigureProps {
   freeLooks: readonly Look[]
   onChangeLook: (look: Look) => void
   onRemove: () => void
-  /** Get to know it; absent while the guide can't ask (mid-conversation, a card waiting, a pause). */
-  onGetToKnow?: () => void
+  /** Clears its words (voice and intent): the one way to take back what it said. */
   onClearWords: () => void
   /** The in-progress gesture, so things drawn between parts can follow it. */
   onDraft?: (placement: Placement | null) => void
@@ -127,7 +126,6 @@ export function PartFigure({
   freeLooks,
   onChangeLook,
   onRemove,
-  onGetToKnow,
   onClearWords,
   onDraft,
   offered = false,
@@ -142,9 +140,16 @@ export function PartFigure({
     onDraft?.(next)
   }
   const [renaming, setRenaming] = useState(false)
+  // The "…": Change figure and Not one of my parts, kept out of the way.
+  const [more, setMore] = useState(false)
   const [choosing, setChoosing] = useState(false)
-  // Deselecting closes the figure choices, so they don't come back on the next select.
-  if (!selected && choosing) setChoosing(false)
+  // Deselecting closes the "…" and the figure choices, so they don't come back on the next select.
+  if (!selected && (more || choosing)) {
+    setMore(false)
+    setChoosing(false)
+  }
+  // Who it is stays put in Act 3's "what if": only its place and size change there.
+  const editable = selected && !whatIf
   const figureRef = useRef<HTMLSpanElement>(null)
   const tagRef = useRef<HTMLDivElement>(null)
   const shown = draft ?? placement
@@ -178,7 +183,7 @@ export function PartFigure({
     shown,
     landscapeRef,
     tagRef,
-    `${part.name} ${selected} ${renaming} ${choosing} ${part.voice} ${part.intent} ${onGetToKnow !== undefined} ${whatIf}`,
+    `${part.name} ${selected} ${renaming} ${more} ${choosing} ${part.voice} ${part.intent} ${whatIf}`,
   )
 
   const finish = (value: Placement | null) => {
@@ -258,7 +263,7 @@ export function PartFigure({
       <button
         type="button"
         className="part__body"
-        aria-label={offered ? copy.offeredLabel(part.name) : copy.partLabel(part.name)}
+        aria-label={offered ? copy.offeredLabel(part.name) : part.name}
         aria-describedby={hintId}
         aria-expanded={selected}
         // Chosen at Act 2, the next card's field may take focus (see Conversation's Reply).
@@ -294,7 +299,7 @@ export function PartFigure({
           can wrap without running into its actions. */}
       <div className="part__tag" ref={tagRef}>
         <div className="part__label">
-          <span className="part__hedge">{copy.hedge}</span>
+          {/* Stays while renaming even as the part is deselected: the click away is what saves it. */}
           {renaming && !whatIf ? (
             <RenameField
               name={part.name}
@@ -303,10 +308,15 @@ export function PartFigure({
                 if (name !== null) onRename(name)
               }}
             />
+          ) : editable ? (
+            // Rename: tap the name.
+            <button type="button" className="part__name part__name--edit" aria-label={copy.rename(part.name)} onClick={() => setRenaming(true)}>
+              {part.name}
+            </button>
           ) : (
             <span className="part__name">{part.name}</span>
           )}
-          {/* Its words from Get to know it: theirs, whole, only when selected (the meadow stays sparse). */}
+          {/* Its words from Act 2: theirs, whole, only when selected (the meadow stays sparse). */}
           {selected && hasWords && (
             <span className="part__words">
               {part.voice !== undefined && <span className="part__voice">“{part.voice}”</span>}
@@ -319,7 +329,7 @@ export function PartFigure({
           )}
         </div>
 
-        {selected && !renaming && choosing && !whatIf && (
+        {editable && !renaming && choosing && (
           <div className="part__figures" role="group" aria-label={copy.figureChoices(part.name)}>
             {freeLooks.map((look, index) => (
               <button
@@ -330,6 +340,7 @@ export function PartFigure({
                 autoFocus={index === 0}
                 onClick={() => {
                   setChoosing(false)
+                  setMore(false)
                   onChangeLook(look)
                 }}
               >
@@ -344,54 +355,52 @@ export function PartFigure({
           </div>
         )}
 
-        {selected && !renaming && !(choosing && !whatIf) && (
-          <div className="part__actions" role="group" aria-label={copy.sizeLabel(part.name)}>
-            <button
-              type="button"
-              disabled={placement.scale <= SCALE_MIN}
-              onClick={() => onPlace({ ...placement, scale: placement.scale / SCALE_STEP })}
-            >
-              {copy.smaller}
-            </button>
-            <button
-              type="button"
-              disabled={placement.scale >= SCALE_MAX}
-              onClick={() => onPlace({ ...placement, scale: placement.scale * SCALE_STEP })}
-            >
-              {copy.larger}
-            </button>
+        {selected && !renaming && !(editable && choosing) && (
+          <div className="part__actions">
+            <div className="part__sizes" role="group" aria-label={copy.sizeLabel(part.name)}>
+              <button
+                type="button"
+                disabled={placement.scale <= SCALE_MIN}
+                onClick={() => onPlace({ ...placement, scale: placement.scale / SCALE_STEP })}
+              >
+                {copy.smaller}
+              </button>
+              <button
+                type="button"
+                disabled={placement.scale >= SCALE_MAX}
+                onClick={() => onPlace({ ...placement, scale: placement.scale * SCALE_STEP })}
+              >
+                {copy.larger}
+              </button>
+            </div>
+            {editable && (
+              <button
+                type="button"
+                className="part__more"
+                aria-label={copy.more(part.name)}
+                aria-expanded={more}
+                onClick={() => setMore((open) => !open)}
+              >
+                …
+              </button>
+            )}
           </div>
         )}
 
-        {selected && !renaming && !(choosing && !whatIf) && (
+        {editable && more && !renaming && !choosing && (
           <div className="part__actions">
-            {onGetToKnow && (
-              // Asking for the card: its field takes focus (see Conversation's Reply).
-              <button type="button" data-opens-card onClick={onGetToKnow}>
-                {copy.getToKnow}
+            {freeLooks.length > 0 && (
+              <button type="button" onClick={() => setChoosing(true)}>
+                {copy.changeFigure}
               </button>
             )}
-            {whatIf ? (
-              <span className="part__elsewhere">{copy.changeInHowItIs}</span>
-            ) : (
-              <>
-                <button type="button" onClick={() => setRenaming(true)}>
-                  {copy.rename}
-                </button>
-                {freeLooks.length > 0 && (
-                  <button type="button" onClick={() => setChoosing(true)}>
-                    {copy.changeFigure}
-                  </button>
-                )}
-                <button type="button" onClick={onRemove}>
-                  {copy.remove}
-                </button>
-                {hasWords && (
-                  <button type="button" onClick={onClearWords}>
-                    {copy.clearWords}
-                  </button>
-                )}
-              </>
+            <button type="button" onClick={onRemove}>
+              {copy.remove}
+            </button>
+            {hasWords && (
+              <button type="button" onClick={onClearWords}>
+                {copy.clearWords}
+              </button>
             )}
           </div>
         )}

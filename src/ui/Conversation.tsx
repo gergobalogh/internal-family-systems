@@ -17,9 +17,6 @@ type CardActions = Pick<
   | 'goOn'
   | 'dismiss'
   | 'decline'
-  | 'accept'
-  | 'tried'
-  | 'keepTrying'
   | 'thank'
   | 'thatsHowItIs'
   | 'goBack'
@@ -38,7 +35,7 @@ interface ConversationProps {
   /** A part is walking in: the card steps back and a quiet "One moment…" waits in its place. */
   steppedBack: boolean
   actions: CardActions
-  /** Undo, when there's something to undo, for Act 3's step back (the bar isn't there yet). */
+  /** Undo, when there's something to undo, on Act 3's step back. */
   undo?: () => void
   /** Keep this picture, at the ending, once the picture is drawn. */
   keepPicture?: () => void
@@ -69,8 +66,8 @@ function cardLines(lines: readonly Line[], start: number | null): Line[] {
  * (docs/input-choreography-plan.md): the reflection and the current
  * question together, then the field. No history — past answers are
  * reachable through the map (rename, remove), never a hidden transcript.
- * After the entry conversation the same card carries the guide's
- * invitations and questions (docs/slice-4-handoff.md), or nothing at all.
+ * The same card carries Acts 2 and 3, the ending and a later visit's
+ * welcome; after the walk, nothing at all.
  */
 export function Conversation({ state, shown, phase, steppedBack, actions, undo, keepPicture, clearMeadow }: ConversationProps) {
   const lines = cardLines(state.lines, shown)
@@ -150,12 +147,11 @@ function Card({
   const [choices] = useState(choicesNow)
   const [welcome] = useState(welcomeNow)
   const cardRef = useRef<HTMLElement>(null)
-  const slim = step === 'trying'
 
   return (
     <section
       ref={cardRef}
-      className={`card${slim ? ' card--slim' : ''}${HINTED.includes(step) ? ' card--hinted' : ''}${phase === 'waiting' ? ' is-waiting' : ''}${phase === 'arriving' || away ? ' is-away' : ''}`}
+      className={`card${HINTED.includes(step) ? ' card--hinted' : ''}${phase === 'waiting' ? ' is-waiting' : ''}${phase === 'arriving' || away ? ' is-away' : ''}`}
       aria-label={copy.talk.label}
       aria-busy={phase !== 'card'}
     >
@@ -203,32 +199,6 @@ function Card({
         <Reply step={step} choices={choices} phase={phase} away={away} interactive={current} cardRef={cardRef} actions={actions} />
       ) : (
         <div className="card__actions">
-          {step === 'invite' && (
-            <>
-              {/* Equal weight: the app doesn't lean toward yes. */}
-              <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.decline}>
-                {copy.talk.notNow}
-              </button>
-              <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.accept}>
-                {copy.talk.letsTry}
-              </button>
-            </>
-          )}
-          {step === 'trying' && (
-            <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.tried}>
-              {copy.talk.triedIt}
-            </button>
-          )}
-          {step === 'nothingMoved' && (
-            <>
-              <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.keepTrying}>
-                {copy.talk.keepTrying}
-              </button>
-              <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.decline}>
-                {copy.talk.finishUntried}
-              </button>
-            </>
-          )}
           {step === 'paused' && (
             <a className="card__button" href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" aria-label={copy.talk.supportLabel}>
               {copy.talk.support}
@@ -328,8 +298,8 @@ function Reply({ step, choices, phase, away, interactive, cardRef, actions }: Re
   const shiftBreak = useRef(false)
 
   // A new question takes focus only if the person isn't busy on the map —
-  // or just asked for this card (Get to know it, or the figure they tapped
-  // at Act 2, which the camera is now on). Layout effect: the old
+  // or just asked for this card (the figure they tapped at Act 2, which the
+  // camera is now on). Layout effect: the old
   // card's field (still focused, so a phone keyboard stays up) is removed in
   // this same commit, and refocusing in the same task is what keeps that
   // keyboard up; a phone won't raise it outside a tap.
@@ -396,7 +366,7 @@ function Reply({ step, choices, phase, away, interactive, cardRef, actions }: Re
           ? { label: copy.talk.skipFears, onClick: actions.decline }
         : step === 'noticing'
           ? { label: copy.talk.skip, onClick: actions.decline }
-          : step === 'newPart' || step === 'experiment' || step === 'voice'
+          : step === 'newPart' || step === 'voice'
             ? { label: copy.talk.notNow, onClick: actions.decline }
             : null
 
@@ -431,7 +401,7 @@ function Reply({ step, choices, phase, away, interactive, cardRef, actions }: Re
         id={fieldId}
         ref={fieldRef}
         className="card__field"
-        rows={step === 'freeWrite' ? 3 : step === 'voice' || step === 'intent' || step === 'fears' || step === 'experiment' ? 2 : 1}
+        rows={step === 'freeWrite' ? 3 : step === 'voice' || step === 'intent' || step === 'fears' ? 2 : 1}
         enterKeyHint="send"
         value={draft}
         // Read-only, not disabled, while waiting: it keeps focus, so a

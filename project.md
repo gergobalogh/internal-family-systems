@@ -622,3 +622,46 @@ This decision will determine the tone of the responses, what happens after a cha
   free-write, the save gone after a reload). Six paths at 390×844 and
   1440×900, and AI off, the dev jump and Fears re-run for the first visit.
   No page errors; build and lint pass.
+
+### 2026-11-03 — No modes, top bar or map note
+
+- **Change (Option A step 8, the redesign doc's "Everything on screen
+  after closing" table, agreed 2026-11-03):** after the walk the meadow
+  has no menu. Cut: the How it is / What if… switch with the bar's title
+  and hint, Try an experiment (and its invitation, "Take your time" and
+  "What was that like?"), Start over from how it is, the summary note on
+  the map, Add a part (Someone new on a later visit replaces it), and Get
+  to know it. The rose curtains went with the mode.
+  "What if" is now only Act 3's beat at dusk.
+- **Kept, on the part:** tap the name to rename it; Smaller / Larger (and
+  the handle, the arrow keys, plus and minus); a small "…" opens Change
+  figure, Not one of my parts and, when it has words, Clear what it said.
+  At dusk the box has only Smaller / Larger. (The redesign's table cut
+  Clear what it said in favour of Undo or editing the words in place, but
+  Undo can't take back words the conversation gave, and editing in place
+  isn't built; Codex's review caught it, so it stays behind the "…".) Remove this link stays on the knot (not at dusk).
+- **Undo** sits in a corner after the walk, only while there's something
+  to undo: the sky's top-left, not the bottom as first planned, because on
+  a phone the bottom corners hold the names of the parts standing there.
+  It steps aside while a card is up (a noticing card floats in that sky on
+  a phone) and while a removal's notice, with its own Undo, shows. Act 3's
+  card keeps its own Undo.
+- **Labels:** "one way to see this" is gone from the names and the link's
+  label (on screen and for screen readers). The guide's lines keep their
+  tentative wording.
+- **Noticing** stays as it was; asking only about a real change is still
+  its own board item.
+- **In the code:** the flow lost its invite, trying, nothing-moved and
+  experiment steps, and the server its experiment reflection; `ModeBar`,
+  `MapNote` and the curtains are deleted. The model keeps both layouts,
+  because Act 3's dusk is the "what if" one.
+- **Checked:** scripted AI answers in the browser (no model calls), the
+  first walk on six paths at 390×844 and 1280×800, two with reduced
+  motion, and the saved meadow's later visit on three. After the ending:
+  no bar, note, curtains or mode buttons; no "one way to see this" on
+  screen or for screen readers; Undo in the corner. On a part: rename by
+  its name, Change figure and Not one of my parts behind the "…", each
+  undone (the corner Undo, or the removal notice's while the corner one
+  steps aside). At dusk the box had only Smaller / Larger. A drag after
+  the walk still brought a noticing card, with the corner Undo away until
+  Skip this one. No page errors; build and lint pass.

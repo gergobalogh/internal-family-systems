@@ -11,7 +11,7 @@ import { PartFigure } from './PartFigure'
 import { Speech } from './Speech'
 import { CAMERA_MS } from './useCamera'
 import { SETTLE_MS, WALK_MS } from './useChoreography'
-import { Atmosphere, Curtains, World } from './World'
+import { Atmosphere, World } from './World'
 
 /** Matches the parts' own glide (`--glide` in tokens.css). */
 const GLIDE_MS = 350
@@ -25,8 +25,6 @@ export interface LandscapeProps {
   onChangeLook: (partId: string, look: Look) => void
   onRemove: (partId: string) => void
   onRemoveLink: (linkId: string) => void
-  /** Get to know it, when the guide can ask (otherwise absent). */
-  onGetToKnow?: (partId: string) => void
   onClearWords: (partId: string) => void
   /** The world waits with the person (a part named meanwhile still walks in). */
   waiting?: boolean
@@ -34,10 +32,10 @@ export interface LandscapeProps {
   onEntering?: (entering: boolean) => void
   /** The conversation is moving parts: they glide slowly. */
   settling?: boolean
-  /** Show the light that closeness is measured from (once the map is the person's, and its hint names it). */
+  /** Show the light that closeness is measured from (once the map is the person's). */
   centre?: boolean
   /**
-   * The part being sat with (Act 2, Get to know it): the camera goes to it,
+   * The part being sat with (Act 2): the camera goes to it,
    * the others soften, and its words appear from it. `layoutKey` changes
    * with the card on screen.
    */
@@ -88,9 +86,9 @@ function useEntrances(state: LandscapeState) {
 }
 
 /**
- * Layers, back to front: the world, the "What if…" curtains, atmosphere,
- * links, the characters, then any overlay. Mode is never conveyed by colour
- * alone — the curtains frame it.
+ * Layers, back to front: the world, atmosphere, links, the characters, then
+ * any overlay. Act 3's "what if" is a beat in its own light (dusk), and its
+ * card says what it is, so it's never conveyed by colour alone.
  */
 export function Landscape({
   state,
@@ -101,7 +99,6 @@ export function Landscape({
   onChangeLook,
   onRemove,
   onRemoveLink,
-  onGetToKnow,
   onClearWords,
   waiting = false,
   onEntering,
@@ -169,7 +166,6 @@ export function Landscape({
         style={camera}
       >
       <World waiting={waiting} />
-      <Curtains />
       <Atmosphere />
       {centre && <CentreLight />}
 
@@ -209,7 +205,6 @@ export function Landscape({
           freeLooks={freeLooks}
           onChangeLook={(look) => onChangeLook(part.id, look)}
           onRemove={() => onRemove(part.id)}
-          onGetToKnow={onGetToKnow && (() => onGetToKnow(part.id))}
           onClearWords={() => onClearWords(part.id)}
           onDraft={(draft) => setDrafts((current) => ({ ...current, [part.id]: draft }))}
         />

@@ -117,16 +117,6 @@ function reflectionPrompt(request: ReflectRequest): string {
         exchange(request.question, request.answer) +
         `Reflect back what it is afraid of, as its worry, gently, in one sentence. Don't ask about it, explain it, or reassure them that it won't happen.`
       )
-    case 'experiment': {
-      const changes = request.changes.length === 0 ? 'only small changes' : request.changes.map((line) => `- ${line}`).join('\n')
-      return (
-        earlier +
-        `On a map of the feelings they have named, they tried a different arrangement in a "What if" view; their "How it is" map stays as it was. ` +
-        `Compared with "How it is", in their "What if" (the names in it are theirs):\n${words(changes)}\n\n` +
-        exchange(request.question, request.answer) +
-        `Reflect back that answer.`
-      )
-    }
   }
 }
 
@@ -522,7 +512,7 @@ const isText = (value: unknown): value is string => typeof value === 'string' &&
 const isNames = (value: unknown): value is string[] => Array.isArray(value) && value.every((name) => typeof name === 'string')
 
 function parseReflect(body: unknown): ReflectRequest | null {
-  const { turn, freeWrite, loudest, question, answer, partName, voice, intent, changes, nextQuestion, avoidPhrases } = (body ?? {}) as Record<string, unknown>
+  const { turn, freeWrite, loudest, question, answer, partName, voice, intent, nextQuestion, avoidPhrases } = (body ?? {}) as Record<string, unknown>
   if (turn === 1 && isText(freeWrite)) {
     return {
       turn,
@@ -540,7 +530,6 @@ function parseReflect(body: unknown): ReflectRequest | null {
   if (turn === 'fears' && isText(partName) && typeof voice === 'string' && typeof intent === 'string') {
     return { turn, freeWrite, partName, voice, intent, question, answer }
   }
-  if (turn === 'experiment' && isNames(changes)) return { turn, freeWrite, changes, question, answer }
   return null
 }
 

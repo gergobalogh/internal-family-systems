@@ -47,7 +47,7 @@ interface LinkThreadProps {
   from: { point: Point; glide: number; name: string }
   to: { point: Point; glide: number; name: string }
   selected: boolean
-  /** In "What if…" the link stays: it can be taken down only in "How it is". */
+  /** In Act 3's "what if" the link stays: it can be taken down only on the meadow as it is. */
   whatIf: boolean
   onSelect: () => void
   onRemove: () => void
@@ -104,18 +104,15 @@ export function LinkThread({ id, from, to, selected, whatIf, onSelect, onRemove 
         {selected && (
           <div className="link__tag">
             <div className="part__label">
-              <span className="part__hedge">{copy.hedge}</span>
               <span className="link__words">{copy.link.words}</span>
             </div>
-            <div className="part__actions">
-              {whatIf ? (
-                <span className="part__elsewhere">{copy.link.removeInHowItIs}</span>
-              ) : (
+            {!whatIf && (
+              <div className="part__actions">
                 <button type="button" onClick={onRemove}>
                   {copy.link.remove}
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>

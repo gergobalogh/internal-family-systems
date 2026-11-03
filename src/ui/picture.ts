@@ -308,7 +308,7 @@ export function usePicture(input: PostcardInput | null): Picture | null {
     const date = now.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })
     const pad = (n: number) => String(n).padStart(2, '0')
     const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-    // The landscape the map was arranged on (the whole window, before the bar arrives).
+    // The landscape the map was arranged on (the whole window).
     const landscape = document.querySelector('.landscape')?.getBoundingClientRect()
     const screen = landscape?.width ? landscape : { width: window.innerWidth, height: window.innerHeight }
     let current = true

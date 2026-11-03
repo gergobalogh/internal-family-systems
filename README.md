@@ -2,20 +2,21 @@
 
 Product concept: [project.md](project.md). What a person sees and does,
 step by step: [docs/how-it-works.md](docs/how-it-works.md). Work in
-progress: [PROJECT_BOARD.md](PROJECT_BOARD.md). Current slice:
-[docs/slice-4-handoff.md](docs/slice-4-handoff.md) — after the map is the
-person's: one invited "What if" experiment, "Get to know it" (a part's voice
-and what it might be trying to do), a question when a "How it is" edit
-changes what the map says, and a safety pause across the whole app. It
-builds on [slice 3](docs/slice-3-handoff.md)'s whole entry conversation
-(now reshaped by the story redesign,
-[docs/redesign/story-redesign.md](docs/redesign/story-redesign.md): Turn 3
-asks who else is here, and Act 1 closes with "These are the ones who
-came." in place of Turn 4's summary question and the closing card; Act 2
-then sits with one part the person taps, Act 3 steps back for one
-"what if" at dusk, and the ending gives a picture to keep; the meadow is
-then saved on the device, and a later visit opens on it), [slice 2](docs/slice-2-handoff.md)'s Turns 0–2 and
-[slice 1](docs/slice-1-handoff.md)'s "How it is" / "What if…" landscape.
+progress: [PROJECT_BOARD.md](PROJECT_BOARD.md). The app is one walk in
+three acts, from the story redesign
+([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md), Option
+A): Act 1 meets who's here (Turn 3 asks who else, and it closes with "These
+are the ones who came."), Act 2 sits with one part the person taps, Act 3
+steps back for one "what if" at dusk, and the ending gives a picture to
+keep. The meadow is then saved on the device, and a later visit opens on
+it. After the walk there's no menu or mode: the parts keep their own few
+controls, Undo waits in the corner, the app asks once when an edit changes
+what the map says, and a safety pause covers the whole app. The earlier
+slices it grew from: [slice 1](docs/slice-1-handoff.md)'s landscape,
+[slice 2](docs/slice-2-handoff.md)'s Turns 0–2,
+[slice 3](docs/slice-3-handoff.md)'s entry conversation and
+[slice 4](docs/slice-4-handoff.md)'s after-conversation tools, most of
+which the redesign moved into the walk or cut.
 The conversation is one glass card under the house, per
 [docs/input-choreography-plan.md](docs/input-choreography-plan.md).
 
@@ -48,10 +49,10 @@ session, and the map stays editable.
 ## Layout
 
 - `src/model/` — framework-free state model: global part identity
-  (name, removal) plus per-mode placements, with per-mode undo.
-  `addPart` brings in conversation-named parts without an undo entry; a
-  part's voice and intent ("Get to know it") belong to its identity, like
-  its name.
+  (name, removal) plus per-mode placements (the "what if" layout is Act
+  3's dusk), with per-mode undo. `addPart` brings in conversation-named
+  parts without an undo entry; a part's voice and intent (Act 2) belong to
+  its identity, like its name.
 - `src/conversation/` — the entry conversation: the pinned script
   (`script.ts`), the state machine and provenance record (`flow.ts`),
   answer lists and reflection checks (`checks.ts`), map distances
@@ -62,24 +63,25 @@ session, and the map stays editable.
   (sitting with one part; its Fears question waits for a therapist's
   review and shows only with `?fears`, `features.ts`) and Act 3 (step
   back, then one "what if" with Go back / Keep it) and the ending (the
-  picture itself is drawn in `src/ui/picture.ts`), then the
-  invitation and experiment, Get to know it, noticing, and the safety
-  pause.
+  picture itself is drawn in `src/ui/picture.ts`), then noticing, and the
+  safety pause.
 - `server/ai.ts` — the AI routes (`/api/reflect` → Claude, `/api/risk` → OpenAI moderation + JEV, `/api/figure` → one JEV
   request for figure + hidden kind, `/api/toward-check` → JEV, and
   `/api/free-write` → JEV form reading + Claude phrase lifting),
   mounted on Vite's dev and preview servers. API keys are read here only
   and never reach the browser; any other host needs the same six routes.
-- `src/ui/` — the landscape (world → links → characters → mode frame),
+- `src/ui/` — the landscape (world → links → characters),
   the conversation card and its timing (`Conversation.tsx`,
   `useChoreography.ts`: send → ghost → the world waits → a new part walks
   in → next card), Act 2's camera and the part's speech (`useCamera.ts`,
-  `Speech.tsx`), the map note (the summary a finished conversation
-  leaves on the map, kept true to it in either mode), noticing "How it is"
-  edits once the person rests (`useNoticing.ts`), mode bar, and removal
-  notice. UI wording lives in
+  `Speech.tsx`), the part's box (`PartFigure.tsx`: tap the name to rename,
+  the "…" for Change figure, Not one of my parts and Clear what it said),
+  noticing edits once
+  the person rests (`useNoticing.ts`), and the removal notice. UI wording
+  lives in
   `src/ui/copy.ts`; the guide's lines live in `src/conversation/script.ts`.
-- `src/styles/` — palette tokens and the two mode themes (`[data-mode]`).
+- `src/styles/` — palette tokens, and the dusk light of Act 3 and the
+  ending (`[data-mode]`, `[data-beat]`).
 - `art/prompts/`, `scripts/studio/`, `scripts/cutout-figures.py` — how the
   images are generated and prepared: [docs/image-generation.md](docs/image-generation.md).
 - `art/rive/` — Rive scenes generated from Python (the Critic's walk, the

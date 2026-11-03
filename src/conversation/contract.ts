@@ -57,8 +57,7 @@ export interface TowardCheckRequest {
 /**
  * Turn 1 reflects the free-write; Turn 2 the answer to "loudest"; Turns 3
  * and 4 the most recent answer, with the question it answered. Sitting with
- * a part (Act 2, Get to know it): its voice, intent and fears. After the
- * entry conversation: the experiment's "What was that like?", and the
+ * a part (Act 2): its voice, intent and fears. After the walk: the
  * noticing question.
  */
 export type ReflectRequest =
@@ -71,8 +70,6 @@ export type ReflectRequest =
   | { turn: 'intent'; freeWrite: string; partName: string; voice: string; question: string; answer: string }
   /** Fears (frame A10), only while a therapist reviews it (`?fears`). */
   | { turn: 'fears'; freeWrite: string; partName: string; voice: string; intent: string; question: string; answer: string }
-  /** `changes`: how "What if" differs from "How it is", one line per part (names theirs). */
-  | { turn: 'experiment'; freeWrite: string; changes: string[]; question: string; answer: string }
   | { turn: 'noticing'; freeWrite: string; question: string; answer: string }
 
 export type ReflectTurn = ReflectRequest['turn']

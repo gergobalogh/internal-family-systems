@@ -40,142 +40,13 @@ button {
 .app {
   height: 100dvh;
   display: grid;
-  grid-template-rows: auto 1fr;
-}
-
-/* ---------- Mode bar (interface layer) ---------- */
-
-/*
- * Away during the conversation; it opens with the closing card, growing
- * from nothing so the stage gives up its room gradually.
- */
-.modebar-slot {
-  display: grid;
   grid-template-rows: 1fr;
-  animation: modebar-open var(--mode-fade) var(--ease-soft);
-}
-
-.modebar-slot > .modebar {
-  min-height: 0;
-  overflow: clip;
-}
-
-@keyframes modebar-open {
-  from {
-    grid-template-rows: 0fr;
-    opacity: 0;
-  }
-}
-
-.modebar {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px 24px;
-  padding: 14px 20px;
-  background: #fbf3ea;
-  border-bottom: 1px solid var(--line);
-  transition: background-color var(--mode-fade) var(--ease-soft);
-}
-
-[data-mode='whatIf'] .modebar {
-  background: #eeeaf7;
-}
-
-.modebar__title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.6rem, 4vw, 2.2rem);
-  font-weight: 500;
-  line-height: 1.1;
-}
-
-.modebar__hint {
-  margin: 4px 0 0;
-  color: var(--ink-soft);
-  font-size: 0.95rem;
-}
-
-/* Solid mark for "How it is"; dashed mark for "What if…", echoing the frame. */
-.mode-mark {
-  flex: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--howitis-accent);
-}
-
-[data-mode='whatIf'] .mode-mark {
-  background: transparent;
-  border: 2px dashed var(--whatif-accent);
-}
-
-.modebar__controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-}
-
-.mode-switch {
-  display: inline-flex;
-  padding: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--line);
-}
-
-.mode-switch button {
-  min-height: 40px;
-  padding: 8px 16px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink-soft);
-  cursor: pointer;
-}
-
-.mode-switch button[aria-pressed='true'] {
-  background: var(--ink);
-  color: #fff;
-}
-
-[data-mode='whatIf'] .mode-switch button[aria-pressed='true'] {
-  background: var(--whatif-accent-strong);
-}
-
-.control {
-  min-height: 40px;
-  padding: 8px 14px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-}
-
-.control:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.control--quiet {
-  border-color: transparent;
-  background: transparent;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 /* ---------- Stage: the map (the conversation card floats on it) ---------- */
 
 .stage {
-  /* The 1fr row, whether or not the mode bar is there yet. */
-  grid-row: 2;
+  grid-row: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   min-height: 0;
@@ -224,13 +95,6 @@ button {
     --frame-left: calc(60cqw - var(--frame-w) * var(--house-x));
     --frame-top: calc(64cqh - var(--frame-h) * 0.585);
   }
-}
-
-.svg-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
 }
 
 /* ---------- World layer ---------- */
@@ -327,97 +191,6 @@ button {
 
 .world__plate--dusk {
   opacity: var(--night);
-}
-
-/* ---------- "What if…" curtains ---------- */
-
-.curtains {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.curtain,
-.valance,
-.moon-prop,
-.curtains__tag {
-  position: absolute;
-  transition:
-    translate var(--mode-fade) var(--ease-soft),
-    opacity var(--mode-fade) var(--ease-soft);
-}
-
-.curtain {
-  top: 0;
-  height: 100%;
-  width: clamp(40px, 10%, 130px);
-  filter: drop-shadow(0 0 10px rgba(59, 34, 54, 0.3));
-}
-
-.curtain--left {
-  left: 0;
-  translate: -110% 0;
-}
-
-.curtain--right {
-  right: 0;
-  scale: -1 1;
-  translate: 110% 0;
-}
-
-.valance {
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: clamp(30px, 7%, 56px);
-  translate: 0 -110%;
-  filter: drop-shadow(0 4px 8px rgba(59, 34, 54, 0.3));
-}
-
-.moon-prop {
-  top: 0;
-  right: 22%;
-  width: 0;
-  height: 24%;
-  border-left: 1px solid rgba(255, 246, 232, 0.7);
-  translate: 0 calc(-100% - 8cqmin);
-  opacity: 0;
-}
-
-.moon-prop__moon {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 5.5cqmin;
-  height: 5.5cqmin;
-  translate: -50% 50%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 35%, #fffdf6, #f6e6c8 70%, #e9d2ad);
-  box-shadow: 0 0 28px 10px rgba(255, 230, 196, 0.55);
-}
-
-.curtains__tag {
-  top: 6px;
-  left: 50%;
-  translate: -50% -160%;
-  padding: 3px 14px;
-  border-radius: 999px;
-  background: var(--whatif-accent-strong);
-  color: #fff8f0;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  box-shadow: 0 2px 6px rgba(59, 34, 54, 0.3);
-}
-
-[data-mode='whatIf'] .curtain,
-[data-mode='whatIf'] .valance,
-[data-mode='whatIf'] .moon-prop {
-  translate: 0 0;
-  opacity: 1;
-}
-
-[data-mode='whatIf'] .curtains__tag {
-  translate: -50% 0;
 }
 
 /* ---------- Atmosphere: film grain + warm vignette ---------- */
@@ -729,12 +502,6 @@ button {
   backdrop-filter: blur(4px);
 }
 
-.part__hedge {
-  color: var(--ink-soft);
-  font-size: 0.72rem;
-  font-style: italic;
-}
-
 /* The person's own words, shown whole: a long name wraps. */
 .part__name {
   max-width: 100%;
@@ -744,6 +511,29 @@ button {
   overflow-wrap: anywhere;
   text-align: var(--label-text, center);
   text-wrap: balance;
+}
+
+/* Rename: a selected part's name is the button, with a soft dotted line under it. */
+.part__name--edit {
+  /* A larger tap target than the text, without moving the label. */
+  margin: -4px -6px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--ink-soft);
+  text-underline-offset: 4px;
+  cursor: text;
+  pointer-events: auto;
+}
+
+.part__name--edit:hover {
+  text-decoration-style: solid;
 }
 
 .part__rename {
@@ -762,12 +552,12 @@ button {
 .part__actions {
   gap: 6px;
   pointer-events: auto;
-  /* Up to four actions: they wrap inside the label's width rather than run off the map. */
+  /* They wrap inside the label's width rather than run off the map. */
   flex-wrap: wrap;
   justify-content: var(--label-align, center);
 }
 
-/* A part's words from Get to know it, under its name when selected: theirs, whole. */
+/* A part's words from Act 2, under its name when selected: theirs, whole. */
 .part__words {
   display: flex;
   flex-direction: column;
@@ -846,20 +636,6 @@ button {
   height: 100%;
 }
 
-/* In "What if…", where Rename and remove would be: a quiet pointer back to "How it is". */
-.part__elsewhere {
-  max-width: 16rem;
-  padding: 4px 12px 5px;
-  border-radius: 12px;
-  /* Opaque: it can sit over another part's label. No border, so it doesn't read as a button. */
-  background: #fffbf6;
-  box-shadow: 0 1px 4px rgba(58, 51, 64, 0.12);
-  color: var(--ink-soft);
-  font-size: 0.8rem;
-  white-space: normal;
-  text-align: var(--label-text, center);
-}
-
 .part__actions button {
   min-height: 36px;
   padding: 6px 12px;
@@ -869,6 +645,24 @@ button {
   font-size: 0.85rem;
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(58, 51, 64, 0.12);
+}
+
+.part__sizes {
+  display: flex;
+  gap: 6px;
+}
+
+/* The "…": Change figure and Not one of my parts, a tap away. */
+.part__actions .part__more {
+  min-width: 40px;
+  padding: 6px 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.part__actions .part__more[aria-expanded='true'] {
+  border-color: var(--ink-soft);
+  background: #f4ece4;
 }
 
 .part.is-dragging,
@@ -1159,8 +953,6 @@ button {
     position: absolute;
     z-index: 1100;
     top: 16px;
-    /* The map note arrives with the closing card, in the same sky: start under it. */
-    top: max(16px, anchor(--map-note bottom, 0px) + 12px);
     right: 0;
     bottom: calc(100cqh - var(--frame-top) - var(--frame-h) * var(--house-top) + 14px);
     left: 0;
@@ -1362,21 +1154,6 @@ a.card__button {
   text-decoration: none;
 }
 
-/* While they try an arrangement: one quiet line and one action, so the map stays free. */
-.card--slim {
-  --card-w: min(22rem, calc(100cqw - 32px));
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 10px 14px;
-  padding: 12px 16px;
-}
-
-.card--slim .card__line {
-  font-size: 1rem;
-}
-
 /* DEV ONLY: marks a run that started from the ?jump=after shortcut. */
 .dev-badge {
   position: absolute;
@@ -1392,59 +1169,30 @@ a.card__button {
   pointer-events: none;
 }
 
-/* ---------- Map note: the summary, left on the map after the conversation ---------- */
+/* ---------- Undo, after the walk ---------- */
 
-.map-note {
-  position: absolute;
-  /* Under the characters, so a part dragged across it stays in sight. */
-  z-index: 200;
-  /* Tall screens keep the closing card under it (see .card-slot). */
-  anchor-name: --map-note;
-  left: calc(16px + var(--note-x) * (100cqw - 32px));
-  top: calc(16px + var(--note-y) * (100cqh - 32px));
-  translate: calc(var(--note-x) * -100%) calc(var(--note-y) * -100%);
-  width: min(22rem, calc(100cqw - 32px));
-  padding: 12px 16px;
-  border: 1.5px solid rgba(255, 252, 246, 0.9);
-  border-radius: 16px;
-  background: rgba(255, 250, 242, 0.72);
-  backdrop-filter: blur(10px) saturate(1.1);
-  -webkit-backdrop-filter: blur(10px) saturate(1.1);
-  box-shadow: 0 6px 20px rgba(58, 51, 64, 0.14);
+/* In the sky's corner, only while there's something to undo: the meadow's names stay clear. */
+.corner-undo {
+  position: fixed;
+  z-index: 1200;
+  top: max(16px, env(safe-area-inset-top));
+  left: max(16px, env(safe-area-inset-left));
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 250, 242, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(58, 51, 64, 0.14);
   color: var(--ink);
-  cursor: grab;
-  touch-action: none;
-  animation: note-in 550ms var(--ease-soft) both;
-  transition:
-    left var(--glide) var(--ease-soft),
-    top var(--glide) var(--ease-soft),
-    translate var(--glide) var(--ease-soft);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  animation: corner-undo-in 300ms var(--ease-soft) both;
 }
 
-.map-note.is-dragging {
-  z-index: 1050;
-  cursor: grabbing;
-  transition: none;
-}
-
-[data-mode='whatIf'] .map-note {
-  background: rgba(252, 245, 247, 0.74);
-}
-
-.map-note__text {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  line-height: 1.45;
-  text-wrap: pretty;
-}
-
-/* A changed sentence fades in. */
-.map-note__words {
-  animation: note-in 450ms var(--ease-soft) both;
-}
-
-@keyframes note-in {
+@keyframes corner-undo-in {
   from {
     opacity: 0;
   }
@@ -1480,15 +1228,6 @@ a.card__button {
   background: rgba(255, 255, 255, 0.16);
   color: #fff;
   cursor: pointer;
-}
-
-@media (max-width: 560px) {
-  .modebar {
-    padding: 12px 16px;
-  }
-  .modebar__controls {
-    width: 100%;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1816,15 +1555,6 @@ a.card__button {
 }
 
 /* ---------- Act 3 (frames A12–A13) ---------- */
-
-/* The "what if" is one beat in its own light, not a second mode: dusk, without the curtains. */
-.curtains {
-  transition: opacity var(--mode-fade) var(--ease-soft);
-}
-
-[data-beat='dusk'] .curtains {
-  opacity: 0;
-}
 
 /* The part the "what if" names: a soft, steady ring. */
 .part.is-marked .part__ring {

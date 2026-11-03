@@ -103,7 +103,7 @@ export type Action =
   /** Like addPart, a link comes from the conversation: no undo entry. */
   | { type: 'addLink'; link: Omit<Link, 'removed'> }
   /**
-   * A part's words, from the conversation (Get to know it): no undo entry.
+   * A part's words, from the conversation (Act 2): no undo entry.
    * Replaces both — a new voice starts without the old intent.
    */
   | { type: 'setWords'; partId: string; words: Words }

@@ -9,7 +9,7 @@ import type { PartKind } from './contract'
 /**
  * DEV ONLY: `?jump=after` starts at Act 1's close of a full run — two
  * linked parts, "These are the ones who came." and Go on — so everything
- * after the entry conversation (docs/slice-4-handoff.md) can be tried
+ * after Act 1 (Acts 2 and 3, the ending) can be tried
  * without typing the whole run. Ignored in production.
  *
  * The run is played through the real reducers, with scripted AI results:

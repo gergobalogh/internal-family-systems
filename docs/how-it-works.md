@@ -1,6 +1,6 @@
 # How the app works
 
-What a person sees and does, from the first question to the experiment.
+What a person sees and does, from the first question to a later visit.
 The exact wording lives in `src/conversation/script.ts` (the guide's
 lines) and `src/ui/copy.ts` (buttons and labels). Lines from slice 4 on are
 still draft.
@@ -13,8 +13,7 @@ desktop, above it on a phone). Parts appear on the meadow as felt figures.
 
 ```
  +--------------------------------------------------------------+
- |  [How it is | What if…]                           [Undo]     |  <- only after the
- |                                                              |     conversation ends
+ |  [↶ Undo]  <- after the walk, while there's something to undo |
  |        ~ clouds drift ~               ~                      |
  |                         _/\_                                 |
  |                        |[] |  house                          |
@@ -31,11 +30,15 @@ desktop, above it on a phone). Parts appear on the meadow as felt figures.
  +--------------------------------------------------------------+
 ```
 
+There's no menu or top bar at any point: the story moves the person on,
+and the few controls left live on the parts themselves.
+
 Each part's figure is picked from your words (‘the worry’ gets the Map,
 which plans every turn; ‘the one who yells’ the Defender, who steps
 forward to protect), and no two parts share one. There are 13 figures, one
 per character in `docs/character-entrances.md`. The pick is an
-interpretation, so you can change it: "Change figure" in the part's box.
+interpretation, so you can change it: "Change figure", behind the "…" in
+the part's box.
 
 That same quick reading privately chooses only the part's opening place:
 something keeping watch or pushing starts near the meadow's light;
@@ -124,7 +127,7 @@ them.
              "Step back and look at all of them. Does anyone want to be
               somewhere else, or take up more or less room?"
              you move and resize; Undo sits on the card ["That's how it is"]
-             ─► dusk: the curtains go, and one "what if":
+             ─► dusk, and one "what if":
                 "What if ‘X’ had a bit more room?"   [Go back]  [Keep it]
                                     │
                                     ▼
@@ -133,80 +136,66 @@ them.
              to keep lies beside the card
              "Thank them for showing up. They'll be here when you come back."
              [Done]                                  [Keep this picture]
-             ─► Done: the light returns to day, the top bar appears, and
-                the summary stays on the map as a note that keeps itself
-                true as you move things (until step 8 removes them)
+             ─► Done: the light returns to day, and the card goes
                                     │
                                     ▼
-          5. THE MAP IS YOURS (you lead; the app asks only when invited)
+          5. THE MAP IS YOURS (you lead; the app asks only about a change)
              │
-             ├─ drag / resize / rename / remove any part, undo anything
-             ├─ Add a part ............... from the bar, in "How it is"
-             ├─ A. Get to know it ........ select a part, you start it
-             │                              (the same scenes as Act 2)
-             ├─ B. Noticing ............... after you move a part in "How it is"
-             └─ C. The experiment ......... any time from the "What if…" bar
-                                            (Act 3 was its invitation)
+             ├─ drag / resize / rename / remove any part
+             ├─ Undo in the corner, while there's something to undo
+             └─ Noticing ............... after you move or resize a part
 
           SAVED, from the ending on: the meadow stays on this device, and
-          every later change in "How it is" is saved too (see "A later visit")
+          every later change is saved too (see "A later visit"). Someone
+          new joins on a later visit, from its welcome.
 
           SAFETY, everywhere: every typed answer is checked first (see below)
-```
-
-## The two maps
-
-```
-   [ How it is ]                          [ What if… ]
-   the meadow by day                      the same meadow at dusk,
-   "Size shows how much space a           framed by rose curtains
-    part takes up. Nearer the light,      "Try a different arrangement.
-    the closer it feels."                  How it is stays as it is."
-
-   bar: [Add a part]                      bar: [Try an experiment]
-                                          [Start over from how it is]
-
-   Both show a soft pool of light on the meadow, left of the house: the
-   point "close" and "off to the side" are measured from. It appears
-   when the map is handed over.
-
-   Each mode keeps its own places and sizes, and its own undo.
-   Names, removals, links, voices and intents are shared by both, and
-   only "How it is" changes them: in "What if…" you move and resize,
-   nothing else, so an experiment can't change the current map.
 ```
 
 ## Selecting a part
 
 Tap or click a figure. Move it by dragging or with the arrow keys. Change
 its size with [Smaller] [Larger], the round handle by its feet, or plus and
-minus.
+minus. Size shows how much space a part takes up; once the map is handed
+over, a soft pool of light on the meadow, left of the house, marks the
+point "close" and "off to the side" are measured from.
 
 ```
                  (THE WORRY)
    +-----------------------------------------------------+
-   | the worry · one way to see this                      |
+   | the worry                <- tap the name to rename it |
    | “you're going to mess this up”          <- its voice |
    | might be trying to: keep me from failing <- intent   |
-   | [Smaller] [Larger]                    <- both modes  |
-   | [Get to know it] [Rename] [Change figure]            |
-   | [Not one of my parts]        [Clear what it said]    |
+   | [Smaller] [Larger] […]                               |
    +-----------------------------------------------------+
+      │ […] opens:
+      ▼
+   | [Change figure] [Not one of my parts]                |
+   | [Clear what it said]          <- when it has words   |
 
    Change figure opens the figures no other part has, still,
-   with [Keep this one]. Undo changes it back.
+   with [Keep this one]. Undo changes it back. Clear what it
+   said takes its voice and intent off the map; Undo brings
+   them back.
 
-   in "What if…" the same box has only [Smaller] [Larger],
-   [Get to know it], and "To rename or remove it, go back to How it is."
+   at dusk (Act 3's "what if") the box has only [Smaller] [Larger]:
+   who a part is stays put there, only where it stands changes.
 ```
 
-Selecting the knot on a "pulling in different directions" link offers
-[Remove this link] in "How it is", and the same pointer back in "What if…".
+Names on the map are plain: the guide's lines keep their tentative
+wording, the labels don't repeat it. Selecting the knot on a "pulling in
+different directions" link offers [Remove this link] (not at dusk).
 
-## A. Sitting with one: Act 2, and Get to know it (you start it)
+Undo sits in the sky's top-left corner after the walk, only while there's
+something to undo, and steps aside while a card is up. (At the bottom it
+covered the names of parts standing near the edge on a phone.) Taking a
+part off the map shows its own notice with Undo instead, and the corner
+one steps aside meanwhile.
 
-Tapping a figure at Act 2's first question, or [Get to know it] on a
-selected part after the hand-over, plays the same scenes. The camera goes
+## A. Sitting with one: Act 2
+
+Tapping a figure at Act 2's first question (or its name on a later visit's
+welcome) plays these scenes. The camera goes
 to the part (closer for a smaller one), the others soften and lose their
 names, and the next card waits until the camera has arrived.
 
@@ -238,8 +227,8 @@ names, and the next card waits until the camera has arrived.
 ```
 
 Any way out ([Not now], [That's enough for now], [Not yet]) ends the
-sitting the same way: the camera steps back, and Act 3 follows. After the
-hand-over, Get to know it ends there, and nothing more is asked.
+sitting the same way: the camera steps back, and Act 3 follows (on a later
+visit, the ending).
 
 ## Stepping back: Act 3
 
@@ -248,15 +237,15 @@ hand-over, Get to know it ends there, and nothing more is asked.
    "Step back and look at all of them."
    "Does anyone want to be somewhere else, or take up more or less room?"
    [Undo] (once you've changed something)          [That's how it is]
-      │ you drag and resize any part here; this is "How it is"
+      │ you drag and resize any part here; this is how it is
       ▼
-   dusk: the evening light of "What if…", and the curtains go
+   dusk: the evening light, for one "what if"
    "What if ‘the worry’ had a bit more room?"
    "Move it, and notice what shifts."
    [Go back]                                          [Keep it]
       │ Go back: the meadow returns to how it was a moment ago
-      │ Keep it: what you moved becomes how it is (Undo in the bar
-      │          takes it back)
+      │ Keep it: what you moved becomes how it is (Undo in the
+      │          corner, after the ending, takes it back)
       ▼
    the ending (below)
 ```
@@ -267,12 +256,12 @@ Otherwise it asks "What if things sat a little differently?" and "Move
 anyone, and notice what shifts." With a single part, the first card says
 "Step back and look at it." and "Does it want to be somewhere else, or take
 up more or less room?", and the "what if" is "What if ‘X’ sat a little
-differently?" with "Move it, and notice what shifts." Act 3 counts as the experiment's invitation, so the
-first visit to "What if…" afterwards doesn't ask again.
+differently?" with "Move it, and notice what shifts." That one "what if"
+is the only one: there's no second map to switch to afterwards.
 
 ## B. Noticing (the app asks, once per part)
 
-Only in "How it is", only after a drag or resize, and only once you've
+Only after the walk, only after a drag or resize, and only once you've
 rested for a few seconds. If the edit changes what the map's summary would
 say, the app asks once about that part:
 
@@ -348,32 +337,6 @@ app again shows that meadow, in daylight, as it was left.
 New words for a part replace its old ones. Removing every part forgets
 the meadow, so the next visit starts with the free-write.
 
-## C. The experiment (invited once; yours to start any time)
-
-A walk that reached Act 3 has already had its "what if", so the invitation
-below shows only when Act 3 didn't happen (the safety pause, say).
-
-```
-   you switch to [What if…] for the first time
-      ▼
-   "Would it be alright to try something small here — move anything so
-    it feels a little better, and notice what shifts? Undo is one tap."
-   [Not now]                                     [Let's try]
-      │
-      │  or, any time after: [Try an experiment] in the "What if…" bar
-      │  (no invitation: tapping it is the yes)
-      ▼
-   slim bar: "Take your time."              [I've tried it]
-   you move things; flip between the two maps to compare
-      ▼
-   nothing moved?  "Nothing's moved yet — take your time."
-                   [Keep trying]  [Finish without changes]
-   something moved?  "What was that like?"   [Not now]  [Send]
-      ▼
-   one reflection about what moved (never "better" or "worse")
-   "‘How it is’ hasn't changed — both pictures are here."   [Close]
-```
-
 ## Safety (the whole app)
 
 ```
@@ -390,21 +353,20 @@ below shows only when Act 3 didn't happen (the safety pause, say).
                           | out to someone now.                |
                           | [Find support near you]   [Close]  |
                           +------------------------------------+
-                          the answer is dropped; no more questions,
-                          invitations or noticing this session;
+                          the answer is dropped; no more questions
+                          or noticing this session;
                           the map stays editable
 ```
 
 ## One card at a time
 
-Something you start (Get to know it) always beats something the app starts
-(noticing, the invitation). The app never opens a card over another card,
-over a drag in progress, or over the experiment bar.
+The app never opens a card of its own (noticing) over another card, over
+an answer it's still waiting on, or over a drag in progress.
 
 ## If the AI is off or fails
 
 Nothing blocks. Reflections fall back to fixed lines ("Thank you for
-putting that into words."), Turn 2 takes the one-part path, the
-invitation uses the generic wording, and the safety check falls back to
+putting that into words."), Turn 2 takes the one-part path, and the
+safety check falls back to
 the local phrase list. In dev, `?ai=off` forces all of this, and
 `?jump=after` starts at Act 1's close of a scripted full run.

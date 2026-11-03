@@ -1,28 +1,13 @@
-import type { Look, Mode } from '../model/types'
+import type { Look } from '../model/types'
 
 /** All on-screen wording in one place: short, calm, warm, non-clinical. */
 export const copy = {
-  modes: {
-    current: {
-      title: 'How it is',
-      /** What size and place mean, from the moment the map is handed over. Draft copy. */
-      hint: 'Size shows how much space a part takes up. Nearer the light, the closer it feels.',
-    },
-    whatIf: {
-      title: 'What if…',
-      hint: 'Try a different arrangement. How it is stays as it is.',
-    },
-  } satisfies Record<Mode, { title: string; hint: string }>,
-  modeSwitch: 'Mode',
   undo: 'Undo',
-  reset: 'Start over from how it is',
-  /** In the top bar after the conversation, "How it is" only. Draft copy. */
-  addPart: 'Add a part',
-  /** In the top bar after a full run, "What if…" only. Draft copy. */
-  tryExperiment: 'Try an experiment',
-  hedge: 'one way to see this',
-  rename: 'Rename',
-  /** Size in the part's box, in both modes: the same step as the plus and minus keys. Draft copy. */
+  /** Rename: the selected part's name is the button. */
+  rename: (name: string) => `Rename ${name}`,
+  /** The "…" on a selected part: Change figure and Not one of my parts. */
+  more: (name: string) => `More for ${name}`,
+  /** Size in the part's box, also in Act 3's "what if": the same step as the plus and minus keys. Draft copy. */
   smaller: 'Smaller',
   larger: 'Larger',
   sizeLabel: (name: string) => `Size of ${name}`,
@@ -49,11 +34,7 @@ export const copy = {
   renameLabel: (name: string) => `New name for ${name}`,
   renamePlaceholder: 'What would you call it?',
   remove: 'Not one of my parts',
-  /** In "What if…", in place of Rename, Not one of my parts and Clear what it said: experiments never change who a part is. Draft copy. */
-  changeInHowItIs: 'To rename or remove it, go back to How it is.',
-  /** Get to know it (docs/slice-4-handoff.md). Draft copy. */
-  getToKnow: 'Get to know it',
-  /** Clears a part's voice and intent from the map. Draft copy. */
+  /** Behind the "…" when a part has words: clears its voice and intent from the map (Undo brings them back). Draft copy. */
   clearWords: 'Clear what it said',
   /** Before a part's intent, in its selected box. Draft copy. */
   intentLabel: 'might be trying to:',
@@ -61,7 +42,6 @@ export const copy = {
   postcardAlt: (names: readonly string[], date: string) => `A picture of your meadow at dusk, with ${names.join(', ')}, ${date}`,
   removed: 'Taken off the map.',
   empty: 'No parts on the map right now.',
-  partLabel: (name: string) => `${name}, one way to see this`,
   /** A figure offered at Act 2's first question. Draft copy. */
   offeredLabel: (name: string) => `Give ${name} your attention`,
   partHint: 'Drag, or use the arrow keys, to move. Plus and minus change its size.',
@@ -93,31 +73,18 @@ export const copy = {
     welcomeChoices: 'Who to sit with',
     close: 'Close',
     closeLabel: 'Close the conversation',
-    /** After the entry conversation (docs/slice-4-handoff.md). Draft copy. */
     notNow: 'Not now',
-    letsTry: "Let's try",
-    triedIt: "I've tried it",
-    /** After "Nothing's moved yet". Draft copy. */
-    keepTrying: 'Keep trying',
-    finishUntried: 'Finish without changes',
     /** Noticing's way out: it won't ask about this part again, so not "Not now". Draft copy. */
     skip: 'Skip this one',
     enough: "That's enough for now",
     support: 'Find support near you',
     supportLabel: 'Find support near you (opens a helpline directory in a new tab)',
   },
-  /** The summary note a full conversation leaves on the map (MapNote). */
-  note: {
-    label: 'What the map shows, one way to see this',
-    hint: 'Drag, or use the arrow keys, to move this note.',
-  },
   /** The tension link between two parts (Turn 2's pairing). */
   link: {
-    label: (a: string, b: string) => `${a} and ${b}, pulling in different directions, one way to see this`,
+    label: (a: string, b: string) => `${a} and ${b}, pulling in different directions`,
     words: 'pulling in different directions',
     remove: 'Remove this link',
-    /** In "What if…", in place of Remove this link. Draft copy. */
-    removeInHowItIs: 'To take it down, go back to How it is.',
     removed: 'Link taken down.',
   },
 }
