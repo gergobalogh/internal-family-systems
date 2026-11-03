@@ -5,7 +5,7 @@
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
 - **URL:** https://ifs.gergobalogh.me (unlisted test link, live since 2026-11-03)
 - **Post where:** not decided yet
-- **Next:** write the five-person test script ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md), section 6) with the agreed line on where words go (project.md, 2026-11-03); try Keep this picture on a real phone on the test link
+- **Next:** Umami for the test link ([docs/analytics.md](docs/analytics.md)): create its website, put the id in `index.html`, deploy, save the two funnels; then share the link and read where visits stop
 - **Updated:** 2026-11-03
 
 ## Build
@@ -19,7 +19,7 @@
 ## Polish
 - [ ] Phone first: nothing covers an arriving part; interface under 30% of the screen
 - [ ] Copy review (wording skill) and an IFS therapist's review
-- [ ] Five-person test passes (docs/redesign/story-redesign.md, section 6)
+- [ ] Umami shows strangers getting from the free-write to the picture to keep, and coming back ([docs/analytics.md](docs/analytics.md); replaces the five-person test, 2026-11-03)
 
 ## Distribute
 - [ ] Where to post: your call
@@ -40,14 +40,22 @@ only tracks the work.
   of later visits. All eight steps are done: Turn 3, arrivals the card
   never covers, Act 1's close, Act 2 (Fears built but off, `?fears`, until
   a therapist has reviewed it), Act 3, the ending's picture, saving with
-  the next visit, and no modes, top bar or map note (2026-11-03). Next: a
-  real phone (looked fine, 2026-11-03), then the doc's section 6: a
-  five-person test script and the therapist questions.
+  the next visit, and no modes, top bar or map note (2026-11-03). A real
+  phone looked fine (2026-11-03); the test link is live. Instead of a
+  watched five-person test, Umami reports how far each visit gets
+  (built 2026-11-03, docs/analytics.md). Next: Umami live, then the
+  therapist questions.
 - **A reflection that follows resizing (brainstorm).** Idea: when a part is
   resized, call Claude so the reflection changes with the map. Possibly
   instead of the noticing fix below.
 
 ## Needs a decision
+
+- **The line on where visitors' words go: held** (2026-11-03). With
+  nobody beside visitors, the app should say what goes to Meta's Muse
+  (which may train on it), JEV and OpenAI. The user's call: at the end of
+  the walk, not on the first card, and only after they've had feedback on
+  it. The agreed wording is in project.md (2026-11-03).
 
 - **Test the safety checks on lifelike examples** and false alarms too
   (the "new home for my cat" miss is ambiguous, not a clear risk). Renames
@@ -109,12 +117,9 @@ only tracks the work.
 
 ## Up next
 
-- **Before the five-person test: tell testers where their words go.** The
-  line is agreed (project.md, 2026-11-03: Meta's Muse, JEV and OpenAI;
-  Meta may train on it); the test plan's "Nothing is stored beyond their
-  device" (story-redesign.md, section 6) needs it in place. Still open: in
-  private mode or with storage blocked, nothing is saved, yet the ending
-  says "They'll be here when you come back".
+- **In private mode nothing is saved,** yet the ending says "They'll be
+  here when you come back". With nobody there to tell visitors, the app
+  has to say it, or stop promising it.
 - **Before going public** (Codex review, 2026-11-03): the AI routes have
   no login (the test link's `server/serve.ts` limits calls per visitor and
   per day, 2026-11-03); `?fears` works in a production build too.

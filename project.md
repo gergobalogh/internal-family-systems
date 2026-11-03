@@ -733,3 +733,23 @@ This decision will determine the tone of the responses, what happens after a cha
   and no pause; a 503 then a flag paused; two 503s went on; "not sure"
   made no call. Closing the pause card left no card. The tap, jump and
   scripted walks still pass, with no page errors.
+
+### 2026-11-03 — Umami instead of a watched five-person test
+
+- **Change (the user's choice):** no moderated test; the test link reports
+  through Umami how far each visit gets, and we read it ourselves
+  ([docs/analytics.md](docs/analytics.md)). The test script written for
+  the watched test was dropped before it was committed.
+- **What's sent:** fixed labels and buckets only, never words or part
+  names: the walk's steps from the first card to Done, a later visit (with
+  days since), hand moves by when, a part's own controls, safety pauses by
+  reason, AI calls that fell back by route and reason, and where each
+  visit stopped (`walk-leave`). Built in `src/analytics.ts` from the walk's
+  steps and its record, so `flow.ts` is unchanged. Only
+  `ifs.gergobalogh.me` counts (`data-domains`); the URL's query and hash
+  are left out.
+- **Checked:** see docs/analytics.md.
+- **The line on where words go** (no facilitator now, so the app has to
+  say it): the user wants it at the end of the walk, and held until
+  they've had feedback on it. Not in the app yet.
+

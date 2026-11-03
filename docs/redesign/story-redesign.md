@@ -261,10 +261,17 @@ safety pause.
 
 ### Test with five people (you recruit; I prepare and analyse)
 
+Dropped on 2026-11-03, the user's choice: instead of watching five people,
+the test link reports through Umami how far each visit gets
+([docs/analytics.md](../analytics.md)), and we read it ourselves. The plan
+below is kept for the record.
+
 - **Who:** two in or after IFS therapy, two curious with no therapy, one
   with no interest in psychology. On their own phone.
 - **Their words:** tell them they can use a made-up situation; offer a
-  scenario card. Nothing is stored beyond their device.
+  scenario card. Their meadow stays on their phone, but what they type
+  goes to Meta's Muse, JEV and OpenAI, and Meta may train on it: say so
+  first (the agreed line is in project.md, 2026-11-03).
 - **Round 1, before any code:** a tap-through of A's frames (and C's, for
   contrast). **Round 2:** the built version.
 - **Tasks, said once:** "Use this the way you would on your own." Then:
@@ -296,6 +303,8 @@ safety pause.
 7. What would you want a client to bring to a session from this?
 
 ### Umami events, once it has a URL
+
+Built on 2026-11-03, with some changes: [docs/analytics.md](../analytics.md).
 
 Ids and counts only, never anyone's words: `freewrite-sent`,
 `part-arrived`, `act1-done`, `act2-answer` (voice / intent / fears),
