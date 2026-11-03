@@ -679,8 +679,9 @@ This decision will determine the tone of the responses, what happens after a cha
   standard `muse-spark-1.3` at low reasoning effort; then, the user's
   choice, `muse-spark-1.3-contributor` for the price ($0.10 in / $0.20 out
   per million tokens against $1.25 / $4.25), which Meta may train on (what's
-  sent and what it writes back), at medium effort. `MUSE_MODEL` in .env
-  switches the model. Testers have to be told. Claude stays the fallback
+  sent and what it writes back; the user: the test is anonymous anyway).
+  Medium effort ran out of time (below), so low again, the user's choice.
+  `MUSE_MODEL` in .env switches the model. Testers have to be told. Claude stays the fallback
   on the laptop. JEV and OpenAI moderation are unchanged. Muse's wording
   hasn't been checked against the reflection checks yet.
 - **The key** may be named `META_API_KEY` or `MUSE_API_KEY`.

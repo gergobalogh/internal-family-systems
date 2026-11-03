@@ -66,8 +66,8 @@ const CLAUDE_TIMEOUT_MS = 10_000
  */
 const MUSE_MODEL = 'muse-spark-1.3-contributor'
 const MUSE_TIMEOUT_MS = 10_000
-/** The user's choice: medium, not low. */
-const MUSE_EFFORT = 'medium'
+/** Low: medium ran past MUSE_TIMEOUT_MS on half the real calls (project.md, 2026-11-03). */
+const MUSE_EFFORT = 'low'
 const JEV_MODEL = 'jev-1.13.0'
 const JEV_TIMEOUT_MS = 8_000
 const MODERATION_MODEL = 'omni-moderation-latest'
