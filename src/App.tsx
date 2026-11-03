@@ -109,6 +109,10 @@ interface ShellProps {
   offered?: readonly string[] | null
   onChoose?: (partId: string) => void
   thanked?: readonly string[]
+  /** The part Act 3's "what if" names. */
+  marked?: string | null
+  /** Act 3's "what if": dusk without the curtains (not a second mode, frame A13). */
+  dusk?: boolean
   children?: ReactNode
 }
 
@@ -126,6 +130,8 @@ function Shell({
   offered,
   onChoose,
   thanked,
+  marked,
+  dusk = false,
   children,
 }: ShellProps) {
   const { state, act, selectedId, setSelectedId, notice, setNotice } = workspace
@@ -143,7 +149,7 @@ function Shell({
   }
 
   return (
-    <div className="app" data-mode={state.mode}>
+    <div className="app" data-mode={state.mode} data-beat={dusk ? 'dusk' : undefined}>
       {bar && (
         <div className="modebar-slot">
           <ModeBar
@@ -187,6 +193,7 @@ function Shell({
           offered={offered}
           onChoose={sitWith(onChoose)}
           thanked={thanked}
+          marked={marked}
         >
           {children}
         </Landscape>
@@ -251,10 +258,19 @@ function TalkWorkspace() {
       offered={state.step === 'choose' && shown === state.card && phase === 'card' ? offeredIds(state, workspace.state) : null}
       onChoose={talk.getToKnow}
       thanked={state.thanked}
+      marked={state.step === 'dusk' ? state.duskPart : null}
+      dusk={state.step === 'dusk'}
     >
       {/* After a pause, the map keeps no summary of a conversation that stopped. */}
       {handedOver && !state.paused && <MapNote text={mapNote(state, workspace.state)} />}
-      <Conversation state={state} shown={shown} phase={phase} steppedBack={steppedBack} actions={talk} />
+      <Conversation
+        state={state}
+        shown={shown}
+        phase={phase}
+        steppedBack={steppedBack}
+        actions={talk}
+        undo={canUndo(workspace.state) ? () => workspace.act({ type: 'undo' }) : undefined}
+      />
       {jump && <p className="dev-badge">DEV · jumped to Act 1's close</p>}
     </Shell>
   )

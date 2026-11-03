@@ -49,6 +49,8 @@ export interface LandscapeProps {
   onChoose?: (partId: string) => void
   /** Thanked parts: they glow. */
   thanked?: readonly string[]
+  /** The part Act 3's "what if" names. */
+  marked?: string | null
   /** Layered above the characters (the conversation card). */
   children?: ReactNode
 }
@@ -115,6 +117,7 @@ export function Landscape({
   offered = null,
   onChoose,
   thanked = [],
+  marked = null,
   children,
 }: LandscapeProps) {
   const ref = useRef<HTMLElement>(null)
@@ -206,6 +209,7 @@ export function Landscape({
           offered={offered?.includes(part.id) ?? false}
           focused={focused?.part.id === part.id}
           thanked={thanked.includes(part.id)}
+          marked={marked === part.id}
           onPlace={(next) => onPlace(part.id, next)}
           onRename={(name) => onRename(part.id, name)}
           freeLooks={freeLooks}

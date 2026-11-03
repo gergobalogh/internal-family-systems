@@ -105,6 +105,9 @@ export function useConversation(landscape: LandscapeState, dispatch: Dispatch<Ac
     getToKnow: useCallback((partId: string) => say({ type: 'getToKnow', partId }), [say]),
     thank: useCallback(() => say({ type: 'thank' }), [say]),
     thanksSeen: useCallback(() => say({ type: 'thanksSeen' }), [say]),
+    thatsHowItIs: useCallback(() => say({ type: 'thatsHowItIs' }), [say]),
+    goBack: useCallback(() => say({ type: 'goBack' }), [say]),
+    keepIt: useCallback(() => say({ type: 'keepIt' }), [say]),
     notice: useCallback((before: LandscapeState, partId: string | null) => say({ type: 'notice', before, partId }), [say]),
   }
 }

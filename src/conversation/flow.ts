@@ -42,7 +42,8 @@ import type { ArrangedPart, SummaryInput } from './summary'
  * state machine. Act 1, the entry conversation: Turns 0–3, where Turn 3
  * asks who else is here (docs/four-turn-journey-plan.md), closing with
  * "These are the ones who came." Act 2: the person taps one figure and sits
- * with it (its words, what it might be trying to do, a thanks). Then what
+ * with it (its words, what it might be trying to do, a thanks). Act 3: they
+ * step back and arrange everyone, then try one "what if" at dusk. Then what
  * the guide does after it (docs/slice-4-handoff.md). Async work (LLM
  * reflections, risk checks, JEV judgements) is
  * described by `pending`; the caller runs it and feeds the result back.
@@ -105,6 +106,7 @@ export interface Attribute {
     | 'sitWith'
     | 'fears'
     | 'thanks'
+    | 'stepBack'
     | 'safety'
     | 'invitation'
     | 'experiment'
@@ -182,6 +184,11 @@ export type Step =
   | 'thanks'
   /** Thanked: no card, while its glow is seen up close. */
   | 'thanked'
+  // Act 3 (frames A12–A13).
+  /** Step back and look at all of them: moving and sizing, then That's how it is. */
+  | 'stepBack'
+  /** One "what if" at dusk: Go back, or Keep it. */
+  | 'dusk'
   /** A "How it is" edit changed what the summary says. */
   | 'noticing'
   /** The safety path: the pause card, then no more guide this session. */
@@ -294,6 +301,8 @@ export interface ConversationState {
   thanked: string[]
   /** Act 2 asks the Fears question: off until an IFS-trained therapist has reviewed it (`?fears`). */
   askFears: boolean
+  /** The part Act 3's "what if" names, while it's asked; null for the open "what if". */
+  duskPart: string | null
   /** Parts the noticing question has asked about (once each per session). */
   noticed: string[]
 }
@@ -331,6 +340,11 @@ export type ConversationEvent =
   | { type: 'thank'; map: LandscapeState }
   /** The thanked part's glow has been seen up close: the sitting ends. */
   | { type: 'thanksSeen'; map: LandscapeState }
+  /** That's how it is, at Act 3's step back. */
+  | { type: 'thatsHowItIs'; map: LandscapeState }
+  /** Act 3's "what if": Go back, or Keep it. */
+  | { type: 'goBack'; map: LandscapeState }
+  | { type: 'keepIt'; map: LandscapeState }
   /** The person rested after a "How it is" edit; `before` is the map the last time this was asked. */
   | { type: 'notice'; before: LandscapeState; partId: string | null; map: LandscapeState }
 
@@ -648,6 +662,7 @@ const emptyConversation = (): ConversationState => ({
   noticed: [],
   thanked: [],
   askFears: false,
+  duskPart: null,
 })
 
 export function startConversation({ askFears = false } = {}): ConversationState {
@@ -956,15 +971,69 @@ function toAct2(state: ConversationState, map: LandscapeState): ConversationStat
   if (offered.length === 0) {
     return endSitting(
       note(state, { subject: 'conversation', attribute: 'sitWith', value: 'nobody offered', source: null, confidence: byDefault }),
+      map,
     )
   }
   const [question, hint] = offered.length === 1 ? script.chooseOne(offered[0].name) : script.choose
   return { ...guide(guide(freshCard(state), question), hint), step: 'choose', asked: '' }
 }
 
-/** Act 2 (or Get to know it, after the hand-over) is over: no card, and the map is the person's. */
-function endSitting(state: ConversationState): ConversationState {
-  return { ...idle(state), ended: true }
+/** Act 2 is over: on to Act 3. After the hand-over (Get to know it), the card simply goes. */
+function endSitting(state: ConversationState, map: LandscapeState): ConversationState {
+  return state.ended ? idle(state) : toAct3(idle(state), map)
+}
+
+// ---------- Act 3: step back, and one "what if" (frames A12–A13) ----------
+
+/** The walk is over: no card, and the map is the person's. Act 3's "what if" was the invitation. */
+const finishWalk = (state: ConversationState): ConversationState => ({ ...idle(state), ended: true, invited: true, duskPart: null })
+
+/** "Step back and look at all of them." Moving and sizing live here. */
+function toAct3(state: ConversationState, map: LandscapeState): ConversationState {
+  const here = visibleNow(state, map)
+  if (here.length === 0) return finishWalk(state)
+  const [look, ask] = script.stepBack(here.length)
+  return { ...guide(guide(freshCard(state), look), ask), step: 'stepBack', asked: '' }
+}
+
+/**
+ * The part the "what if" gives a bit more room: the smallest one Act 2 could
+ * offer, when another part is larger; otherwise none (the open "what if").
+ */
+function duskPartFor(state: ConversationState, map: LandscapeState): PartNow | null {
+  const visible = visibleNow(state, map)
+  const [smallest] = [...offeredParts(state, map)].sort((a, b) => a.placement.scale - b.placement.scale)
+  if (!smallest || !visible.some((part) => part.placement.scale > smallest.placement.scale)) return null
+  return smallest
+}
+
+/** That's how it is: dusk falls on one "what if" (the "What if" layout, forked from how it is now). */
+function onThatsHowItIs(state: ConversationState, map: LandscapeState): ConversationState {
+  if (state.pending || state.step !== 'stepBack') return state
+  const noted = note(state, { subject: 'conversation', attribute: 'stepBack', value: "that's how it is", source: null, confidence: high })
+  if (visibleNow(noted, map).length === 0) return finishWalk(noted)
+  const part = duskPartFor(noted, map)
+  const here = visibleNow(noted, map)
+  const [question, hint] = part ? script.dusk(part.name) : script.duskOpen(here.length === 1 ? here[0].name : null)
+  const dusk = act({ ...noted, duskPart: part?.id ?? null }, map, { type: 'enterWhatIf' })
+  return { ...guide(guide(freshCard(dusk), question), hint), step: 'dusk', asked: '' }
+}
+
+/** Go back: the "what if" is let go, and the light returns on how it is. */
+function onGoBack(state: ConversationState): ConversationState {
+  if (state.pending || state.step !== 'dusk') return state
+  const noted = note(state, { subject: 'conversation', attribute: 'experiment', value: 'went back', source: null, confidence: high })
+  // Straight to the effects, in order: act() would switch the view back before the reset.
+  return finishWalk({ ...noted, effects: [...noted.effects, { type: 'resetWhatIf' }, { type: 'returnToCurrent' }] })
+}
+
+/** Keep it: the "what if" becomes how it is (undoable); the words of what changed stay in the record. */
+function onKeepIt(state: ConversationState, map: LandscapeState): ConversationState {
+  if (state.pending || state.step !== 'dusk') return state
+  const parts = arranged(state, map)
+  const value = arrangementDiffers(parts) ? `kept: ${arrangementChanges(parts).join('; ')}` : 'kept: nothing moved'
+  const noted = note(state, { subject: 'conversation', attribute: 'experiment', value, source: null, confidence: high })
+  return finishWalk({ ...noted, effects: [...noted.effects, { type: 'keepWhatIf' }] })
 }
 
 const askThanks = (state: ConversationState): ConversationState => ({ ...guide(state, script.thanks), step: 'thanks', asked: '' })
@@ -1197,7 +1266,7 @@ function onGetToKnow(state: ConversationState, partId: string, map: LandscapeSta
 
 function onVoiceAnswer(state: ConversationState, map: LandscapeState, text: string): ConversationState {
   // Taken off the map while they answered: the card ends quietly, and the answer is dropped.
-  if (!subjectHere(state, map)) return endSitting(state)
+  if (!subjectHere(state, map)) return endSitting(state, map)
   const { id } = state.subject!
   const stored = act(
     note({ ...state, subject: { ...state.subject!, voice: text } }, { subject: id, attribute: 'voice', value: text, source: text, confidence: high }),
@@ -1217,7 +1286,7 @@ function onVoiceAnswer(state: ConversationState, map: LandscapeState, text: stri
 }
 
 function onIntentAnswer(state: ConversationState, map: LandscapeState, text: string): ConversationState {
-  if (!subjectHere(state, map)) return endSitting(state)
+  if (!subjectHere(state, map)) return endSitting(state, map)
   const { id, voice } = state.subject!
   const stored = act(
     note({ ...state, subject: { ...state.subject!, intent: text } }, { subject: id, attribute: 'intent', value: text, source: text, confidence: high }),
@@ -1239,7 +1308,7 @@ function onIntentAnswer(state: ConversationState, map: LandscapeState, text: str
 
 /** Fears (frame A10), only with `askFears`: kept in the record, not on the map. */
 function onFearsAnswer(state: ConversationState, map: LandscapeState, text: string): ConversationState {
-  if (!subjectHere(state, map)) return endSitting(state)
+  if (!subjectHere(state, map)) return endSitting(state, map)
   const { id, voice, intent } = state.subject!
   const noted = note(state, { subject: id, attribute: 'fears', value: text, source: text, confidence: high })
   return request(noted, {
@@ -1259,15 +1328,15 @@ function onFearsAnswer(state: ConversationState, map: LandscapeState, text: stri
 /** Thank it (frame A11): the part glows, seen up close for a moment, then the sitting ends (`thanksSeen`). */
 function onThank(state: ConversationState, map: LandscapeState): ConversationState {
   if (state.pending || state.step !== 'thanks') return state
-  if (!subjectHere(state, map)) return endSitting(state)
+  if (!subjectHere(state, map)) return endSitting(state, map)
   const { id } = state.subject!
   const thanked = state.thanked.includes(id) ? state.thanked : [...state.thanked, id]
   const noted = note({ ...state, thanked }, { subject: id, attribute: 'thanks', value: 'thanked', source: null, confidence: high })
   return { ...noted, step: 'thanked', asked: '', card: null }
 }
 
-function onThanksSeen(state: ConversationState): ConversationState {
-  return state.step === 'thanked' ? endSitting(state) : state
+function onThanksSeen(state: ConversationState, map: LandscapeState): ConversationState {
+  return state.step === 'thanked' ? endSitting(state, map) : state
 }
 
 /**
@@ -1310,7 +1379,7 @@ function onNoticingAnswer(state: ConversationState, text: string): ConversationS
  * changes: the card goes, and the map stays as it is. Skipping Fears goes on
  * to the thanks.
  */
-function onDecline(state: ConversationState): ConversationState {
+function onDecline(state: ConversationState, map: LandscapeState): ConversationState {
   if (state.pending || !DECLINABLE_STEPS.includes(state.step)) return state
   const about = state.subject?.id ?? 'conversation'
   const said = (attribute: Attribute['attribute'], value: string): Attribute => ({ subject: about, attribute, value, source: null, confidence: high })
@@ -1318,12 +1387,12 @@ function onDecline(state: ConversationState): ConversationState {
     case 'fears':
       return askThanks(freshCard(note(state, said('fears', 'skipped'))))
     case 'choose':
-      return endSitting(note(state, said('sitWith', 'not now')))
+      return endSitting(note(state, said('sitWith', 'not now')), map)
     case 'voice':
     case 'intent':
-      return endSitting(note(state, said(state.step, 'not answered')))
+      return endSitting(note(state, said(state.step, 'not answered')), map)
     case 'thanks':
-      return endSitting(note(state, said('thanks', 'not yet')))
+      return endSitting(note(state, said('thanks', 'not yet')), map)
   }
   const outcome: Partial<Record<Step, Attribute>> = {
     nothingMoved: { subject: 'conversation', attribute: 'experiment', value: 'finished without changes', source: null, confidence: high },
@@ -1558,7 +1627,7 @@ function onReflected(state: ConversationState, seq: number, text: string | null,
   // Every part was taken off the map while reflecting: drop the reflection; the early close.
   if (turn === 3 && visibleNow(settled, map).length === 0) return toTurn3(settled, map, null)
   // Sitting with a part that was taken off the map while reflecting: the card ends quietly.
-  if ((turn === 'voice' || turn === 'intent' || turn === 'fears') && !subjectHere(settled, map)) return endSitting(settled)
+  if ((turn === 'voice' || turn === 'intent' || turn === 'fears') && !subjectHere(settled, map)) return endSitting(settled, map)
   // The toward-check branched, but part 1 left meanwhile: no second part
   // without the first, so the toward answer is reflected as Turn 3 instead.
   if (turn === 'toward' && !isHere(settled, map, PART_1)) {
@@ -1653,7 +1722,7 @@ export function conversationReducer(state: ConversationState, event: Conversatio
     case 'dismiss':
       return onDismiss(state)
     case 'decline':
-      return onDecline(state)
+      return onDecline(state, event.map)
     case 'accept':
       return onAccept(state, event.map)
     case 'tryExperiment':
@@ -1673,7 +1742,13 @@ export function conversationReducer(state: ConversationState, event: Conversatio
     case 'thank':
       return onThank(state, event.map)
     case 'thanksSeen':
-      return onThanksSeen(state)
+      return onThanksSeen(state, event.map)
+    case 'thatsHowItIs':
+      return onThatsHowItIs(state, event.map)
+    case 'goBack':
+      return onGoBack(state)
+    case 'keepIt':
+      return onKeepIt(state, event.map)
     case 'notice':
       return onNotice(state, event.before, event.partId, event.map)
   }

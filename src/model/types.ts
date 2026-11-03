@@ -76,6 +76,8 @@ export type Entry =
   | { kind: 'unlink'; linkId: string }
   | { kind: 'words'; partId: string; before: Words }
   | { kind: 'reset'; before: Layout }
+  /** "How it is" before a "what if" was kept (Act 3's Keep it). */
+  | { kind: 'keep'; before: Layout }
 
 export interface LandscapeState {
   parts: Record<string, Part>
@@ -116,4 +118,9 @@ export type Action =
   | { type: 'setLook'; partId: string; look: Look }
   | { type: 'remove'; partId: string }
   | { type: 'resetWhatIf' }
+  /**
+   * Act 3's Keep it: the "what if" arrangement becomes "How it is", and the
+   * view returns there. Undoable in "How it is".
+   */
+  | { type: 'keepWhatIf' }
   | { type: 'undo' }

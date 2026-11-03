@@ -80,6 +80,10 @@ export const copy = {
     skipFears: 'Skip',
     notYet: 'Not yet',
     thankIt: 'Thank it',
+    /** Act 3: the step back, and the "what if" at dusk. Draft copy. */
+    thatsHowItIs: "That's how it is",
+    goBack: 'Go back',
+    keepIt: 'Keep it',
     close: 'Close',
     closeLabel: 'Close the conversation',
     /** After the entry conversation (docs/slice-4-handoff.md). Draft copy. */

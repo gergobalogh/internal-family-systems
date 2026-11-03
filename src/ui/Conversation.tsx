@@ -12,7 +12,18 @@ export const SUPPORT_URL = 'https://findahelpline.com/'
 /** What the person can do on a card, from the conversation hook. */
 type CardActions = Pick<
   Talk,
-  'answer' | 'choose' | 'goOn' | 'dismiss' | 'decline' | 'accept' | 'tried' | 'keepTrying' | 'thank'
+  | 'answer'
+  | 'choose'
+  | 'goOn'
+  | 'dismiss'
+  | 'decline'
+  | 'accept'
+  | 'tried'
+  | 'keepTrying'
+  | 'thank'
+  | 'thatsHowItIs'
+  | 'goBack'
+  | 'keepIt'
 >
 
 interface ConversationProps {
@@ -23,6 +34,8 @@ interface ConversationProps {
   /** A part is walking in: the card steps back and a quiet "One moment…" waits in its place. */
   steppedBack: boolean
   actions: CardActions
+  /** Undo, when there's something to undo, for Act 3's step back (the bar isn't there yet). */
+  undo?: () => void
 }
 
 /** Phrases copied from the free-write, offered as buttons: Turn 1's choose row, or Turn 3's leftovers. */
@@ -51,7 +64,7 @@ function cardLines(lines: readonly Line[], start: number | null): Line[] {
  * After the entry conversation the same card carries the guide's
  * invitations and questions (docs/slice-4-handoff.md), or nothing at all.
  */
-export function Conversation({ state, shown, phase, steppedBack, actions }: ConversationProps) {
+export function Conversation({ state, shown, phase, steppedBack, actions, undo }: ConversationProps) {
   const lines = cardLines(state.lines, shown)
   const current = shown === state.card && phase === 'card'
   // Announced underneath any animation: the wait, then each new card.
@@ -78,6 +91,7 @@ export function Conversation({ state, shown, phase, steppedBack, actions }: Conv
             away={steppedBack}
             current={current}
             actions={actions}
+            undo={undo}
           />
         </div>
       )}
@@ -97,9 +111,13 @@ interface CardProps {
   /** This card is the conversation's current one, and settled on screen. */
   current: boolean
   actions: CardActions
+  undo?: () => void
 }
 
-function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current, actions }: CardProps) {
+/** Cards whose second line is a softer hint under the question. */
+const HINTED: readonly Step[] = ['choose', 'stepBack', 'dusk']
+
+function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current, actions, undo }: CardProps) {
   // The card keeps its own shape while it ghosts: no layout jump.
   const [step] = useState(stepNow)
   const [choices] = useState(choicesNow)
@@ -109,7 +127,7 @@ function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current,
   return (
     <section
       ref={cardRef}
-      className={`card${slim ? ' card--slim' : ''}${step === 'choose' ? ' card--choose' : ''}${phase === 'waiting' ? ' is-waiting' : ''}${phase === 'arriving' || away ? ' is-away' : ''}`}
+      className={`card${slim ? ' card--slim' : ''}${HINTED.includes(step) ? ' card--hinted' : ''}${phase === 'waiting' ? ' is-waiting' : ''}${phase === 'arriving' || away ? ' is-away' : ''}`}
       aria-label={copy.talk.label}
       aria-busy={phase !== 'card'}
     >
@@ -166,6 +184,28 @@ function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current,
             <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.decline}>
               {copy.talk.notNow}
             </button>
+          )}
+          {step === 'stepBack' && (
+            <>
+              {undo && (
+                <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={undo}>
+                  {copy.undo}
+                </button>
+              )}
+              <button type="button" className="card__button" disabled={!current} onClick={actions.thatsHowItIs}>
+                {copy.talk.thatsHowItIs}
+              </button>
+            </>
+          )}
+          {step === 'dusk' && (
+            <>
+              <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.goBack}>
+                {copy.talk.goBack}
+              </button>
+              <button type="button" className="card__button" disabled={!current} onClick={actions.keepIt}>
+                {copy.talk.keepIt}
+              </button>
+            </>
           )}
           {step === 'thanks' && (
             <>

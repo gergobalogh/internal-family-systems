@@ -12,7 +12,8 @@ builds on [slice 3](docs/slice-3-handoff.md)'s whole entry conversation
 [docs/redesign/story-redesign.md](docs/redesign/story-redesign.md): Turn 3
 asks who else is here, and Act 1 closes with "These are the ones who
 came." in place of Turn 4's summary question and the closing card; Act 2
-then sits with one part the person taps), [slice 2](docs/slice-2-handoff.md)'s Turns 0–2 and
+then sits with one part the person taps, and Act 3 steps back for one
+"what if" at dusk), [slice 2](docs/slice-2-handoff.md)'s Turns 0–2 and
 [slice 1](docs/slice-1-handoff.md)'s "How it is" / "What if…" landscape.
 The conversation is one glass card under the house, per
 [docs/input-choreography-plan.md](docs/input-choreography-plan.md).
@@ -57,7 +58,8 @@ session, and the map stays editable.
   browser side of the AI calls (`ai.ts`, `contract.ts`), and the dev-only
   jump to Act 1's close (`devJump.ts`). After Go on, `flow.ts` runs Act 2
   (sitting with one part; its Fears question waits for a therapist's
-  review and shows only with `?fears`, `features.ts`), then the
+  review and shows only with `?fears`, `features.ts`) and Act 3 (step
+  back, then one "what if" with Go back / Keep it), then the
   invitation and experiment, Get to know it, noticing, and the safety
   pause.
 - `server/ai.ts` — the AI routes (`/api/reflect` → Claude, `/api/risk` → OpenAI moderation + JEV, `/api/figure` → one JEV

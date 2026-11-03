@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Plays one whole session of the app the way a person would, AI on:
 // free-write → parts → who came → Go on → Act 2 (tap one, its words, thanks)
-// → Get to know it → a move
-// (noticing) → What if… experiment. Records a video, a still of every card,
+// → Act 3 (step back, a move, the dusk "what if", Keep it) → Get to know it
+// → a move (noticing) → What if… experiment. Records a video, a still of every card,
 // and a timeline of what each card said and when.
 //
 //   node scripts/record-session.mjs http://localhost:5173/ 390x844 docs/redesign/today/phone
@@ -137,7 +137,22 @@ try {
   } else {
     log('act2 skipped: nobody offered')
   }
-  await page.waitForTimeout(4500)
+
+  // ── Act 3: step back, a move, That's how it is, the dusk "what if" ─
+  await record('act3-step-back')
+  await drag(0, -width * 0.08, -10)
+  await page.waitForTimeout(800)
+  await record('act3-moved')
+  await press("That's how it is")
+  await record('act3-dusk')
+  const marked = page.locator('.part.is-marked .part__body')
+  await ((await marked.count()) ? marked.first() : page.locator('.part__body').first()).focus()
+  await page.keyboard.press('+')
+  await page.keyboard.press('+')
+  await page.waitForTimeout(800)
+  log('act3 tried', { file: await shot('act3-tried') })
+  await press('Keep it')
+  await page.waitForTimeout(2500)
   log('map handed over', { file: await shot('map-handed-over') })
 
   // ── Select a part → its box → Get to know it ──────────────────────
@@ -169,11 +184,11 @@ try {
   }
   await page.waitForTimeout(1500)
 
-  // ── What if… experiment ───────────────────────────────────────────
+  // ── What if… experiment (Act 3 was its invitation: start it from the bar) ─
   await page.click('.mode-switch button:has-text("What if")')
   try {
-    await record('whatif-invite')
-    await press("Let's try")
+    await page.waitForTimeout(1500)
+    await page.click('button:has-text("Try an experiment")')
     await page.waitForTimeout(1500)
     log('trying bar', { file: await shot('whatif-trying') })
     await drag(1, -width * 0.15, 10)

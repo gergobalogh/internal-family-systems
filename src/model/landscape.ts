@@ -110,6 +110,7 @@ function isVisibleRevert(state: LandscapeState, entry: Entry): boolean {
       return state.links[entry.linkId].between.every((id) => !state.parts[id].removed)
     case 'remove':
     case 'reset':
+    case 'keep':
       return true
   }
 }
@@ -160,6 +161,8 @@ function revert(state: LandscapeState, entry: Entry): LandscapeState {
       return withPart(state, withWords(state.parts[entry.partId], entry.before))
     case 'reset':
       return withLayout(state, 'whatIf', entry.before)
+    case 'keep':
+      return withLayout(state, 'current', entry.before)
   }
 }
 
@@ -278,6 +281,15 @@ export function landscapeReducer(state: LandscapeState, action: Action): Landsca
       if (sameLayout(whatIf, state.layouts.current)) return state
       const next = withLayout(state, 'whatIf', { ...state.layouts.current })
       return record(next, { kind: 'reset', before: whatIf })
+    }
+
+    case 'keepWhatIf': {
+      const whatIf = state.layouts.whatIf
+      if (!whatIf) return state
+      const before = state.layouts.current
+      const kept = { ...before, ...whatIf }
+      const back = { ...withLayout(state, 'current', kept), mode: 'current' as const }
+      return sameLayout(before, kept) ? back : record(back, { kind: 'keep', before })
     }
 
     case 'undo':

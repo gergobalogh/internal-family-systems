@@ -78,6 +78,21 @@ export const script = {
   fears: 'What is it afraid would happen if it stopped?',
   /** The high point is a tap: Thank it, and it glows. Draft copy. */
   thanks: 'Would you like to thank it?',
+  /** Act 3 (frame A12): the whole meadow again; moving and sizing live here. Draft copy. */
+  stepBack: (count: number) =>
+    count === 1
+      ? ['Step back and look at it.', 'Does it want to be somewhere else, or take up more or less room?']
+      : ['Step back and look at all of them.', 'Does anyone want to be somewhere else, or take up more or less room?'],
+  /**
+   * Act 3's one "what if" at dusk (frame A13): the smallest part Act 2 could
+   * offer, or an open one when there's none. Draft copy.
+   */
+  dusk: (name: string) => [`What if ${quoted(name)} had a bit more room?`, 'Move it, and notice what shifts.'],
+  /** The open "what if": nobody to name, or one part on its own. */
+  duskOpen: (only: string | null) =>
+    only
+      ? [`What if ${quoted(only)} sat a little differently?`, 'Move it, and notice what shifts.']
+      : ['What if things sat a little differently?', 'Move anyone, and notice what shifts.'],
   /** Add a part, from the top bar after closing. Draft copy. */
   newPart: "What would you call the part you'd like to add?",
   partAdded: (name: string) => `${quoted(name)} is here now. Move it wherever feels right.`,

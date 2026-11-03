@@ -45,6 +45,8 @@ interface PartFigureProps {
   focused?: boolean
   /** Thanked: it glows. */
   thanked?: boolean
+  /** Named by Act 3's "what if": a soft ring, so it's clear which one. */
+  marked?: boolean
 }
 
 const MOVE_STEP = 0.02
@@ -131,6 +133,7 @@ export function PartFigure({
   offered = false,
   focused = false,
   thanked = false,
+  marked = false,
 }: PartFigureProps) {
   // In-progress gesture; the model only sees the committed placement.
   const [draft, setDraftState] = useState<Placement | null>(null)
@@ -244,7 +247,7 @@ export function PartFigure({
 
   return (
     <div
-      className={`part${selected ? ' is-selected' : ''}${draft ? ' is-dragging' : ''}${entrance}${offered ? ' is-offered' : ''}${focused ? ' is-focus' : ''}${thanked ? ' is-thanked' : ''}`}
+      className={`part${selected ? ' is-selected' : ''}${draft ? ' is-dragging' : ''}${entrance}${offered ? ' is-offered' : ''}${focused ? ' is-focus' : ''}${thanked ? ' is-thanked' : ''}${marked ? ' is-marked' : ''}`}
       style={style}
       data-part={part.id}
       data-look={part.look}

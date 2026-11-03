@@ -5,7 +5,7 @@
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
 - **URL:** none
 - **Post where:** not decided yet
-- **Next:** Option A, step 5: Act 3, step back and look at everyone (moving and sizing live here), then one "what if" at dusk with Go back / Keep it ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md))
+- **Next:** Option A, step 6: the ending's picture (frame A14): "Thank them for showing up. They'll be here when you come back." with Done / Keep this picture, a postcard of their meadow with the names, a part's words and the date ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md))
 - **Updated:** 2026-11-03
 
 ## Build
@@ -37,9 +37,9 @@ only tracks the work.
   here, sit with one, step back), ending with a picture to keep, and the
   meadow saved on the device for the next visit. Option B is the shape of
   later visits. Done: Turn 3, arrivals the card never covers, Act 1's
-  close, and Act 2 (Fears built but off, `?fears`, until a therapist has
-  reviewed it). Next: Act 3, the ending's picture, saving, then removing
-  the modes, top bar, map note and the label hedge. The doc's
+  close, Act 2 (Fears built but off, `?fears`, until a therapist has
+  reviewed it) and Act 3. Next: the ending's picture, saving, then
+  removing the modes, top bar, map note and the label hedge. The doc's
   section 6 has a five-person test script and the therapist questions.
 - **A reflection that follows resizing (brainstorm).** Idea: when a part is
   resized, call Claude so the reflection changes with the map. Possibly
@@ -144,7 +144,13 @@ only tracks the work.
   "Would ‘X’ like a little of your attention?" / "Tap it when you're
   ready." / "What is it afraid would happen if it stopped?" / "Skip" /
   "Would you like to thank it?" / "Not yet" / "Thank it", and the figure's
-  label "Give X your attention".
+  label "Give X your attention", and Act 3: "Step back and look at all of
+  them." / "Step back and look at it." / "Does anyone (it) want to be
+  somewhere else, or take up more or less room?" / "That's how it is" /
+  "What if ‘X’ had a bit more room?" / "Move it, and notice what shifts."
+  / "What if things sat a little differently?" / "Move anyone, and notice
+  what shifts." / "What if ‘X’ sat a little differently?" / "Go back" /
+  "Keep it".
 - **Card covers the selected part's box on desktop.** The card sits at a
   fixed spot under the house, so a part dragged there has its box hidden
   behind it. (New parts no longer start there, 2026-11-03.) Idea: on
@@ -158,14 +164,30 @@ only tracks the work.
   2. Turn 1 rows — complete: calibrated on 72 free-writes and in the app.
   3. Kind — complete: 40/40 calibrated; combined with the figure request.
   4. Turn 3 — complete (2026-11-02). 5. Turn 4 — replaced by Act 1's
-  close (2026-11-03); its drag invite moves after Act 2 (it becomes "Step
-  back"). 6. Turn 2's "already said" skip.
+  close (2026-11-03); its drag invite is now Act 3's "Step back", after
+  Act 2. 6. Turn 2's "already said" skip.
 - **Reflections echo the answer's filler.** Real run, 2026-11-02: "It
   sounds like, honestly, you feel frustrated with 'not good enough.'"
 - **Risk check: one known miss.** "I found a new home for my cat, for
   good" scores near zero on both moderation and JEV (Claude caught it).
 
 ## Done
+
+- **Act 3: step back, one "what if"** (2026-11-03, Option A step 5,
+  frames A12–A13). After Act 2 the guide says "Step back and look at all
+  of them." and asks whether anyone wants to be somewhere else or take up
+  more or less room; moving and sizing happen here, with Undo on the card,
+  until "That's how it is". Then dusk: the curtains go, and one "What if
+  ‘X’ had a bit more room?" names the smallest part Act 2 could offer
+  (with its ring), or asks "What if things sat a little differently?"
+  when there's none. Go back clears it; Keep it makes it how it is (one
+  Undo takes it back). Then the map is handed over, and the experiment
+  doesn't invite again. Checked with scripted AI answers in the browser
+  (no model calls), ten paths at 390×844 and 1440×900 plus two with
+  reduced motion: Undo on the card, the named and the open "what if", one
+  part on its own, Keep it and Go back, and Get to know it after the
+  hand-over (no Act 3 then), with no page errors. Build and lint pass.
+  Wording is draft.
 
 - **Turn 1's phrases are short names** (2026-11-03). The lifter returned
   "I'm not good enough and should push harder", 42 characters, so Turn 1

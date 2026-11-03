@@ -504,3 +504,40 @@ This decision will determine the tone of the responses, what happens after a cha
   or not word for word. The failing free-write now gives ‘not good
   enough’ · ‘should push harder’ · ‘wants to hide under the covers’. 19
   Claude calls, approved.
+
+### 2026-11-03 — Act 3: step back, one "what if"
+
+- **Change (Option A step 5, frames A12–A13):** after Act 2 (or straight
+  after Go on, when Act 2 has nobody to offer), the guide says "Step back
+  and look at all of them." and "Does anyone want to be somewhere else, or
+  take up more or less room?" with one button, "That's how it is". Moving
+  and resizing live here, in "How it is"; once something has changed, an
+  Undo sits on the card. With one part: "Step back and look at it." and
+  "Does it want to be somewhere else, or take up more or less room?"
+- **Dusk:** "That's how it is" turns the light to the "What if…" evening
+  and the curtains go. One "what if": "What if ‘X’ had a bit more room?"
+  and "Move it, and notice what shifts.", with Go back / Keep it. ‘X’ is
+  the smallest part Act 2 could offer (agreed 2026-11-03), marked with its
+  ring, as long as another part is bigger. Otherwise: "What if things sat
+  a little differently?" and "Move anyone, and notice what shifts.", or,
+  with one part, "What if ‘X’ sat a little differently?" and "Move it, and
+  notice what shifts."
+- **Go back / Keep it:** Go back clears the "what if" and the meadow
+  returns to how it was. Keep it makes the "what if" how it is; one Undo
+  in the bar takes it back. Either way the walk ends and the map is handed
+  over (the bar and note, until the ending's picture and step 8 replace
+  them). The record keeps "that's how it is" and what was kept or that
+  they went back.
+- **The experiment's invitation:** Act 3 is it, so the first visit to
+  "What if…" afterwards doesn't invite again. A walk that never reached
+  Act 3 (the safety pause) still gets the invitation.
+- **Checked:** scripted AI answers in the browser (no model calls), ten
+  paths at 390×844 and 1440×900 and two with reduced motion. Each one
+  dragged a part at the step back and undid it from the card, hid the
+  curtains at dusk, marked the named part (or asked the open "what if"
+  when there was none, or one part alone), resized it, then kept it (the
+  size stayed) or went back (it returned). The bar came after, "What if…"
+  didn't invite again, and Get to know it after the hand-over ended
+  without Act 3. No page errors; build and lint pass. On desktop the
+  card's box touches a large part's transparent edge beside it (the
+  board's "card covers the selected part's box" item).

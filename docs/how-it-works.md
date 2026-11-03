@@ -116,20 +116,29 @@ them.
              reviewed it); with nobody to offer, Act 2 is skipped
              ─► the camera goes to it: its words, what it might be trying
                 to do, a thanks
-             ─► the camera steps back; the top bar appears; the summary
-                stays on the map as a note, and keeps itself true as you
-                move things (until Act 3 is built)
+             ─► the camera steps back to the whole meadow
                                     │
                                     ▼
-          3. THE MAP IS YOURS (you lead; the app asks only when invited)
+          3. ACT 3: STEP BACK (frames A12–A13; see "Stepping back")
+             "Step back and look at all of them. Does anyone want to be
+              somewhere else, or take up more or less room?"
+             you move and resize; Undo sits on the card ["That's how it is"]
+             ─► dusk: the curtains go, and one "what if":
+                "What if ‘X’ had a bit more room?"   [Go back]  [Keep it]
+             ─► the top bar appears; the summary stays on the map as a
+                note, and keeps itself true as you move things (until the
+                ending's picture is built)
+                                    │
+                                    ▼
+          4. THE MAP IS YOURS (you lead; the app asks only when invited)
              │
              ├─ drag / resize / rename / remove any part, undo anything
              ├─ Add a part ............... from the bar, in "How it is"
              ├─ A. Get to know it ........ select a part, you start it
              │                              (the same scenes as Act 2)
              ├─ B. Noticing ............... after you move a part in "How it is"
-             └─ C. The experiment ......... the first time you open "What if…",
-                                            then any time from the bar
+             └─ C. The experiment ......... any time from the "What if…" bar
+                                            (Act 3 was its invitation)
 
           SAFETY, everywhere: every typed answer is checked first (see below)
 ```
@@ -218,7 +227,37 @@ names, and the next card waits until the camera has arrived.
 ```
 
 Any way out ([Not now], [That's enough for now], [Not yet]) ends the
-sitting the same way: the camera steps back, and nothing more is asked.
+sitting the same way: the camera steps back, and Act 3 follows. After the
+hand-over, Get to know it ends there, and nothing more is asked.
+
+## Stepping back: Act 3
+
+```
+   the whole meadow, as it is now
+   "Step back and look at all of them."
+   "Does anyone want to be somewhere else, or take up more or less room?"
+   [Undo] (once you've changed something)          [That's how it is]
+      │ you drag and resize any part here; this is "How it is"
+      ▼
+   dusk: the evening light of "What if…", and the curtains go
+   "What if ‘the worry’ had a bit more room?"
+   "Move it, and notice what shifts."
+   [Go back]                                          [Keep it]
+      │ Go back: the meadow returns to how it was a moment ago
+      │ Keep it: what you moved becomes how it is (Undo in the bar
+      │          takes it back)
+      ▼
+   the top bar appears, and the map is yours
+```
+
+The "what if" names the smallest part that Act 2 could offer (not one read
+as hurting, and not Turn 3's quieter part), if another part is bigger.
+Otherwise it asks "What if things sat a little differently?" and "Move
+anyone, and notice what shifts." With a single part, the first card says
+"Step back and look at it." and "Does it want to be somewhere else, or take
+up more or less room?", and the "what if" is "What if ‘X’ sat a little
+differently?" with "Move it, and notice what shifts." Act 3 counts as the experiment's invitation, so the
+first visit to "What if…" afterwards doesn't ask again.
 
 ## B. Noticing (the app asks, once per part)
 
@@ -240,6 +279,9 @@ answer never changes the map. Skipping means it won't ask about that part
 again, so the button says so instead of "Not now".
 
 ## C. The experiment (invited once; yours to start any time)
+
+A walk that reached Act 3 has already had its "what if", so the invitation
+below shows only when Act 3 didn't happen (the safety pause, say).
 
 ```
    you switch to [What if…] for the first time

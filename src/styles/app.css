@@ -1725,7 +1725,7 @@ a.card__button {
 }
 
 /* The question, then a softer line under it. */
-.card--choose .card__line + .card__line {
+.card--hinted .card__line + .card__line {
   color: var(--ink-soft);
   font-size: 0.95rem;
 }
@@ -1812,6 +1812,22 @@ a.card__button {
     opacity: 0;
     translate: 0 6px;
   }
+}
+
+/* ---------- Act 3 (frames A12–A13) ---------- */
+
+/* The "what if" is one beat in its own light, not a second mode: dusk, without the curtains. */
+.curtains {
+  transition: opacity var(--mode-fade) var(--ease-soft);
+}
+
+[data-beat='dusk'] .curtains {
+  opacity: 0;
+}
+
+/* The part the "what if" names: a soft, steady ring. */
+.part.is-marked .part__ring {
+  opacity: 0.85;
 }
 
 @media (prefers-reduced-motion: reduce) {
