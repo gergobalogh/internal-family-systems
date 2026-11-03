@@ -5,7 +5,7 @@
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
 - **URL:** https://ifs.gergobalogh.me (unlisted test link, live since 2026-11-03)
 - **Post where:** not decided yet
-- **Next:** Umami for the test link ([docs/analytics.md](docs/analytics.md)): create its website, put the id in `index.html`, deploy, save the two funnels; then share the link and read where visits stop
+- **Next:** share the test link (yours), then read where visits stop in Umami (live since 2026-11-03 11:15 UTC, [docs/analytics.md](docs/analytics.md)); the line on where words go waits for your feedback
 - **Updated:** 2026-11-03
 
 ## Build

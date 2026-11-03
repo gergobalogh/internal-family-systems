@@ -12,8 +12,9 @@ is in `index.html`: `data-domains="ifs.gergobalogh.me"` keeps local runs
 and previews out, and `data-exclude-search` / `data-exclude-hash` keep the
 URL's query and hash out.
 
-Not live yet: the events go live when the website exists in Umami, its id
-is in `index.html`, and the build is on the VPS. Write that time here.
+**Live since 2026-11-03 11:15:38 UTC** (`e1c4146`, built on the VPS; the
+live HTML carried the tag the same second). Count from then:
+`dropoff.py --spec … --since '2026-11-03 11:16'`.
 
 ## Where people stop
 
@@ -31,11 +32,13 @@ where visits ended and after how long. The rungs, in order: `opened`,
 `act2-fears`, `thanked`, `act3`, `whatif`, `ending`, `picture-kept`,
 `done`.
 
-Funnels, to save in Umami on the user's yes (window 60 minutes):
+Funnels, saved in Umami on 2026-11-03 on the user's yes (window 60
+minutes), on the
+[Funnels page](https://umami.gergobalogh.me/websites/8be15a69-36f5-4bc4-bed7-5378d6a71f40/funnels):
 
 | Funnel | Spec | Steps |
 |---|---|---|
-| The walk | `docs/funnels/walk.json` | page → `freewrite-sent` → `part-arrived` n=1 → `act1-done` → `act3` → `ending-reached` → `picture-kept` |
+| The walk | `docs/funnels/walk.json` | page → `freewrite-sent` → `part-arrived` (the first is always n=1) → `act1-done` → `act3` → `ending-reached` → `picture-kept` |
 | Act 2 | `docs/funnels/act2.json` | `act1-done` → `act2-start` how=chosen → `act2-answer` voice → `act2-answer` intent → `thanked` |
 
 Coming back is `return-visit`, read on its own (a later visit is a new
@@ -81,3 +84,4 @@ sent `return-visit` `same day`; the safety cases sent `safety-pause`
 
 | Live (UTC) | Change | Step to watch |
 |---|---|---|
+| 2026-11-03 11:15:38 | Umami goes live on the test link (`e1c4146`); Muse is the contributor model at low effort, and new names are risk-checked (`9167710`, `fe94a9d`) | All of it: the baseline |

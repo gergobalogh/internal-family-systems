@@ -3,5 +3,5 @@
   "name": "The walk: drop-off",
   "window": 60,
   "path": "/",
-  "steps": ["page", "freewrite-sent", "part-arrived:n=1", "act1-done", "act3", "ending-reached", "picture-kept"]
+  "steps": ["page", "freewrite-sent", "part-arrived", "act1-done", "act3", "ending-reached", "picture-kept"]
 }
