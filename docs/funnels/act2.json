@@ -1,0 +1,7 @@
+{
+  "site": "ifs.gergobalogh.me",
+  "name": "Act 2: drop-off",
+  "window": 60,
+  "path": "/",
+  "steps": ["act1-done", "act2-start:how=chosen", "act2-answer:question=voice", "act2-answer:question=intent", "thanked"]
+}

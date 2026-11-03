@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import type { ReactNode } from 'react'
+import { track, trackEdited, trackMoved, trackReturn, useWalkAnalytics } from './analytics'
 import { jumpRequested, jumpToClose } from './conversation/devJump'
 import { fearsRequested } from './conversation/features'
 import { offeredIds, startReturning } from './conversation/flow'
@@ -31,12 +32,12 @@ import { useNoticing } from './ui/useNoticing'
 const jump = import.meta.env.DEV && jumpRequested ? jumpToClose() : null
 
 /** Where a visit opens: the dev jump, the meadow saved on this device (a later visit), or an empty one. */
-function opening(): { map: LandscapeState; conversation?: ConversationState } {
+function opening(): { map: LandscapeState; conversation?: ConversationState; savedAt?: string } {
   if (jump) return { map: jump.landscape, conversation: jump.conversation }
   const saved = loadMeadow()
   if (!saved) return { map: createLandscape([]) }
   const map = landscapeOf(saved)
-  return { map, conversation: startReturning(saved, map, { askFears: fearsRequested }) }
+  return { map, conversation: startReturning(saved, map, { askFears: fearsRequested }), savedAt: saved.savedAt }
 }
 
 const walkParams = new URLSearchParams(window.location.search)
@@ -67,6 +68,7 @@ export default function App() {
       <TalkWorkspace
         key={visit}
         onStartOver={() => {
+          track('start-over')
           forgetMeadow()
           setVisit((count) => count + 1)
         }}
@@ -116,6 +118,8 @@ interface ShellProps {
   onEntering?: (entering: boolean) => void
   /** A part got a new name: it meets the safety checks, as a typed answer does. */
   onRenamed?: (name: string) => void
+  /** The person moved or resized a part by hand. */
+  onMoved?: () => void
   settling?: boolean
   /** Sitting with one part (Act 2): see Landscape. */
   focus?: LandscapeProps['focus']
@@ -140,6 +144,7 @@ function Shell({
   waiting,
   onEntering,
   onRenamed,
+  onMoved,
   settling,
   focus,
   offered,
@@ -164,21 +169,32 @@ function Shell({
           centre={handedOver}
           selectedId={selectedId}
           onSelect={setSelectedId}
-          onPlace={(partId, placement) => act({ type: 'place', partId, placement })}
+          onPlace={(partId, placement) => {
+            act({ type: 'place', partId, placement })
+            onMoved?.()
+          }}
           onRename={(partId, name) => {
             act({ type: 'rename', partId, name })
+            trackEdited('rename')
             onRenamed?.(name)
           }}
-          onChangeLook={(partId, look) => act({ type: 'setLook', partId, look })}
+          onChangeLook={(partId, look) => {
+            act({ type: 'setLook', partId, look })
+            trackEdited('change figure')
+          }}
           onRemove={(partId) => {
             act({ type: 'remove', partId })
+            trackEdited('remove')
             removed(copy.removed)
           }}
           onRemoveLink={(linkId) => {
             act({ type: 'unlink', linkId })
             removed(copy.link.removed)
           }}
-          onClearWords={(partId) => act({ type: 'clearWords', partId })}
+          onClearWords={(partId) => {
+            act({ type: 'clearWords', partId })
+            trackEdited('clear words')
+          }}
           waiting={waiting}
           onEntering={onEntering}
           settling={settling}
@@ -240,6 +256,12 @@ function TalkWorkspace({ onStartOver }: { onStartOver: () => void }) {
 
   useNoticing(workspace.state, handedOver && !state.paused, talk.notice)
 
+  // Umami: how far the visit gets, never what was written (src/analytics.ts).
+  useWalkAnalytics(state, shown !== null && shown === state.card && phase === 'card')
+  useEffect(() => {
+    if (start.savedAt !== undefined) trackReturn(start.savedAt)
+  }, [start.savedAt])
+
   // Saved on this device from the ending on ("They'll be here when you come
   // back"), and on a later visit from the start: every change, in "How it is".
   const saving = !jump && (state.returning || state.ended || state.step === 'ending')
@@ -264,6 +286,7 @@ function TalkWorkspace({ onStartOver }: { onStartOver: () => void }) {
       waiting={waiting}
       onEntering={setEntering}
       onRenamed={talk.renamed}
+      onMoved={() => trackMoved(state.step, handedOver)}
       // Parts glide slowly only while the entry conversation moves them, never under the person's own hand.
       settling={settling && !handedOver}
       focus={

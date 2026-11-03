@@ -89,6 +89,8 @@ session, and the map stays editable.
   the person rests (`useNoticing.ts`), and the removal notice. UI wording
   lives in
   `src/ui/copy.ts`; the guide's lines live in `src/conversation/script.ts`.
+- `src/analytics.ts` — Umami events: how far a visit gets through the
+  walk, never what anyone wrote ([docs/analytics.md](docs/analytics.md)).
 - `src/styles/` — palette tokens, and the dusk light of Act 3 and the
   ending (`[data-mode]`, `[data-beat]`).
 - `art/prompts/`, `scripts/studio/`, `scripts/cutout-figures.py` — how the

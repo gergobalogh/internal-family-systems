@@ -23,6 +23,7 @@ import type {
   TowardCheck,
   TowardCheckRequest,
 } from './contract'
+import { trackOnce } from '../analytics'
 
 /** Any AI call slower than this counts as failed; the talk moves on without it. */
 export const AI_TIMEOUT_MS = 12_000
@@ -88,6 +89,16 @@ async function scripted(url: string, body: unknown): Promise<unknown> {
   }
 }
 
+/**
+ * A route that failed, once per route per view (Umami): the app carried on
+ * with its fixed lines there. Not counted when the app itself let go of
+ * the call (a newer one, or the page moving on).
+ */
+function fellBack(url: string, why: 'timeout' | 'limit' | 'unavailable' | 'error') {
+  const route = url.replace('/api/', '')
+  trackOnce(`ai-fallback ${route}`, 'ai-fallback', { route, why })
+}
+
 /** Null on any failure — HTTP error, timeout, bad shape, or the dev switch. */
 async function post(url: string, body: unknown, signal: AbortSignal): Promise<unknown> {
   if (aiOff) return null
@@ -99,8 +110,10 @@ async function post(url: string, body: unknown, signal: AbortSignal): Promise<un
       body: JSON.stringify(body),
       signal: AbortSignal.any([signal, AbortSignal.timeout(AI_TIMEOUT_MS)]),
     })
+    if (!response.ok) fellBack(url, response.status === 429 ? 'limit' : response.status === 503 ? 'unavailable' : 'error')
     return response.ok ? await response.json() : null
-  } catch {
+  } catch (error) {
+    if (!signal.aborted) fellBack(url, error instanceof DOMException && error.name === 'TimeoutError' ? 'timeout' : 'error')
     return null
   }
 }
