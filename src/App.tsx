@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import type { ReactNode } from 'react'
 import { jumpRequested, jumpToClose } from './conversation/devJump'
-import { canAddPart, canGetToKnow, canTryExperiment, mapNote, offeredIds } from './conversation/flow'
+import { fearsRequested } from './conversation/features'
+import { canAddPart, canGetToKnow, canTryExperiment, mapNote, offeredIds, startReturning } from './conversation/flow'
+import type { ConversationState } from './conversation/flow'
+import { forgetMeadow, landscapeOf, loadMeadow, meadowOf, saveMeadow } from './conversation/saved'
 import { useConversation } from './conversation/useConversation'
 import { canUndo, createLandscape, landscapeReducer } from './model/landscape'
 import type { Action, LandscapeState } from './model/types'
@@ -28,7 +31,15 @@ import { useNoticing } from './ui/useNoticing'
 
 /** DEV ONLY (`?jump=after`): a full run already at Act 1's close. */
 const jump = import.meta.env.DEV && jumpRequested ? jumpToClose() : null
-const startingMap = jump?.landscape ?? createLandscape([])
+
+/** Where a visit opens: the dev jump, the meadow saved on this device (a later visit), or an empty one. */
+function opening(): { map: LandscapeState; conversation?: ConversationState } {
+  if (jump) return { map: jump.landscape, conversation: jump.conversation }
+  const saved = loadMeadow()
+  if (!saved) return { map: createLandscape([]) }
+  const map = landscapeOf(saved)
+  return { map, conversation: startReturning(saved, map, { askFears: fearsRequested }) }
+}
 
 const walkParams = new URLSearchParams(window.location.search)
 const showWalkSpike = walkParams.has('walk') || walkParams.has('walkpose')
@@ -38,8 +49,9 @@ const showSproutSpike = walkParams.has('sprout') || walkParams.has('sproutpose')
 const showMapSpike = walkParams.has('map') || walkParams.has('mappose')
 const showDoodleSpike = walkParams.has('doodle') || walkParams.has('doodlepose')
 
-/** Opens on the entry conversation. */
+/** Opens on the entry conversation, or on the saved meadow. Start over begins a new visit from scratch. */
 export default function App() {
+  const [visit, setVisit] = useState(0)
   return (
     <>
       {/* THROWAWAY review spike: Rive Critic walk-in over the page, hidden until ?walk or ?walkpose. */}
@@ -54,7 +66,13 @@ export default function App() {
       {showMapSpike && <MapRouteSpike />}
       {/* THROWAWAY review spike: Rive Doodle riding in on its crayon line, hidden until ?doodle or ?doodlepose. */}
       {showDoodleSpike && <DoodleLineSpike />}
-      <TalkWorkspace />
+      <TalkWorkspace
+        key={visit}
+        onStartOver={() => {
+          forgetMeadow()
+          setVisit((count) => count + 1)
+        }}
+      />
     </>
   )
 }
@@ -213,9 +231,10 @@ function Shell({
   )
 }
 
-function TalkWorkspace() {
-  const workspace = useWorkspace(startingMap)
-  const talk = useConversation(workspace.state, workspace.dispatch, jump?.conversation)
+function TalkWorkspace({ onStartOver }: { onStartOver: () => void }) {
+  const [start] = useState(opening)
+  const workspace = useWorkspace(start.map)
+  const talk = useConversation(workspace.state, workspace.dispatch, start.conversation)
   const { state } = talk
   const [entering, setEntering] = useState(false)
   // Act 2 and Get to know it: the camera goes to the part being sat with,
@@ -238,6 +257,16 @@ function TalkWorkspace() {
   if (!handedOver && state.ended && shown === state.card && phase === 'card') setHandedOver(true)
 
   useNoticing(workspace.state, handedOver && !state.paused, talk.notice)
+
+  // Saved on this device from the ending on ("They'll be here when you come
+  // back"), and on a later visit from the start: every change, in "How it is".
+  const saving = !jump && (state.returning || state.ended || state.step === 'ending')
+  const { parts: named, unheard } = state
+  useEffect(() => {
+    if (!saving) return
+    const kinds = Object.fromEntries(named.map((part) => [part.id, part.kind]))
+    saveMeadow(meadowOf(workspace.state, { kinds, quieter: unheard }, new Date()))
+  }, [saving, workspace.state, named, unheard])
 
   // The ending's picture to keep, drawn from the map as it is now.
   const ending = state.step === 'ending'
@@ -265,7 +294,11 @@ function TalkWorkspace() {
           layoutKey: shown,
         }
       }
-      offered={state.step === 'choose' && shown === state.card && phase === 'card' ? offeredIds(state, workspace.state) : null}
+      offered={
+        (state.step === 'choose' || state.step === 'welcome') && shown === state.card && phase === 'card'
+          ? offeredIds(state, workspace.state)
+          : null
+      }
       onChoose={talk.getToKnow}
       thanked={state.thanked}
       marked={state.step === 'dusk' ? state.duskPart : null}
@@ -283,6 +316,7 @@ function TalkWorkspace() {
         undo={canUndo(workspace.state) ? () => workspace.act({ type: 'undo' }) : undefined}
         // Straight from the tap: a phone's share sheet only opens inside one.
         keepPicture={picture ? () => void keepPicture(picture).then((kept) => kept && pictureKept()) : undefined}
+        clearMeadow={onStartOver}
       />
       {jump && <p className="dev-badge">DEV · jumped to Act 1's close</p>}
     </Shell>

@@ -33,6 +33,7 @@ import type {
   TowardCheckRequest,
 } from './contract'
 import { EDGE_SPOTS, clearestSpot, startingSpot } from './geometry'
+import type { SavedMeadow } from './saved'
 import { script } from './script'
 import { arrangementChanges, arrangementDiffers, partPhrases, summarize, summaryClauses } from './summary'
 import type { ArrangedPart, SummaryInput } from './summary'
@@ -44,7 +45,9 @@ import type { ArrangedPart, SummaryInput } from './summary'
  * "These are the ones who came." Act 2: the person taps one figure and sits
  * with it (its words, what it might be trying to do, a thanks). Act 3: they
  * step back and arrange everyone, then try one "what if" at dusk. The ending:
- * a thank-you, and a picture of the meadow to keep. Then what
+ * a thank-you, and a picture of the meadow to keep. A later visit opens on
+ * the saved meadow: "Welcome back. Who's around today?", a short Act 2 with
+ * one part, then the ending (`startReturning`). Then what
  * the guide does after it (docs/slice-4-handoff.md). Async work (LLM
  * reflections, risk checks, JEV judgements) is
  * described by `pending`; the caller runs it and feeds the result back.
@@ -109,6 +112,7 @@ export interface Attribute {
     | 'thanks'
     | 'stepBack'
     | 'ending'
+    | 'visit'
     | 'safety'
     | 'invitation'
     | 'experiment'
@@ -193,6 +197,11 @@ export type Step =
   | 'dusk'
   /** The ending (frame A14): a thank-you, the picture to keep, and Done. */
   | 'ending'
+  // A later visit (frame A15).
+  /** "Welcome back. Who's around today?": a part to sit with, someone new, or Not now. */
+  | 'welcome'
+  /** Start over: one confirm before the saved meadow is cleared. */
+  | 'startOver'
   /** A "How it is" edit changed what the summary says. */
   | 'noticing'
   /** The safety path: the pause card, then no more guide this session. */
@@ -217,6 +226,8 @@ export const ANSWERED_STEPS: readonly Step[] = [
 /** Steps with a way out that keeps the map as it is (Not now, That's enough for now, Skip, Not yet, Skip this one, Finish without changes). */
 export const DECLINABLE_STEPS: readonly Step[] = [
   'choose',
+  'welcome',
+  'startOver',
   'fears',
   'thanks',
   'newPart',
@@ -307,6 +318,10 @@ export interface ConversationState {
   askFears: boolean
   /** The part Act 3's "what if" names, while it's asked; null for the open "what if". */
   duskPart: string | null
+  /** A later visit, on the saved meadow: a short Act 2, then the ending (no Act 1 or Act 3). */
+  returning: boolean
+  /** The welcome's choices, as the card first showed them, and whether someone new can still come. */
+  welcome: { parts: { id: string; name: string }[]; someoneNew: boolean }
   /** Parts the noticing question has asked about (once each per session). */
   noticed: string[]
 }
@@ -353,6 +368,10 @@ export type ConversationEvent =
   | { type: 'pictureKept'; map: LandscapeState }
   /** Done, at the ending. */
   | { type: 'done'; map: LandscapeState }
+  /** Someone new, at the welcome. */
+  | { type: 'someoneNew'; map: LandscapeState }
+  /** Start over, at the welcome: asks once before anything is cleared (the clearing is the app's). */
+  | { type: 'startOver'; map: LandscapeState }
   /** The person rested after a "How it is" edit; `before` is the map the last time this was asked. */
   | { type: 'notice'; before: LandscapeState; partId: string | null; map: LandscapeState }
 
@@ -671,11 +690,61 @@ const emptyConversation = (): ConversationState => ({
   thanked: [],
   askFears: false,
   duskPart: null,
+  returning: false,
+  welcome: { parts: [], someoneNew: false },
 })
 
 export function startConversation({ askFears = false } = {}): ConversationState {
   return ask({ ...emptyConversation(), askFears }, 'freeWrite', script.freeWrite)
 }
+
+/**
+ * A later visit (frame A15), on the saved meadow already on the map. The
+ * conversation knows its parts again, with the hidden facts that keep it
+ * careful (a part read as hurting, the quieter part), so new parts get new
+ * ids and figures, and the same parts are held back.
+ */
+export function startReturning(saved: SavedMeadow, map: LandscapeState, { askFears = false } = {}): ConversationState {
+  const parts: ConversationPart[] = saved.parts.map(({ id, name, look, x, y, scale, kind }) => ({
+    id,
+    name,
+    look,
+    kind,
+    placement: { x, y, scale },
+    sizeFromAnswer: false,
+  }))
+  const state: ConversationState = {
+    ...emptyConversation(),
+    askFears,
+    returning: true,
+    // The first visit had its "what if"; the experiment doesn't invite again.
+    invited: true,
+    parts,
+    unheard: saved.parts.find((part) => part.quieter)?.id ?? null,
+    link: saved.links[0]?.id ?? null,
+  }
+  return toWelcome(note(state, { subject: 'conversation', attribute: 'visit', value: 'returning', source: null, confidence: high }), map)
+}
+
+/** "Welcome back. Who's around today?" The parts Act 2 would offer, as choices (and as figures to tap). */
+function toWelcome(state: ConversationState, map: LandscapeState): ConversationState {
+  const parts = offeredParts(state, map).map(({ id, name }) => ({ id, name }))
+  const someoneNew = state.parts.length < LOOKS.length
+  return { ...guide(freshCard(state), script.welcome), step: 'welcome', asked: '', welcome: { parts, someoneNew } }
+}
+
+function onSomeoneNew(state: ConversationState): ConversationState {
+  if (state.pending || state.step !== 'welcome' || !state.welcome.someoneNew) return state
+  return ask(freshCard(state), 'newPart', script.someoneNew)
+}
+
+function onStartOver(state: ConversationState): ConversationState {
+  if (state.pending || state.step !== 'welcome') return state
+  return { ...guide(freshCard(state), script.startOver), step: 'startOver', asked: '' }
+}
+
+/** Still at the welcome's questions (not the map handed over after them). */
+const welcoming = (state: ConversationState) => state.returning && !state.ended
 
 // ---------- Turns 0–2 ----------
 
@@ -971,7 +1040,7 @@ function offeredParts(state: ConversationState, map: LandscapeState): PartNow[] 
 
 /** The figures to tap while Act 2's first question is up (none otherwise). */
 export const offeredIds = (state: ConversationState, map: LandscapeState): string[] =>
-  state.step === 'choose' ? offeredParts(state, map).map((part) => part.id) : []
+  state.step === 'choose' || state.step === 'welcome' ? offeredParts(state, map).map((part) => part.id) : []
 
 /** "Which one would like your attention first?" With nobody to offer, Act 2 is skipped. */
 function toAct2(state: ConversationState, map: LandscapeState): ConversationState {
@@ -986,9 +1055,13 @@ function toAct2(state: ConversationState, map: LandscapeState): ConversationStat
   return { ...guide(guide(freshCard(state), question), hint), step: 'choose', asked: '' }
 }
 
-/** Act 2 is over: on to Act 3. After the hand-over (Get to know it), the card simply goes. */
+/**
+ * Act 2 is over: on to Act 3, or on a later visit straight to the ending.
+ * After the hand-over (Get to know it), the card simply goes.
+ */
 function endSitting(state: ConversationState, map: LandscapeState): ConversationState {
-  return state.ended ? idle(state) : toAct3(idle(state), map)
+  if (state.ended) return idle(state)
+  return state.returning ? toEnding(idle(state), map) : toAct3(idle(state), map)
 }
 
 // ---------- Act 3: step back, and one "what if" (frames A12–A13) ----------
@@ -1098,7 +1171,7 @@ export function mapNote(state: ConversationState, map: LandscapeState): string |
 // ---------- After the entry conversation (docs/slice-4-handoff.md) ----------
 
 /** A full run reached Act 1's close (not an early close, not a pause before it). */
-const fullRun = (state: ConversationState) => state.record.some((entry) => entry.attribute === 'gathered')
+const fullRun = (state: ConversationState) => state.returning || state.record.some((entry) => entry.attribute === 'gathered')
 
 /**
  * Whether the app may open a card of its own (the invitation, noticing):
@@ -1138,8 +1211,9 @@ function arranged(state: ConversationState, map: LandscapeState): ArrangedPart[]
 
 // ---------- Adding a part after the conversation (top bar) ----------
 
-/** Parts are numbered in the order they're named; removed ones keep their number. */
-const nextPartId = (state: ConversationState) => `part-${state.parts.length + 1}`
+/** Parts are numbered in the order they're named; removed ones keep their number (a saved meadow keeps only those still there). */
+const nextPartId = (state: ConversationState) =>
+  `part-${Math.max(state.parts.length, ...state.parts.map((part) => Number(part.id.replace('part-', '')) || 0)) + 1}`
 
 /** Adding changes who is on the map, so only in "How it is". */
 function onNewPart(state: ConversationState, map: LandscapeState): ConversationState {
@@ -1148,8 +1222,8 @@ function onNewPart(state: ConversationState, map: LandscapeState): ConversationS
 }
 
 /** A name, or an explicit no/unsure — never an inferred one. A bare "yes" gets the question again. */
-function resolveNewName(state: ConversationState, text: string): ConversationState {
-  if (matchesAny(text, NO_FORMS) || matchesAny(text, UNSURE_FORMS)) return idle(state)
+function resolveNewName(state: ConversationState, map: LandscapeState, text: string): ConversationState {
+  if (matchesAny(text, NO_FORMS) || matchesAny(text, UNSURE_FORMS)) return welcoming(state) ? toWelcome(state, map) : idle(state)
   if (matchesAny(text, YES_FORMS)) return reask(state)
   return chooseFigure(state, text.trim())
 }
@@ -1215,7 +1289,14 @@ function nameNewPart(
     { subject: id, attribute: 'name', value: name, source: text, confidence: nameConfidence },
     { subject: id, attribute: 'size', value: String(DEFAULT_SCALE), source: null, confidence: byDefault },
   )
-  return rest(guide(created, script.partAdded(name)))
+  if (!welcoming(created)) return rest(guide(created, script.partAdded(name)))
+  // Someone new, on a later visit: it walks in, and they sit with it (unless it's held back; then the ending).
+  if (kind.kind === 'hurts') return toEnding(created, map)
+  const sitting = note(
+    { ...guide(freshCard(created), script.arrived(name)), subject: { id, voice: null, intent: null } },
+    { subject: id, attribute: 'sitWith', value: 'someone new', source: null, confidence: high },
+  )
+  return ask(sitting, 'voice', script.voice(name))
 }
 
 /** The first time they enter "What if" after a full run: one invitation. */
@@ -1278,7 +1359,7 @@ function onExperimentAnswer(state: ConversationState, text: string): Conversatio
 
 /** A figure tapped at Act 2's first question, or Get to know it on a selected part: the same scenes. */
 function onGetToKnow(state: ConversationState, partId: string, map: LandscapeState): ConversationState {
-  const chosen = state.step === 'choose' && !state.pending && offeredIds(state, map).includes(partId)
+  const chosen = (state.step === 'choose' || state.step === 'welcome') && !state.pending && offeredIds(state, map).includes(partId)
   if (!chosen && (!canGetToKnow(state) || !isHere(state, map, partId))) return state
   const name = partNow(state, map, partId)!.name
   const noted = note(state, {
@@ -1411,6 +1492,13 @@ function onDecline(state: ConversationState, map: LandscapeState): ConversationS
   const about = state.subject?.id ?? 'conversation'
   const said = (attribute: Attribute['attribute'], value: string): Attribute => ({ subject: about, attribute, value, source: null, confidence: high })
   switch (state.step) {
+    case 'welcome':
+      return finishWalk(note(state, said('visit', 'not now')))
+    case 'startOver':
+      return toWelcome(note(state, said('visit', 'kept the meadow')), map)
+    case 'newPart':
+      if (welcoming(state)) return toWelcome(note(state, said('visit', 'no one new')), map)
+      break
     case 'fears':
       return askThanks(freshCard(note(state, said('fears', 'skipped'))))
     case 'choose':
@@ -1511,7 +1599,7 @@ function proceed(state: ConversationState, text: string, map: LandscapeState): C
       return onTurn3Answer(state, map, text)
 
     case 'newPart':
-      return resolveNewName(state, text)
+      return resolveNewName(state, map, text)
 
     case 'experiment':
       return onExperimentAnswer(state, text)
@@ -1780,6 +1868,10 @@ export function conversationReducer(state: ConversationState, event: Conversatio
       return onPictureKept(state)
     case 'done':
       return onDone(state)
+    case 'someoneNew':
+      return onSomeoneNew(state)
+    case 'startOver':
+      return onStartOver(state)
     case 'notice':
       return onNotice(state, event.before, event.partId, event.map)
   }

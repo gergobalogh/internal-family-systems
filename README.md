@@ -13,7 +13,8 @@ builds on [slice 3](docs/slice-3-handoff.md)'s whole entry conversation
 asks who else is here, and Act 1 closes with "These are the ones who
 came." in place of Turn 4's summary question and the closing card; Act 2
 then sits with one part the person taps, Act 3 steps back for one
-"what if" at dusk, and the ending gives a picture to keep), [slice 2](docs/slice-2-handoff.md)'s Turns 0–2 and
+"what if" at dusk, and the ending gives a picture to keep; the meadow is
+then saved on the device, and a later visit opens on it), [slice 2](docs/slice-2-handoff.md)'s Turns 0–2 and
 [slice 1](docs/slice-1-handoff.md)'s "How it is" / "What if…" landscape.
 The conversation is one glass card under the house, per
 [docs/input-choreography-plan.md](docs/input-choreography-plan.md).
@@ -56,7 +57,8 @@ session, and the map stays editable.
   answer lists and reflection checks (`checks.ts`), map distances
   (`geometry.ts`), the deterministic map summary (`summary.ts`), the
   browser side of the AI calls (`ai.ts`, `contract.ts`), and the dev-only
-  jump to Act 1's close (`devJump.ts`). After Go on, `flow.ts` runs Act 2
+  jump to Act 1's close (`devJump.ts`), and the meadow saved in this
+  browser's storage for the next visit (`saved.ts`, no account). After Go on, `flow.ts` runs Act 2
   (sitting with one part; its Fears question waits for a therapist's
   review and shows only with `?fears`, `features.ts`) and Act 3 (step
   back, then one "what if" with Go back / Keep it) and the ending (the

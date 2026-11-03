@@ -88,6 +88,9 @@ export const copy = {
     keepIt: 'Keep it',
     done: 'Done',
     keepPicture: 'Keep this picture',
+    someoneNew: 'Someone new',
+    startOver: 'Start over',
+    welcomeChoices: 'Who to sit with',
     close: 'Close',
     closeLabel: 'Close the conversation',
     /** After the entry conversation (docs/slice-4-handoff.md). Draft copy. */

@@ -52,7 +52,8 @@ them.
 ## The whole journey
 
 ```
- START ─► 1. ENTRY CONVERSATION (the app asks 4 questions, then checks the map)
+ START ─► (a meadow saved on this device? then "A later visit", below)
+          1. ENTRY CONVERSATION (the app asks 4 questions, then checks the map)
            │   each answer: card fades to a ghost → the world "waits"
            │   (light breathes, clouds drift), and a part named meanwhile
            │   walks in while the guide thinks: the card steps back to a
@@ -146,6 +147,9 @@ them.
              ├─ B. Noticing ............... after you move a part in "How it is"
              └─ C. The experiment ......... any time from the "What if…" bar
                                             (Act 3 was its invitation)
+
+          SAVED, from the ending on: the meadow stays on this device, and
+          every later change in "How it is" is saved too (see "A later visit")
 
           SAFETY, everywhere: every typed answer is checked first (see below)
 ```
@@ -311,6 +315,38 @@ downloads a PNG elsewhere. Nothing is sent anywhere. With one part the line
 is "Thank it for showing up. It'll be here when you come back." A part they
 thanked keeps its glow in the picture; if Act 2 was skipped, the picture
 has the names only.
+
+## A later visit
+
+From the ending on (or once the map is handed over some other way, like
+the safety pause), the meadow is saved in this browser: who's there, their
+names, figures, places and sizes, the thread between two, and each part's
+words. Two hidden facts are saved with them, so the welcome holds back the
+same parts Act 2 does: a part read as hurting, and Turn 3's quieter part.
+Nothing else is kept: not the free-write or the other answers. Opening the
+app again shows that meadow, in daylight, as it was left.
+
+```
+   "Welcome back. Who's around today?"
+   [‘the worry’] [‘the tired one’]       the parts Act 2 would offer; their
+                                         figures ring and can be tapped too
+   [Not now]                [Someone new]
+                 Start over
+      │
+      ├─ a part ─► Act 2 with it (its words, what it might be trying to
+      │            do, a thanks) ─► the ending (no Act 3 on a later visit)
+      ├─ Someone new ─► "What would you call the one who's here today?"
+      │            ─► it walks in: "‘X’ is here now." ─► Act 2 with it
+      │            ─► the ending (straight to the ending if it's read as
+      │            hurting)
+      ├─ Not now ─► the map is handed over
+      └─ Start over ─► "Start over with an empty meadow? This one will be
+                   gone for good."   [Not now]   [Start over]
+                   ─► the saved meadow is cleared, and the free-write opens
+```
+
+New words for a part replace its old ones. Removing every part forgets
+the meadow, so the next visit starts with the free-write.
 
 ## C. The experiment (invited once; yours to start any time)
 

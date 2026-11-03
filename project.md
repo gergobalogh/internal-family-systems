@@ -580,3 +580,45 @@ This decision will determine the tone of the responses, what happens after a cha
   Done brought the bar back with the veil gone. No page errors; build and
   lint pass. The share-sheet path hasn't run yet: headless Chrome on Linux
   can't share files, so it needs a real phone.
+
+### 2026-11-03 — The meadow is saved, and a later visit opens on it
+
+- **Change (Option A step 7, frame A15; the three choices agreed
+  2026-11-03):** from the ending on, the meadow is saved in this browser's
+  storage (no account), and every later change in "How it is" is saved
+  too. Opening the app again shows the meadow as it was left, with
+  "Welcome back. Who's around today?": the parts to sit with as buttons
+  (their figures ring and can be tapped too), Not now, Someone new, and a
+  quiet Start over. "They'll be here when you come back" is now true.
+- **What's saved:** the parts still on the map (names, figures, places
+  and sizes in "How it is"), the thread between two, and each part's words.
+  Not the free-write, the other answers or the record. Two hidden facts go
+  with the parts, so a later visit is as careful as the first: a part read
+  as hurting, and Turn 3's quieter part, aren't offered (the same rule as
+  Act 2, until the therapist review). A save that can't be read is ignored,
+  and the visit starts with the free-write.
+- **A later visit is a short Act 2, then the ending:** a part, then its
+  words, what it might be trying to do and a thanks, then "Thank them for
+  showing up…" and the picture. No Act 1 or Act 3. New words replace the
+  old ones. Someone new asks "What would you call the one who's here
+  today?", the part walks in ("‘X’ is here now."), and they sit with it; if
+  it's read as hurting, the ending comes straight after it arrives. Not now
+  hands the map over.
+- **Start over** asks once ("Start over with an empty meadow? This one
+  will be gone for good.") and then clears the save and starts a new walk
+  with the free-write. Removing every part also forgets the meadow.
+- **In the code:** `src/conversation/saved.ts` reads and writes the save;
+  `startReturning` in `flow.ts` seeds the conversation with the saved
+  parts (so new parts get new ids and figures). The dev jump neither loads
+  nor saves.
+- **Checked:** scripted AI answers in the browser (no model calls). Each
+  path played a first visit, then reloaded on the same browser: the map
+  came back the same, the welcome held back the hurting and quieter parts,
+  and the bar waited. Then: sitting with a part (the ending followed, no
+  Act 3; its new words were saved), someone new (it walked in, they sat
+  with it, it was saved), Not now on its name (back to the welcome) and a
+  new part read as hurting (straight to the ending), Not now (the map
+  handed over), and Start over with nobody to offer (one confirm, then the
+  free-write, the save gone after a reload). Six paths at 390×844 and
+  1440×900, and AI off, the dev jump and Fears re-run for the first visit.
+  No page errors; build and lint pass.

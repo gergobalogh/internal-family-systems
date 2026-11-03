@@ -98,6 +98,11 @@ export const script = {
     count === 1
       ? "Thank it for showing up. It'll be here when you come back."
       : "Thank them for showing up. They'll be here when you come back.",
+  /** A later visit (frame A15), on the saved meadow. Draft copy. */
+  welcome: "Welcome back. Who's around today?",
+  someoneNew: "What would you call the one who's here today?",
+  arrived: (name: string) => `${quoted(name)} is here now.`,
+  startOver: 'Start over with an empty meadow? This one will be gone for good.',
   /** Add a part, from the top bar after closing. Draft copy. */
   newPart: "What would you call the part you'd like to add?",
   partAdded: (name: string) => `${quoted(name)} is here now. Move it wherever feels right.`,

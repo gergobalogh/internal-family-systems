@@ -1831,6 +1831,34 @@ a.card__button {
   opacity: 0.85;
 }
 
+/* ---------- A later visit (frame A15) ---------- */
+
+/* Start over: there when it's wanted, quiet enough not to be the question. */
+.card__aside {
+  align-self: center;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.card__aside:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.card__aside:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
 /* ---------- The ending (frame A14) ---------- */
 
 /* The dusk of the "what if" stays on (no second mode), and the meadow rests under a veil. */

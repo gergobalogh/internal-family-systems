@@ -25,6 +25,9 @@ type CardActions = Pick<
   | 'goBack'
   | 'keepIt'
   | 'done'
+  | 'getToKnow'
+  | 'someoneNew'
+  | 'startOver'
 >
 
 interface ConversationProps {
@@ -39,6 +42,8 @@ interface ConversationProps {
   undo?: () => void
   /** Keep this picture, at the ending, once the picture is drawn. */
   keepPicture?: () => void
+  /** Start over, confirmed: the app clears the saved meadow and starts a new walk. */
+  clearMeadow?: () => void
 }
 
 /** Phrases copied from the free-write, offered as buttons: Turn 1's choose row, or Turn 3's leftovers. */
@@ -67,7 +72,7 @@ function cardLines(lines: readonly Line[], start: number | null): Line[] {
  * After the entry conversation the same card carries the guide's
  * invitations and questions (docs/slice-4-handoff.md), or nothing at all.
  */
-export function Conversation({ state, shown, phase, steppedBack, actions, undo, keepPicture }: ConversationProps) {
+export function Conversation({ state, shown, phase, steppedBack, actions, undo, keepPicture, clearMeadow }: ConversationProps) {
   const lines = cardLines(state.lines, shown)
   const current = shown === state.card && phase === 'card'
   // Announced underneath any animation: the wait, then each new card.
@@ -96,6 +101,8 @@ export function Conversation({ state, shown, phase, steppedBack, actions, undo, 
             actions={actions}
             undo={undo}
             keepPicture={keepPicture}
+            clearMeadow={clearMeadow}
+            welcome={state.welcome}
           />
         </div>
       )}
@@ -117,15 +124,31 @@ interface CardProps {
   actions: CardActions
   undo?: () => void
   keepPicture?: () => void
+  clearMeadow?: () => void
+  /** A later visit's welcome: its choices as the card first showed them. */
+  welcome: ConversationState['welcome']
 }
 
 /** Cards whose second line is a softer hint under the question. */
 const HINTED: readonly Step[] = ['choose', 'stepBack', 'dusk']
 
-function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current, actions, undo, keepPicture }: CardProps) {
+function Card({
+  lines,
+  step: stepNow,
+  choices: choicesNow,
+  phase,
+  away,
+  current,
+  actions,
+  undo,
+  keepPicture,
+  clearMeadow,
+  welcome: welcomeNow,
+}: CardProps) {
   // The card keeps its own shape while it ghosts: no layout jump.
   const [step] = useState(stepNow)
   const [choices] = useState(choicesNow)
+  const [welcome] = useState(welcomeNow)
   const cardRef = useRef<HTMLElement>(null)
   const slim = step === 'trying'
 
@@ -144,7 +167,39 @@ function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current,
         ))}
       </div>
 
-      {ANSWERED_STEPS.includes(step) ? (
+      {step === 'welcome' ? (
+        <>
+          {/* A later visit (frame A15): the parts to sit with, as buttons (the figures can be tapped too). */}
+          {welcome.parts.length > 0 && (
+            <div className="card__choices" role="group" aria-label={copy.talk.welcomeChoices}>
+              {welcome.parts.map((part) => (
+                <button
+                  key={part.id}
+                  type="button"
+                  className="card__button card__button--quiet card__choice"
+                  disabled={!current}
+                  onClick={() => actions.getToKnow(part.id)}
+                >
+                  {`‘${part.name}’`}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="card__actions">
+            <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.decline}>
+              {copy.talk.notNow}
+            </button>
+            {welcome.someoneNew && (
+              <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.someoneNew}>
+                {copy.talk.someoneNew}
+              </button>
+            )}
+          </div>
+          <button type="button" className="card__aside" disabled={!current} onClick={actions.startOver}>
+            {copy.talk.startOver}
+          </button>
+        </>
+      ) : ANSWERED_STEPS.includes(step) ? (
         <Reply step={step} choices={choices} phase={phase} away={away} interactive={current} cardRef={cardRef} actions={actions} />
       ) : (
         <div className="card__actions">
@@ -199,6 +254,16 @@ function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current,
               )}
               <button type="button" className="card__button" disabled={!current} onClick={actions.thatsHowItIs}>
                 {copy.talk.thatsHowItIs}
+              </button>
+            </>
+          )}
+          {step === 'startOver' && (
+            <>
+              <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.decline}>
+                {copy.talk.notNow}
+              </button>
+              <button type="button" className="card__button" disabled={!current || !clearMeadow} onClick={clearMeadow}>
+                {copy.talk.startOver}
               </button>
             </>
           )}

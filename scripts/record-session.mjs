@@ -2,7 +2,8 @@
 // Plays one whole session of the app the way a person would, AI on:
 // free-write → parts → who came → Go on → Act 2 (tap one, its words, thanks)
 // → Act 3 (step back, a move, the dusk "what if", Keep it) → the ending (the
-// picture, kept) → Get to know it → a move (noticing) → What if… experiment. Records a video, a still of every card,
+// picture, kept) → Get to know it → a move (noticing) → What if… experiment
+// → a later visit (reload: the saved meadow and its welcome, then Not now). Records a video, a still of every card,
 // and a timeline of what each card said and when.
 //
 //   node scripts/record-session.mjs http://localhost:5173/ 390x844 docs/redesign/today/phone
@@ -224,6 +225,13 @@ try {
     file: await shot('end-howitis'),
     note: await page.evaluate(() => document.querySelector('.map-note__text')?.textContent.trim()),
   })
+
+  // ── A later visit: the meadow saved on this device, and its welcome ─
+  await page.reload()
+  await record('welcome-back')
+  await press('Not now')
+  await page.waitForTimeout(2000)
+  log('later visit handed over', { file: await shot('later-visit') })
 } catch (e) {
   log('FAILED', { error: String(e).slice(0, 400), file: await shot('failed') })
 } finally {
