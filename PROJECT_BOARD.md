@@ -125,7 +125,10 @@ only tracks the work.
 - **Try Keep this picture on a real phone** (2026-11-03). The browser
   checks only reach the download path; headless Chrome can't share files,
   so the share sheet (Save Image) is untested. Also look at the picture
-  there: a phone's figures are drawn at 75% of a wide screen's size.
+  there: a phone's figures are drawn at 75% of a wide screen's size. To
+  try the walk without model calls: `npm run dev -- --host`, then the
+  laptop's address with `?ai=scripted`. The share sheet needs HTTPS, so
+  over that address the picture downloads instead.
 - **After the therapist review: Act 2's held-back parts and Fears**
   (2026-11-03). Act 2 doesn't offer a part read as hurting or Turn 3's
   quieter part, and Fears shows only with `?fears`. The review (the

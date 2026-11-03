@@ -35,6 +35,11 @@ falls back to the local phrase list. In
 dev, `?ai=off` forces every AI call down its fallback path, and
 `?jump=after` starts at Act 1's close of a scripted full run (two linked
 parts) to try everything after the entry conversation; the two combine.
+`?ai=scripted` answers every AI call on the device instead, with no model
+call: the free-write's short clauses become feeling buttons, Turn 2 brings
+a second part, and parts start in different places, so the whole walk can
+be tried, on a phone too (`npm run dev -- --host`, then the laptop's
+network address).
 
 Every typed answer is screened before anything reads it: a local list of
 risk phrases (`RISK_PHRASES` in `src/conversation/checks.ts`), then an AI

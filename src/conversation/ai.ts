@@ -1,5 +1,7 @@
 import {
   API,
+  FREE_WRITE_FORM_LABELS,
+  PART_KIND_LABELS,
   isFigureReading,
   TOWARD_LABELS,
   isExtractResponse,
@@ -14,6 +16,8 @@ import type {
   FigureRequest,
   FreeWriteAnalysis,
   FreeWriteRequest,
+  Judgement,
+  PartKind,
   ReflectRequest,
   RiskRequest,
   TowardCheck,
@@ -24,15 +28,70 @@ import type {
 export const AI_TIMEOUT_MS = 12_000
 
 /**
- * Dev-only switch: `?ai=off` sends every AI call down its fallback path,
- * deterministically, without touching the network. Ignored in production.
+ * Dev-only switches, ignored in production. `?ai=off` sends every AI call
+ * down its fallback path, deterministically, without touching the network.
+ * `?ai=scripted` answers on the device instead, like the browser checks'
+ * scripted answers, so the whole walk can be tried (on a phone, say)
+ * without a model call: see `scripted`.
  */
-export const aiOff =
-  import.meta.env.DEV && new URLSearchParams(window.location.search).get('ai') === 'off'
+const aiSwitch = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('ai') : null
+const aiOff = aiSwitch === 'off'
+const aiScripted = aiSwitch === 'scripted'
+
+/** A scripted answer's pause, so the world still waits a moment as with a real call. */
+const SCRIPTED_MS = 700
+/** Kinds in turn: one keeps watch, one gets away, then the neutral places. Never "hurts", so Act 2 offers them. */
+const SCRIPTED_KINDS: readonly PartKind[] = ['guards', 'escapes', 'other']
+let scriptedFigures = 0
+
+const judged = <Label extends string>(labels: readonly Label[], label: Label): Judgement<Label> => ({
+  label,
+  probabilities: Object.fromEntries(
+    labels.map((each) => [each, each === label ? 0.91 : 0.09 / (labels.length - 1)]),
+  ) as Record<Label, number>,
+})
+
+/** The free-write's first few short clauses (two to four words), word for word: the feeling buttons. */
+function shortClauses(freeWrite: string): string[] {
+  const clauses = freeWrite
+    .split(/[.,;:!?]+|\s+(?:and|but|because|so)\s+/i)
+    .map((clause) => clause.trim())
+    .filter((clause) => {
+      const words = clause.split(/\s+/).length
+      return words >= 2 && words <= 4
+    })
+  return [...new Set(clauses)].slice(0, 3)
+}
+
+/**
+ * `?ai=scripted`: the free-write's short clauses as feeling buttons, a
+ * frustrated toward-check (so a second part comes), kinds in turn, no risk
+ * from the AI (the local phrase list still pauses), and the fixed fallback
+ * lines for reflections and names.
+ */
+async function scripted(url: string, body: unknown): Promise<unknown> {
+  await new Promise((resolve) => setTimeout(resolve, SCRIPTED_MS))
+  switch (url) {
+    case API.freeWrite: {
+      const phrases = shortClauses((body as FreeWriteRequest).freeWrite)
+      const form = phrases.length >= 2 ? 'several_feelings' : phrases.length === 1 ? 'one_feeling' : 'little'
+      return { form: judged(FREE_WRITE_FORM_LABELS, form), phrases }
+    }
+    case API.towardCheck:
+      return judged(TOWARD_LABELS, 'frustrated_critical')
+    case API.risk:
+      return { atRisk: false }
+    case API.figure:
+      return { figure: null, kind: judged(PART_KIND_LABELS, SCRIPTED_KINDS[scriptedFigures++ % SCRIPTED_KINDS.length]) }
+    default:
+      return null
+  }
+}
 
 /** Null on any failure — HTTP error, timeout, bad shape, or the dev switch. */
 async function post(url: string, body: unknown, signal: AbortSignal): Promise<unknown> {
   if (aiOff) return null
+  if (aiScripted) return scripted(url, body)
   try {
     const response = await fetch(url, {
       method: 'POST',

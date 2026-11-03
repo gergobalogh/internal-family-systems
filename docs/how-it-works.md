@@ -370,3 +370,8 @@ putting that into words."), Turn 2 takes the one-part path, and the
 safety check falls back to
 the local phrase list. In dev, `?ai=off` forces all of this, and
 `?jump=after` starts at Act 1's close of a scripted full run.
+`?ai=scripted` answers on the device instead, without a model call: the
+free-write's first short clauses (two to four words) as feeling buttons, a
+frustrated feeling toward the first part (so a second one comes), parts
+that keep watch or get away (never one read as hurting), and the fixed
+lines for reflections.
