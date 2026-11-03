@@ -344,6 +344,10 @@ export type ConversationEvent =
   | { type: 'startOver'; map: LandscapeState }
   /** The person rested after a "How it is" edit; `before` is the map the last time this was asked. */
   | { type: 'notice'; before: LandscapeState; partId: string | null; map: LandscapeState }
+  /** A part renamed in its box: the new name meets the phrase list, as an answer does. */
+  | { type: 'renamed'; text: string; map: LandscapeState }
+  /** The AI risk check's verdict on a new name (see `nameNeedsCheck`), run beside the walk's own calls. */
+  | { type: 'nameChecked'; text: string; atRisk: boolean | null; map: LandscapeState }
 
 const high: Confidence = { tag: 'high' }
 const notJudged: Confidence = { tag: 'notJudged' }
@@ -1387,10 +1391,14 @@ function onDismiss(state: ConversationState): ConversationState {
 
 // ---------- The safety path ----------
 
-/** Stops the guide for the session: the pause card, then no more questions. The answer isn't used. */
+/**
+ * Stops the guide for the session: the pause card, then no more questions.
+ * The answer isn't used, and a call still out is dropped (a rename can
+ * pause the walk mid-question).
+ */
 function pause(state: ConversationState, text: string, how: string): ConversationState {
   const noted = note(state, { subject: 'conversation', attribute: 'safety', value: `paused: ${how}`, source: text, confidence: high })
-  return { ...guide(noted, script.pause), step: 'paused', asked: '', ended: true, paused: true, subject: null }
+  return { ...guide(noted, script.pause), step: 'paused', asked: '', ended: true, paused: true, subject: null, pending: null }
 }
 
 /**
@@ -1406,6 +1414,32 @@ function onAnswer(state: ConversationState, text: string, map: LandscapeState): 
   if (hasRiskPhrase(text)) return pause(next, text, 'risk phrase')
   if (matchesAny(text, LISTED_FORMS)) return proceed(next, text, map)
   return request(next, { kind: 'risk', request: { question: state.asked, answer: text } })
+}
+
+/** What the AI risk check is told a new name answers: renaming has no question of its own. */
+export const RENAME_ASKED = 'What would you call this part? (a new name, typed on their map)'
+
+/** Whether a new name waits for the AI risk check: not if it's empty, a listed phrase, or already caught by the phrase list. */
+export function nameNeedsCheck(text: string): boolean {
+  return text.trim() !== '' && !hasRiskPhrase(text) && !matchesAny(text, LISTED_FORMS)
+}
+
+/**
+ * A name is words the person typed too, any time the map is theirs or
+ * mid-walk, so it meets the same checks as an answer. The pause comes on
+ * its own card, over whatever was showing.
+ */
+function onRenamed(state: ConversationState, text: string): ConversationState {
+  if (state.paused || !hasRiskPhrase(text)) return state
+  return pause(freshCard(state), text, 'risk phrase in a name')
+}
+
+function onNameChecked(state: ConversationState, text: string, atRisk: boolean | null): ConversationState {
+  if (state.paused) return state
+  if (atRisk) return pause(freshCard(state), text, 'risk check on a name')
+  return atRisk === null
+    ? note(state, { subject: 'conversation', attribute: 'safety', value: 'name not checked', source: text, confidence: notJudged })
+    : state
 }
 
 function onRiskChecked(state: ConversationState, seq: number, atRisk: boolean | null, map: LandscapeState): ConversationState {
@@ -1716,5 +1750,9 @@ export function conversationReducer(state: ConversationState, event: Conversatio
       return onStartOver(state)
     case 'notice':
       return onNotice(state, event.before, event.partId, event.map)
+    case 'renamed':
+      return onRenamed(state, event.text)
+    case 'nameChecked':
+      return onNameChecked(state, event.text, event.atRisk)
   }
 }

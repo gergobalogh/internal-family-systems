@@ -114,6 +114,8 @@ interface ShellProps {
   waiting?: boolean
   /** Whether any part is still entering, for the conversation's timing. */
   onEntering?: (entering: boolean) => void
+  /** A part got a new name: it meets the safety checks, as a typed answer does. */
+  onRenamed?: (name: string) => void
   settling?: boolean
   /** Sitting with one part (Act 2): see Landscape. */
   focus?: LandscapeProps['focus']
@@ -137,6 +139,7 @@ function Shell({
   cornerUndo = false,
   waiting,
   onEntering,
+  onRenamed,
   settling,
   focus,
   offered,
@@ -162,7 +165,10 @@ function Shell({
           selectedId={selectedId}
           onSelect={setSelectedId}
           onPlace={(partId, placement) => act({ type: 'place', partId, placement })}
-          onRename={(partId, name) => act({ type: 'rename', partId, name })}
+          onRename={(partId, name) => {
+            act({ type: 'rename', partId, name })
+            onRenamed?.(name)
+          }}
           onChangeLook={(partId, look) => act({ type: 'setLook', partId, look })}
           onRemove={(partId) => {
             act({ type: 'remove', partId })
@@ -257,6 +263,7 @@ function TalkWorkspace({ onStartOver }: { onStartOver: () => void }) {
       cornerUndo={handedOver && shown === null}
       waiting={waiting}
       onEntering={setEntering}
+      onRenamed={talk.renamed}
       // Parts glide slowly only while the entry conversation moves them, never under the person's own hand.
       settling={settling && !handedOver}
       focus={

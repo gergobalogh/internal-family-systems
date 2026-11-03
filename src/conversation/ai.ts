@@ -121,10 +121,18 @@ export async function checkToward(request: TowardCheckRequest, signal: AbortSign
   return isJudgement(data, TOWARD_LABELS) ? data : null
 }
 
-/** Null when the check couldn't be had: the local phrase list stays the floor. */
+/**
+ * Null when the check couldn't be had, even on a second try: the local
+ * phrase list stays the floor. Both tries share one timeout, so a blip gets
+ * another go but a slow service doesn't double the wait.
+ */
 export async function checkRisk(request: RiskRequest, signal: AbortSignal): Promise<boolean | null> {
-  const data = await post(API.risk, request, signal)
-  return isRiskResponse(data) ? data.atRisk : null
+  const deadline = AbortSignal.any([signal, AbortSignal.timeout(AI_TIMEOUT_MS)])
+  for (let tries = 0; tries < 2 && !deadline.aborted; tries++) {
+    const data = await post(API.risk, request, deadline)
+    if (isRiskResponse(data)) return data.atRisk
+  }
+  return null
 }
 
 /** Null when JEV can't be had: the flow takes the session's next unused figure. */

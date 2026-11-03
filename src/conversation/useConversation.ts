@@ -3,7 +3,7 @@ import type { Dispatch } from 'react'
 import type { Action, LandscapeState } from '../model/types'
 import { analyzeFreeWrite, checkRisk, checkToward, chooseFigure, extractName, reflect } from './ai'
 import { fearsRequested } from './features'
-import { conversationReducer, startConversation } from './flow'
+import { RENAME_ASKED, conversationReducer, nameNeedsCheck, startConversation } from './flow'
 import type { ConversationEvent, ConversationState, Pending } from './flow'
 import type { ReflectRequest } from './contract'
 
@@ -86,6 +86,8 @@ export function useConversation(landscape: LandscapeState, dispatch: Dispatch<Ac
     return () => controller.abort()
   }, [state.pending, map])
 
+  const { paused } = state
+
   /** Sends a person's event with the map as it is now. */
   const say = useCallback((event: WithoutMap<ConversationEvent>) => send({ ...event, map: map() } as ConversationEvent), [map])
 
@@ -107,6 +109,22 @@ export function useConversation(landscape: LandscapeState, dispatch: Dispatch<Ac
     someoneNew: useCallback(() => say({ type: 'someoneNew' }), [say]),
     startOver: useCallback(() => say({ type: 'startOver' }), [say]),
     notice: useCallback((before: LandscapeState, partId: string | null) => say({ type: 'notice', before, partId }), [say]),
+    /**
+     * A part was renamed in its box. The phrase list reads the name at once;
+     * the AI check runs beside the walk (which may have its own call out)
+     * and reports back when it's done. After a pause there's nothing to check.
+     */
+    renamed: useCallback(
+      (name: string) => {
+        if (paused) return
+        say({ type: 'renamed', text: name })
+        if (!nameNeedsCheck(name)) return
+        void checkRisk({ question: RENAME_ASKED, answer: name }, new AbortController().signal).then((atRisk) =>
+          say({ type: 'nameChecked', text: name, atRisk }),
+        )
+      },
+      [say, paused],
+    ),
   }
 }
 
