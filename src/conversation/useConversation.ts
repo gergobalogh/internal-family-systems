@@ -108,6 +108,8 @@ export function useConversation(landscape: LandscapeState, dispatch: Dispatch<Ac
     thatsHowItIs: useCallback(() => say({ type: 'thatsHowItIs' }), [say]),
     goBack: useCallback(() => say({ type: 'goBack' }), [say]),
     keepIt: useCallback(() => say({ type: 'keepIt' }), [say]),
+    pictureKept: useCallback(() => say({ type: 'pictureKept' }), [say]),
+    done: useCallback(() => say({ type: 'done' }), [say]),
     notice: useCallback((before: LandscapeState, partId: string | null) => say({ type: 'notice', before, partId }), [say]),
   }
 }

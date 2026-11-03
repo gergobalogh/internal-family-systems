@@ -125,12 +125,19 @@ them.
              you move and resize; Undo sits on the card ["That's how it is"]
              ─► dusk: the curtains go, and one "what if":
                 "What if ‘X’ had a bit more room?"   [Go back]  [Keep it]
-             ─► the top bar appears; the summary stays on the map as a
-                note, and keeps itself true as you move things (until the
-                ending's picture is built)
                                     │
                                     ▼
-          4. THE MAP IS YOURS (you lead; the app asks only when invited)
+          4. THE ENDING (frame A14; see "The ending")
+             still at dusk, the meadow rests under a veil, and the picture
+             to keep lies beside the card
+             "Thank them for showing up. They'll be here when you come back."
+             [Done]                                  [Keep this picture]
+             ─► Done: the light returns to day, the top bar appears, and
+                the summary stays on the map as a note that keeps itself
+                true as you move things (until step 8 removes them)
+                                    │
+                                    ▼
+          5. THE MAP IS YOURS (you lead; the app asks only when invited)
              │
              ├─ drag / resize / rename / remove any part, undo anything
              ├─ Add a part ............... from the bar, in "How it is"
@@ -247,7 +254,7 @@ hand-over, Get to know it ends there, and nothing more is asked.
       │ Keep it: what you moved becomes how it is (Undo in the bar
       │          takes it back)
       ▼
-   the top bar appears, and the map is yours
+   the ending (below)
 ```
 
 The "what if" names the smallest part that Act 2 could offer (not one read
@@ -277,6 +284,33 @@ say, the app asks once about that part:
 The map is the subject ("the map now shows…"), never "you moved it". The
 answer never changes the map. Skipping means it won't ask about that part
 again, so the button says so instead of "Not now".
+
+## The ending
+
+```
+   still at dusk; the meadow rests under a veil
+   ┌──────────────────────────┐   the picture to keep, a little tilted:
+   │  the meadow at dusk,     │   beside the card (above it on a wide
+   │  everyone where they     │   screen, below it on a phone, where the
+   │  stand                   │   card floats in the sky)
+   │ ‘the worry’ · ‘the tired │
+   │  one’                    │   names, left to right as they stand
+   │ “Don't you dare slow     │   the words of the part they sat with,
+   │  down.”                  │   and what it might be trying to do
+   │ might be trying to: …    │
+   │              3 Nov 2026  │
+   └──────────────────────────┘
+   "Thank them for showing up. They'll be here when you come back."
+   [Done]                                        [Keep this picture]
+```
+
+The picture is drawn from the map, not taken from the screen, so it looks
+the same on any device; what's on screen is the very image that's kept.
+Keep this picture opens a phone's share sheet (where Save Image is), and
+downloads a PNG elsewhere. Nothing is sent anywhere. With one part the line
+is "Thank it for showing up. It'll be here when you come back." A part they
+thanked keeps its glow in the picture; if Act 2 was skipped, the picture
+has the names only.
 
 ## C. The experiment (invited once; yours to start any time)
 

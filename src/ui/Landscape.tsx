@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { CLOSE_BELOW, MAP_CENTRE } from '../conversation/geometry'
-import { visibleLinks, visibleParts } from '../model/landscape'
+import { entrySide, visibleLinks, visibleParts } from '../model/landscape'
 import { LOOKS } from '../model/types'
 import type { LandscapeState, Look, Placement } from '../model/types'
 import { copy } from './copy'
 import { entersOnRive, useRiveEntranceFiles } from './riveEntrances'
 import { LinkThread } from './LinkThread'
 import { PartFigure } from './PartFigure'
-import type { Side } from './PartFigure'
 import { Speech } from './Speech'
 import { CAMERA_MS } from './useCamera'
 import { SETTLE_MS, WALK_MS } from './useChoreography'
@@ -86,11 +85,6 @@ function useEntrances(state: LandscapeState) {
 
   const arrived = useCallback((id: string) => setArriving((current) => current.filter((other) => other !== id)), [])
   return { arriving: next, arrived }
-}
-
-/** Parts arrive one per answer, alternating sides: the first from the left, the next from the right. */
-function sideOf(state: LandscapeState, id: string): Side {
-  return state.order.indexOf(id) % 2 === 0 ? 'left' : 'right'
 }
 
 /**
@@ -202,7 +196,7 @@ export function Landscape({
           entering={arriving.includes(part.id)}
           onArrived={() => arrived(part.id)}
           riveFile={riveFiles[part.look]}
-          side={sideOf(state, part.id)}
+          side={entrySide(state, part.id)}
           hintId={hintId}
           landscapeRef={ref}
           onSelect={() => (offered?.includes(part.id) && onChoose ? onChoose(part.id) : onSelect(part.id))}

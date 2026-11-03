@@ -541,3 +541,42 @@ This decision will determine the tone of the responses, what happens after a cha
   without Act 3. No page errors; build and lint pass. On desktop the
   card's box touches a large part's transparent edge beside it (the
   board's "card covers the selected part's box" item).
+
+### 2026-11-03 — The ending: a picture to keep
+
+- **Change (Option A step 6, frame A14):** Go back or Keep it no longer
+  hands the map over. The dusk stays on, the meadow rests under a veil,
+  and the guide says "Thank them for showing up. They'll be here when you
+  come back." (with one part: "Thank it for showing up. It'll be here when
+  you come back.") with Done / Keep this picture. Beside the card, a little
+  tilted, lies the picture: above the card on a wide screen, below it on a
+  phone, where the card floats in the sky. Done turns the light back to
+  day and hands the map over (the bar and note, until step 8).
+- **The picture:** a postcard of the meadow at dusk with everyone where
+  they stand, a part they thanked still glowing; under it their names, left
+  to right as they stand; the words of the part they sat with ("…" and
+  "might be trying to: …", the app's own label); and the date in the
+  device's language. With Act 2 skipped, names only. It's drawn on a canvas
+  from the map (`src/ui/picture.ts`), not from the screen, so it's the same
+  on any device and needs no new library; what's on screen is the image
+  that's kept.
+- **Figures in the picture:** the picture is a 4:3 view of the plate. A
+  part keeps its place across and its feet keep their distance from the
+  hills; a phone's figures, sized to its narrow width, are drawn at no less
+  than 75% of a wide screen's size, and feet never land on the hills.
+  (A first try sized them from the tall screen as they were, so a large
+  part stood on the far hills like a giant.)
+- **Keeping it:** on a phone (a coarse pointer that can share files) Keep
+  this picture opens the share sheet, where Save Image is; elsewhere it
+  downloads `meadow-YYYY-MM-DD.png`. The picture never leaves the device
+  otherwise. The record notes "picture kept" and "done".
+- **Until step 7:** "They'll be here when you come back" isn't true yet
+  (nothing is saved, so a reload loses the meadow). Step 7 makes it true.
+- **Checked:** scripted AI answers in the browser (no model calls), seven
+  paths at 390×844 and 1440×900 and one with reduced motion: Keep it and
+  Go back, one part ("Thank it…"), no words (Not now, and Act 2 skipped),
+  AI off, and the dev jump. Each showed the picture inside the screen and
+  clear of the card, kept `meadow-2026-11-03.png` (the download path), and
+  Done brought the bar back with the veil gone. No page errors; build and
+  lint pass. The share-sheet path hasn't run yet: headless Chrome on Linux
+  can't share files, so it needs a real phone.

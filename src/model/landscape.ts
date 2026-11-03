@@ -85,6 +85,11 @@ export function visibleParts(state: LandscapeState): VisiblePart[] {
     .map((part) => ({ part, placement: layout[part.id] }))
 }
 
+/** Parts arrive one per answer, alternating sides: the first from the left, the next from the right. */
+export function entrySide(state: LandscapeState, id: string): 'left' | 'right' {
+  return state.order.indexOf(id) % 2 === 0 ? 'left' : 'right'
+}
+
 /** Links not taken down whose two parts are both on the map. */
 export function visibleLinks(state: LandscapeState): Link[] {
   return Object.values(state.links).filter(

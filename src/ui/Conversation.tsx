@@ -24,6 +24,7 @@ type CardActions = Pick<
   | 'thatsHowItIs'
   | 'goBack'
   | 'keepIt'
+  | 'done'
 >
 
 interface ConversationProps {
@@ -36,6 +37,8 @@ interface ConversationProps {
   actions: CardActions
   /** Undo, when there's something to undo, for Act 3's step back (the bar isn't there yet). */
   undo?: () => void
+  /** Keep this picture, at the ending, once the picture is drawn. */
+  keepPicture?: () => void
 }
 
 /** Phrases copied from the free-write, offered as buttons: Turn 1's choose row, or Turn 3's leftovers. */
@@ -64,7 +67,7 @@ function cardLines(lines: readonly Line[], start: number | null): Line[] {
  * After the entry conversation the same card carries the guide's
  * invitations and questions (docs/slice-4-handoff.md), or nothing at all.
  */
-export function Conversation({ state, shown, phase, steppedBack, actions, undo }: ConversationProps) {
+export function Conversation({ state, shown, phase, steppedBack, actions, undo, keepPicture }: ConversationProps) {
   const lines = cardLines(state.lines, shown)
   const current = shown === state.card && phase === 'card'
   // Announced underneath any animation: the wait, then each new card.
@@ -92,6 +95,7 @@ export function Conversation({ state, shown, phase, steppedBack, actions, undo }
             current={current}
             actions={actions}
             undo={undo}
+            keepPicture={keepPicture}
           />
         </div>
       )}
@@ -112,12 +116,13 @@ interface CardProps {
   current: boolean
   actions: CardActions
   undo?: () => void
+  keepPicture?: () => void
 }
 
 /** Cards whose second line is a softer hint under the question. */
 const HINTED: readonly Step[] = ['choose', 'stepBack', 'dusk']
 
-function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current, actions, undo }: CardProps) {
+function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current, actions, undo, keepPicture }: CardProps) {
   // The card keeps its own shape while it ghosts: no layout jump.
   const [step] = useState(stepNow)
   const [choices] = useState(choicesNow)
@@ -194,6 +199,16 @@ function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current,
               )}
               <button type="button" className="card__button" disabled={!current} onClick={actions.thatsHowItIs}>
                 {copy.talk.thatsHowItIs}
+              </button>
+            </>
+          )}
+          {step === 'ending' && (
+            <>
+              <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.done}>
+                {copy.talk.done}
+              </button>
+              <button type="button" className="card__button" disabled={!current || !keepPicture} onClick={keepPicture}>
+                {copy.talk.keepPicture}
               </button>
             </>
           )}

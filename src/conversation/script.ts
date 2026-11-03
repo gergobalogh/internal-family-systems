@@ -93,6 +93,11 @@ export const script = {
     only
       ? [`What if ${quoted(only)} sat a little differently?`, 'Move it, and notice what shifts.']
       : ['What if things sat a little differently?', 'Move anyone, and notice what shifts.'],
+  /** The ending (frame A14), over the picture to keep. Draft copy. */
+  ending: (count: number) =>
+    count === 1
+      ? "Thank it for showing up. It'll be here when you come back."
+      : "Thank them for showing up. They'll be here when you come back.",
   /** Add a part, from the top bar after closing. Draft copy. */
   newPart: "What would you call the part you'd like to add?",
   partAdded: (name: string) => `${quoted(name)} is here now. Move it wherever feels right.`,

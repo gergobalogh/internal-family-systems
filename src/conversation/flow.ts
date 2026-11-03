@@ -43,7 +43,8 @@ import type { ArrangedPart, SummaryInput } from './summary'
  * asks who else is here (docs/four-turn-journey-plan.md), closing with
  * "These are the ones who came." Act 2: the person taps one figure and sits
  * with it (its words, what it might be trying to do, a thanks). Act 3: they
- * step back and arrange everyone, then try one "what if" at dusk. Then what
+ * step back and arrange everyone, then try one "what if" at dusk. The ending:
+ * a thank-you, and a picture of the meadow to keep. Then what
  * the guide does after it (docs/slice-4-handoff.md). Async work (LLM
  * reflections, risk checks, JEV judgements) is
  * described by `pending`; the caller runs it and feeds the result back.
@@ -107,6 +108,7 @@ export interface Attribute {
     | 'fears'
     | 'thanks'
     | 'stepBack'
+    | 'ending'
     | 'safety'
     | 'invitation'
     | 'experiment'
@@ -189,6 +191,8 @@ export type Step =
   | 'stepBack'
   /** One "what if" at dusk: Go back, or Keep it. */
   | 'dusk'
+  /** The ending (frame A14): a thank-you, the picture to keep, and Done. */
+  | 'ending'
   /** A "How it is" edit changed what the summary says. */
   | 'noticing'
   /** The safety path: the pause card, then no more guide this session. */
@@ -345,6 +349,10 @@ export type ConversationEvent =
   /** Act 3's "what if": Go back, or Keep it. */
   | { type: 'goBack'; map: LandscapeState }
   | { type: 'keepIt'; map: LandscapeState }
+  /** The ending's picture was saved or shared. */
+  | { type: 'pictureKept'; map: LandscapeState }
+  /** Done, at the ending. */
+  | { type: 'done'; map: LandscapeState }
   /** The person rested after a "How it is" edit; `before` is the map the last time this was asked. */
   | { type: 'notice'; before: LandscapeState; partId: string | null; map: LandscapeState }
 
@@ -1019,12 +1027,12 @@ function onThatsHowItIs(state: ConversationState, map: LandscapeState): Conversa
   return { ...guide(guide(freshCard(dusk), question), hint), step: 'dusk', asked: '' }
 }
 
-/** Go back: the "what if" is let go, and the light returns on how it is. */
-function onGoBack(state: ConversationState): ConversationState {
+/** Go back: the "what if" is let go, and the meadow is as it was. */
+function onGoBack(state: ConversationState, map: LandscapeState): ConversationState {
   if (state.pending || state.step !== 'dusk') return state
   const noted = note(state, { subject: 'conversation', attribute: 'experiment', value: 'went back', source: null, confidence: high })
   // Straight to the effects, in order: act() would switch the view back before the reset.
-  return finishWalk({ ...noted, effects: [...noted.effects, { type: 'resetWhatIf' }, { type: 'returnToCurrent' }] })
+  return toEnding({ ...noted, effects: [...noted.effects, { type: 'resetWhatIf' }, { type: 'returnToCurrent' }] }, map)
 }
 
 /** Keep it: the "what if" becomes how it is (undoable); the words of what changed stay in the record. */
@@ -1033,7 +1041,26 @@ function onKeepIt(state: ConversationState, map: LandscapeState): ConversationSt
   const parts = arranged(state, map)
   const value = arrangementDiffers(parts) ? `kept: ${arrangementChanges(parts).join('; ')}` : 'kept: nothing moved'
   const noted = note(state, { subject: 'conversation', attribute: 'experiment', value, source: null, confidence: high })
-  return finishWalk({ ...noted, effects: [...noted.effects, { type: 'keepWhatIf' }] })
+  return toEnding({ ...noted, effects: [...noted.effects, { type: 'keepWhatIf' }] }, map)
+}
+
+// ---------- The ending: a thank-you, and a picture to keep (frame A14) ----------
+
+/** "Thank them for showing up." The picture itself is drawn by the UI from the map. */
+function toEnding(state: ConversationState, map: LandscapeState): ConversationState {
+  const here = visibleNow(state, map)
+  if (here.length === 0) return finishWalk(state)
+  return { ...guide(freshCard({ ...state, duskPart: null }), script.ending(here.length)), step: 'ending', asked: '' }
+}
+
+function onPictureKept(state: ConversationState): ConversationState {
+  if (state.step !== 'ending') return state
+  return note(state, { subject: 'conversation', attribute: 'ending', value: 'picture kept', source: null, confidence: high })
+}
+
+function onDone(state: ConversationState): ConversationState {
+  if (state.step !== 'ending') return state
+  return finishWalk(note(state, { subject: 'conversation', attribute: 'ending', value: 'done', source: null, confidence: high }))
 }
 
 const askThanks = (state: ConversationState): ConversationState => ({ ...guide(state, script.thanks), step: 'thanks', asked: '' })
@@ -1746,9 +1773,13 @@ export function conversationReducer(state: ConversationState, event: Conversatio
     case 'thatsHowItIs':
       return onThatsHowItIs(state, event.map)
     case 'goBack':
-      return onGoBack(state)
+      return onGoBack(state, event.map)
     case 'keepIt':
       return onKeepIt(state, event.map)
+    case 'pictureKept':
+      return onPictureKept(state)
+    case 'done':
+      return onDone(state)
     case 'notice':
       return onNotice(state, event.before, event.partId, event.map)
   }

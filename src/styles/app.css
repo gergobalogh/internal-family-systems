@@ -217,7 +217,8 @@ button {
  */
 @container (aspect-ratio < 0.9) {
   .world,
-  .card-slot {
+  .card-slot,
+  .postcard {
     --frame-h: calc(100cqh * 1.7);
     --frame-w: calc(var(--frame-h) * var(--plate-ratio));
     --frame-left: calc(60cqw - var(--frame-w) * var(--house-x));
@@ -1828,6 +1829,84 @@ a.card__button {
 /* The part the "what if" names: a soft, steady ring. */
 .part.is-marked .part__ring {
   opacity: 0.85;
+}
+
+/* ---------- The ending (frame A14) ---------- */
+
+/* The dusk of the "what if" stays on (no second mode), and the meadow rests under a veil. */
+.app[data-beat='ending'] {
+  --night: 1;
+  --lantern: 1;
+}
+
+[data-beat='ending'] .figure {
+  filter: saturate(0.88) brightness(0.93) hue-rotate(-6deg);
+}
+
+.ending-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1040;
+  background: linear-gradient(rgba(60, 40, 70, 0.1), rgba(60, 40, 70, 0.35));
+  animation: veil-in 900ms var(--ease-soft) both;
+}
+
+@keyframes veil-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The picture to keep: in the sky above the card on wide screens (the card's top, as in .card). */
+.postcard {
+  position: absolute;
+  z-index: 1060;
+  top: 16px;
+  right: 16px;
+  bottom: calc(
+    100cqh - max(16px, min(calc(var(--frame-top) + var(--frame-h) * var(--below-house)), calc(100cqh - 15rem))) + 24px
+  );
+  left: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin: 0;
+  pointer-events: none;
+}
+
+.postcard__image {
+  min-height: 0;
+  max-width: min(100%, 34rem);
+  max-height: 100%;
+  border-radius: 6px;
+  rotate: -2deg;
+  box-shadow: 0 14px 34px rgba(40, 28, 50, 0.35);
+  animation: postcard-in 900ms var(--ease-soft) both;
+  pointer-events: auto;
+}
+
+@keyframes postcard-in {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+    rotate: 0deg;
+  }
+}
+
+/* Tall screens: the card floats in the sky, so the picture lies on the meadow under it. */
+@container (aspect-ratio < 0.9) {
+  .postcard {
+    top: calc(var(--frame-top) + var(--frame-h) * var(--house-top) + 6px);
+    bottom: 16px;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ending-veil,
+  .postcard__image {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

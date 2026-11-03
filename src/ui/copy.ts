@@ -57,6 +57,8 @@ export const copy = {
   clearWords: 'Clear what it said',
   /** Before a part's intent, in its selected box. Draft copy. */
   intentLabel: 'might be trying to:',
+  /** The ending's picture to keep, for screen readers. Draft copy. */
+  postcardAlt: (names: readonly string[], date: string) => `A picture of your meadow at dusk, with ${names.join(', ')}, ${date}`,
   removed: 'Taken off the map.',
   empty: 'No parts on the map right now.',
   partLabel: (name: string) => `${name}, one way to see this`,
@@ -84,6 +86,8 @@ export const copy = {
     thatsHowItIs: "That's how it is",
     goBack: 'Go back',
     keepIt: 'Keep it',
+    done: 'Done',
+    keepPicture: 'Keep this picture',
     close: 'Close',
     closeLabel: 'Close the conversation',
     /** After the entry conversation (docs/slice-4-handoff.md). Draft copy. */

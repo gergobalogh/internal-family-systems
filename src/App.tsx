@@ -19,6 +19,8 @@ import { Landscape } from './ui/Landscape'
 import type { LandscapeProps } from './ui/Landscape'
 import { MapNote } from './ui/MapNote'
 import { ModeBar } from './ui/ModeBar'
+import { keepPicture, postcardOf, usePicture } from './ui/picture'
+import { Postcard } from './ui/Postcard'
 import { StatusToast } from './ui/StatusToast'
 import { THANKS_MS, useCamera } from './ui/useCamera'
 import { useChoreography } from './ui/useChoreography'
@@ -111,8 +113,11 @@ interface ShellProps {
   thanked?: readonly string[]
   /** The part Act 3's "what if" names. */
   marked?: string | null
-  /** Act 3's "what if": dusk without the curtains (not a second mode, frame A13). */
-  dusk?: boolean
+  /**
+   * A beat in its own light, not a second mode: Act 3's "what if" (dusk
+   * without the curtains, frame A13), and the ending (dusk under a veil, A14).
+   */
+  beat?: 'dusk' | 'ending'
   children?: ReactNode
 }
 
@@ -131,7 +136,7 @@ function Shell({
   onChoose,
   thanked,
   marked,
-  dusk = false,
+  beat,
   children,
 }: ShellProps) {
   const { state, act, selectedId, setSelectedId, notice, setNotice } = workspace
@@ -149,7 +154,7 @@ function Shell({
   }
 
   return (
-    <div className="app" data-mode={state.mode} data-beat={dusk ? 'dusk' : undefined}>
+    <div className="app" data-mode={state.mode} data-beat={beat}>
       {bar && (
         <div className="modebar-slot">
           <ModeBar
@@ -234,6 +239,11 @@ function TalkWorkspace() {
 
   useNoticing(workspace.state, handedOver && !state.paused, talk.notice)
 
+  // The ending's picture to keep, drawn from the map as it is now.
+  const ending = state.step === 'ending'
+  const picture = usePicture(ending ? postcardOf(workspace.state, state.thanked) : null)
+  const { pictureKept } = talk
+
   return (
     <Shell
       workspace={workspace}
@@ -259,10 +269,11 @@ function TalkWorkspace() {
       onChoose={talk.getToKnow}
       thanked={state.thanked}
       marked={state.step === 'dusk' ? state.duskPart : null}
-      dusk={state.step === 'dusk'}
+      beat={state.step === 'dusk' ? 'dusk' : ending ? 'ending' : undefined}
     >
       {/* After a pause, the map keeps no summary of a conversation that stopped. */}
       {handedOver && !state.paused && <MapNote text={mapNote(state, workspace.state)} />}
+      {ending && <Postcard picture={picture} />}
       <Conversation
         state={state}
         shown={shown}
@@ -270,6 +281,8 @@ function TalkWorkspace() {
         steppedBack={steppedBack}
         actions={talk}
         undo={canUndo(workspace.state) ? () => workspace.act({ type: 'undo' }) : undefined}
+        // Straight from the tap: a phone's share sheet only opens inside one.
+        keepPicture={picture ? () => void keepPicture(picture).then((kept) => kept && pictureKept()) : undefined}
       />
       {jump && <p className="dev-badge">DEV · jumped to Act 1's close</p>}
     </Shell>

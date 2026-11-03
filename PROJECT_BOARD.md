@@ -5,14 +5,14 @@
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
 - **URL:** none
 - **Post where:** not decided yet
-- **Next:** Option A, step 6: the ending's picture (frame A14): "Thank them for showing up. They'll be here when you come back." with Done / Keep this picture, a postcard of their meadow with the names, a part's words and the date ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md))
+- **Next:** Option A, step 7: save the meadow on the device, and open the next visit on it with "Welcome back. Who's around today?" (frame A15, [docs/redesign/story-redesign.md](docs/redesign/story-redesign.md))
 - **Updated:** 2026-11-03
 
 ## Build
 - [x] The entry conversation, with all thirteen parts walking in on Rive
 - [x] Act 1: every answer brings someone (Turn 3), closing with who came
 - [x] Act 2: sit with one part (its words, what it's trying to do, thanks)
-- [ ] Act 3 and the ending: step back, one "what if", a picture to keep
+- [x] Act 3 and the ending: step back, one "what if", a picture to keep
 - [ ] The meadow is saved on the device, and the next visit opens on it
 
 ## Polish
@@ -38,8 +38,8 @@ only tracks the work.
   meadow saved on the device for the next visit. Option B is the shape of
   later visits. Done: Turn 3, arrivals the card never covers, Act 1's
   close, Act 2 (Fears built but off, `?fears`, until a therapist has
-  reviewed it) and Act 3. Next: the ending's picture, saving, then
-  removing the modes, top bar, map note and the label hedge. The doc's
+  reviewed it), Act 3 and the ending's picture. Next: saving and the next
+  visit, then removing the modes, top bar, map note and the label hedge. The doc's
   section 6 has a five-person test script and the therapist questions.
 - **A reflection that follows resizing (brainstorm).** Idea: when a part is
   resized, call Claude so the reflection changes with the map. Possibly
@@ -104,6 +104,12 @@ only tracks the work.
 
 ## Up next
 
+- **Try Keep this picture on a real phone** (2026-11-03). The browser
+  checks only reach the download path; headless Chrome can't share files,
+  so the share sheet (Save Image) is untested. Also look at the picture
+  there: a phone's figures are drawn at 75% of a wide screen's size.
+- **"They'll be here when you come back" isn't true yet** (2026-11-03):
+  nothing is saved until step 7.
 - **After the therapist review: Act 2's held-back parts and Fears**
   (2026-11-03). Act 2 doesn't offer a part read as hurting or Turn 3's
   quieter part, and Fears shows only with `?fears`. The review (the
@@ -150,7 +156,10 @@ only tracks the work.
   "What if ‘X’ had a bit more room?" / "Move it, and notice what shifts."
   / "What if things sat a little differently?" / "Move anyone, and notice
   what shifts." / "What if ‘X’ sat a little differently?" / "Go back" /
-  "Keep it".
+  "Keep it", and the ending: "Thank them (it) for showing up. They'll
+  (It'll) be here when you come back." / "Done" / "Keep this picture", and
+  the picture's "might be trying to:" and its alt text "A picture of your
+  meadow at dusk, with …".
 - **Card covers the selected part's box on desktop.** The card sits at a
   fixed spot under the house, so a part dragged there has its box hidden
   behind it. (New parts no longer start there, 2026-11-03.) Idea: on
@@ -172,6 +181,18 @@ only tracks the work.
   good" scores near zero on both moderation and JEV (Claude caught it).
 
 ## Done
+
+- **The ending: a picture to keep** (2026-11-03, Option A step 6, frame
+  A14). After Go back or Keep it the dusk stays, the meadow rests under a
+  veil, and "Thank them for showing up. They'll be here when you come
+  back." comes with Done / Keep this picture. Beside the card lies a
+  postcard of the meadow at dusk: everyone where they stand, their names,
+  the words of the part they sat with, and the date. It's drawn from the
+  map on a canvas (`src/ui/picture.ts`); Keep this picture opens a phone's
+  share sheet or downloads a PNG, and nothing leaves the device. Done
+  hands the map over. Checked with scripted AI answers in the browser,
+  seven paths on a phone and desktop plus one with reduced motion, with no
+  page errors. Build and lint pass. Wording is draft.
 
 - **Act 3: step back, one "what if"** (2026-11-03, Option A step 5,
   frames A12–A13). After Act 2 the guide says "Step back and look at all

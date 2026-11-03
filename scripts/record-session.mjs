@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Plays one whole session of the app the way a person would, AI on:
 // free-write → parts → who came → Go on → Act 2 (tap one, its words, thanks)
-// → Act 3 (step back, a move, the dusk "what if", Keep it) → Get to know it
-// → a move (noticing) → What if… experiment. Records a video, a still of every card,
+// → Act 3 (step back, a move, the dusk "what if", Keep it) → the ending (the
+// picture, kept) → Get to know it → a move (noticing) → What if… experiment. Records a video, a still of every card,
 // and a timeline of what each card said and when.
 //
 //   node scripts/record-session.mjs http://localhost:5173/ 390x844 docs/redesign/today/phone
@@ -33,6 +33,7 @@ const browser = await chromium.launch({
 const context = await browser.newContext({
   viewport: { width, height },
   recordVideo: { dir: out, size: { width, height } },
+  acceptDownloads: true,
 })
 const page = await context.newPage()
 const logs = []
@@ -152,6 +153,17 @@ try {
   await page.waitForTimeout(800)
   log('act3 tried', { file: await shot('act3-tried') })
   await press('Keep it')
+
+  // ── The ending: the picture to keep, then Done ───────────────────
+  await record('ending')
+  await page.waitForSelector('.postcard__image', { timeout: 15000 })
+  const [download] = await Promise.all([
+    page.waitForEvent('download', { timeout: 8000 }).catch(() => null),
+    press('Keep this picture'),
+  ])
+  if (download) await download.saveAs(`${out}/${download.suggestedFilename()}`)
+  log('picture kept', { file: download ? download.suggestedFilename() : null })
+  await press('Done')
   await page.waitForTimeout(2500)
   log('map handed over', { file: await shot('map-handed-over') })
 
