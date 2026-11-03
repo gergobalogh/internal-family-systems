@@ -22,7 +22,7 @@ The conversation is one glass card under the house, per
 
 ```bash
 npm install
-cp .env.example .env   # add ANTHROPIC_API_KEY, JEV_API_KEY and OPENAI_API_KEY
+cp .env.example .env   # add ANTHROPIC_API_KEY (or META_API_KEY), JEV_API_KEY and OPENAI_API_KEY
 npm run dev            # http://localhost:5173
 npm run build
 npm run lint
@@ -70,11 +70,15 @@ session, and the map stays editable.
   back, then one "what if" with Go back / Keep it) and the ending (the
   picture itself is drawn in `src/ui/picture.ts`), then noticing, and the
   safety pause.
-- `server/ai.ts` — the AI routes (`/api/reflect` → Claude, `/api/risk` → OpenAI moderation + JEV, `/api/figure` → one JEV
-  request for figure + hidden kind, `/api/toward-check` → JEV, and
-  `/api/free-write` → JEV form reading + Claude phrase lifting),
-  mounted on Vite's dev and preview servers. API keys are read here only
-  and never reach the browser; any other host needs the same six routes.
+- `server/ai.ts` — the AI routes (`/api/reflect` → Claude, or Muse Spark
+  when `META_API_KEY` is set, `/api/risk` → OpenAI moderation + JEV,
+  `/api/figure` → one JEV request for figure + hidden kind,
+  `/api/toward-check` → JEV, `/api/extract-name` → Claude or Muse Spark, and
+  `/api/free-write` → JEV form reading + phrase lifting by Claude or Muse
+  Spark), mounted on Vite's dev and preview servers. API keys are read here
+  only and never reach the browser. `server/serve.ts` serves the same routes
+  on their own, with a rate limit, for the test link on the VPS
+  ([deploy/README.md](deploy/README.md): ifs.gergobalogh.me).
 - `src/ui/` — the landscape (world → links → characters),
   the conversation card and its timing (`Conversation.tsx`,
   `useChoreography.ts`: send → ghost → the world waits → a new part walks

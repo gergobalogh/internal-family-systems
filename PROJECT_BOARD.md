@@ -3,9 +3,9 @@
 - **Status:** active
 - **What:** An app for mapping your inner landscape, based on Internal Family Systems
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
-- **URL:** none
+- **URL:** https://ifs.gergobalogh.me (unlisted test link, being set up)
 - **Post where:** not decided yet
-- **Next:** Option A is built: try it on a real phone (Keep this picture's share sheet, the labels), then the five-person test and the therapist review ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md), section 6)
+- **Next:** finish the test link ([deploy/README.md](deploy/README.md)): DNS, keys and the Caddy step, then a few real Muse calls; then decide what a failed safety check does and tell testers where their words go ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md), section 6)
 - **Updated:** 2026-11-03
 
 ## Build
@@ -41,8 +41,8 @@ only tracks the work.
   never covers, Act 1's close, Act 2 (Fears built but off, `?fears`, until
   a therapist has reviewed it), Act 3, the ending's picture, saving with
   the next visit, and no modes, top bar or map note (2026-11-03). Next: a
-  real phone, then the doc's section 6: a five-person test script and the
-  therapist questions.
+  real phone (looked fine, 2026-11-03), then the doc's section 6: a
+  five-person test script and the therapist questions.
 - **A reflection that follows resizing (brainstorm).** Idea: when a part is
   resized, call Claude so the reflection changes with the map. Possibly
   instead of the noticing fix below.
@@ -120,9 +120,17 @@ only tracks the work.
   Also: in private mode or with storage blocked, nothing is saved, yet the
   ending says "They'll be here when you come back".
 - **Before going public** (Codex review, 2026-11-03): the AI routes have
-  no login or rate limit (`server/ai.ts`), and there's no production host
-  for them yet; `?fears` works in a production build too.
-- **Try Keep this picture on a real phone** (2026-11-03). The browser
+  no login (the test link's `server/serve.ts` limits calls per visitor and
+  per day, 2026-11-03); `?fears` works in a production build too.
+- **Check Muse Spark's words** (2026-11-03): reflections, names and phrases
+  now come from Muse Spark on the test link. Run Turn 1's phrase
+  calibration (`node scripts/calibrate-turn1.ts phrases`) and a few walks
+  with real answers, and see how often the reflection checks fall back.
+  Also check Meta's Model API terms: what it keeps, and whether it trains
+  on what's sent (the standard model).
+- **Try Keep this picture on a real phone** (2026-11-03). The walk was
+  tried on the user's phone with `?ai=scripted` (2026-11-03) and looked
+  fine; the share sheet is still untested, because it needs HTTPS. The browser
   checks only reach the download path; headless Chrome can't share files,
   so the share sheet (Save Image) is untested. Also look at the picture
   there: a phone's figures are drawn at 75% of a wide screen's size. To

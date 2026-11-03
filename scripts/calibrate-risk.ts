@@ -11,14 +11,10 @@
 // local phrase list (RISK_PHRASES) isn't part of this: it's the floor under
 // the AI check, not something to calibrate.
 import { loadEnv } from 'vite'
-import { readRisk, riskVerdict } from '../server/ai.ts'
+import { configFromEnv, readRisk, riskVerdict } from '../server/ai.ts'
 
 const env = loadEnv('development', process.cwd(), '')
-const config = {
-  jevApiKey: env.JEV_API_KEY,
-  jevBaseUrl: env.JEV_BASE_URL || 'https://api.typesafe.ai',
-  openaiApiKey: env.OPENAI_API_KEY,
-}
+const config = configFromEnv(env)
 if (!config.jevApiKey || !config.openaiApiKey) {
   console.error('Needs OPENAI_API_KEY and JEV_API_KEY in .env.')
   process.exit(1)

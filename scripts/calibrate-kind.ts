@@ -6,15 +6,12 @@
 // This calls the same combined figure + kind JEV request as the app. The
 // corpus mixes names with surrounding context because vague names are common.
 import { loadEnv } from 'vite'
-import { readFigureAndKind } from '../server/ai.ts'
+import { configFromEnv, readFigureAndKind } from '../server/ai.ts'
 import { PART_KIND_LABELS } from '../src/conversation/contract.ts'
 import type { PartKind } from '../src/conversation/contract.ts'
 
 const env = loadEnv('development', process.cwd(), '')
-const config = {
-  jevApiKey: env.JEV_API_KEY,
-  jevBaseUrl: env.JEV_BASE_URL || 'https://api.typesafe.ai',
-}
+const config = configFromEnv(env)
 if (!config.jevApiKey) {
   console.error('Needs JEV_API_KEY in .env.')
   process.exit(1)

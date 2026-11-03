@@ -23,28 +23,50 @@ import type { Look } from '../src/model/types.ts'
 
 /**
  * Server-side AI routes. API keys are read here and never reach the browser.
- * Mounted on Vite's dev and preview servers by `aiRoutes`; any other host
- * needs the same six POST routes (see `handle`). Failures answer 502/503
- * and the browser falls back — person text is never logged.
+ * Mounted on Vite's dev and preview servers by `aiRoutes`, and served on
+ * their own by `server/serve.ts` (the VPS); any other host needs the same
+ * six POST routes (see `handle`). Failures answer 502/503 and the browser
+ * falls back — person text is never logged.
  */
 
 export interface AiConfig {
   anthropicApiKey?: string
+  /** Meta's Model API: when set, Muse Spark writes the reflections, names and phrases instead of Claude. */
+  metaApiKey?: string
+  metaBaseUrl: string
   jevApiKey?: string
   /** First-party API or a gateway in front of it. */
   jevBaseUrl: string
   openaiApiKey?: string
 }
 
+/** The config from environment variables (`.env` on the laptop, the service's `.env` on the VPS). */
+export function configFromEnv(env: Record<string, string | undefined>): AiConfig {
+  return {
+    anthropicApiKey: env.ANTHROPIC_API_KEY || undefined,
+    metaApiKey: env.META_API_KEY || undefined,
+    metaBaseUrl: env.META_BASE_URL || 'https://api.meta.ai/v1',
+    jevApiKey: env.JEV_API_KEY || undefined,
+    jevBaseUrl: env.JEV_BASE_URL || 'https://api.typesafe.ai',
+    openaiApiKey: env.OPENAI_API_KEY || undefined,
+  }
+}
+
 const CLAUDE_MODEL = 'claude-opus-5-5'
 const CLAUDE_TIMEOUT_MS = 10_000
+/**
+ * The standard Muse Spark, never a "contributor" one: those are cheaper
+ * because what's sent may be used to train Meta's models.
+ */
+const MUSE_MODEL = 'muse-spark-1.3'
+const MUSE_TIMEOUT_MS = 10_000
 const JEV_MODEL = 'jev-1.13.0'
 const JEV_TIMEOUT_MS = 8_000
 const MODERATION_MODEL = 'omni-moderation-latest'
 const MODERATION_TIMEOUT_MS = 8_000
 const MAX_BODY_BYTES = 32_000
 
-// ---------- Reflections (Claude) ----------
+// ---------- Reflections (Claude or Muse Spark) ----------
 
 const REFLECTION_SYSTEM = `You write one short reflection for a gentle self-reflection app. A person is putting what's on their mind into words. The app shows your reflection, then asks its own next question — so never ask a question yourself.
 
@@ -141,15 +163,84 @@ async function claude(client: Anthropic, params: Omit<Anthropic.Beta.Messages.Me
   return text === '' ? null : text
 }
 
-function reflect(client: Anthropic, request: ReflectRequest): Promise<string | null> {
-  return claude(client, {
-    output_config: { effort: 'low' },
-    system: REFLECTION_SYSTEM,
-    messages: [{ role: 'user', content: reflectionPrompt(request) }],
-  })
+/** One request for words: a system prompt, their words, and optionally a JSON shape to answer in. */
+interface Ask {
+  system: string
+  prompt: string
+  format?: { name: string; schema: Record<string, unknown> }
 }
 
-// ---------- Name extraction (Claude, structured output) ----------
+/** Whoever writes the app's words: Claude, or Muse Spark when Meta's key is set. Null when neither is configured. */
+type Writer = (ask: Ask) => Promise<string | null>
+
+function claudeWriter(client: Anthropic): Writer {
+  return ({ system, prompt, format }) =>
+    claude(client, {
+      output_config: format ? { effort: 'low', format: { type: 'json_schema', schema: format.schema } } : { effort: 'low' },
+      system,
+      messages: [{ role: 'user', content: prompt }],
+    })
+}
+
+/** A failed Muse request, by HTTP status only (the body may echo their words). */
+class MuseError extends Error {
+  status: number
+  constructor(status: number) {
+    super(`Muse ${status}`)
+    this.name = 'MuseError'
+    this.status = status
+  }
+}
+
+/** Muse Spark on Meta's Model API, through its OpenAI-compatible chat completions. */
+function museWriter(config: AiConfig): Writer {
+  return async ({ system, prompt, format }) => {
+    const response = await fetch(`${config.metaBaseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.metaApiKey}` },
+      body: JSON.stringify({
+        model: MUSE_MODEL,
+        reasoning_effort: 'low',
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: prompt },
+        ],
+        ...(format && { response_format: { type: 'json_schema', json_schema: { name: format.name, schema: format.schema, strict: true } } }),
+      }),
+      // The browser gives up at 12s; one attempt keeps us inside that.
+      signal: AbortSignal.timeout(MUSE_TIMEOUT_MS),
+    })
+    if (!response.ok) throw new MuseError(response.status)
+    const data = (await response.json()) as { choices?: { finish_reason?: string; message?: { content?: unknown } }[] }
+    const choice = data.choices?.[0]
+    if (choice?.finish_reason !== 'stop' || typeof choice.message?.content !== 'string') return null
+    const text = choice.message.content.trim()
+    return text === '' ? null : text
+  }
+}
+
+/** Muse Spark when Meta's key is set, else Claude when Anthropic's is, else nobody. */
+function writerFor(config: AiConfig): Writer | null {
+  if (config.metaApiKey) return museWriter(config)
+  if (config.anthropicApiKey) return claudeWriter(new Anthropic({ apiKey: config.anthropicApiKey }))
+  return null
+}
+
+/** A JSON answer, also when it comes wrapped in a code fence or a sentence. */
+function jsonIn(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    const object = text.match(/\{[\s\S]*\}/)
+    return object ? JSON.parse(object[0]) : null
+  }
+}
+
+function reflect(write: Writer, request: ReflectRequest): Promise<string | null> {
+  return write({ system: REFLECTION_SYSTEM, prompt: reflectionPrompt(request) })
+}
+
+// ---------- Name extraction (structured output) ----------
 
 const EXTRACT_SYSTEM = `You read one reply in a gentle self-reflection app and find the name in it. The app asked the person to name a feeling or an inner voice ("a part"), and their reply may wrap the name in other words ("as I've told you, not feeling good enough", "well, I guess the angry one").
 
@@ -175,18 +266,14 @@ function extractPrompt(request: ExtractRequest): string {
   return `The app asked (the names in it are theirs):\n"${request.question}"\n\n<their_reply>\n${request.answer}\n</their_reply>`
 }
 
-async function extractName(client: Anthropic, request: ExtractRequest): Promise<string | null> {
-  const text = await claude(client, {
-    output_config: { effort: 'low', format: { type: 'json_schema', schema: EXTRACT_SCHEMA } },
-    system: EXTRACT_SYSTEM,
-    messages: [{ role: 'user', content: extractPrompt(request) }],
-  })
+async function extractName(write: Writer, request: ExtractRequest): Promise<string | null> {
+  const text = await write({ system: EXTRACT_SYSTEM, prompt: extractPrompt(request), format: { name: 'name', schema: EXTRACT_SCHEMA } })
   if (text === null) return null
-  const data: unknown = JSON.parse(text)
+  const data = jsonIn(text)
   return isExtractResponse(data) ? data.label : null
 }
 
-// ---------- Turn 0 reading (JEV form + Claude phrases) ----------
+// ---------- Turn 0 reading (JEV form + phrases from Claude or Muse Spark) ----------
 
 const FREE_WRITE_FORM_CRITERIA: Record<(typeof FREE_WRITE_FORM_LABELS)[number], string> = {
   one_feeling:
@@ -232,28 +319,29 @@ const PHRASES_SCHEMA = {
   additionalProperties: false,
 }
 
-async function extractFreeWritePhrases(client: Anthropic, request: FreeWriteRequest): Promise<string[] | null> {
-  const text = await claude(client, {
-    output_config: { effort: 'low', format: { type: 'json_schema', schema: PHRASES_SCHEMA } },
+async function extractFreeWritePhrases(write: Writer, request: FreeWriteRequest): Promise<string[] | null> {
+  const text = await write({
     system: PHRASES_SYSTEM,
-    messages: [{ role: 'user', content: `<their_words>\n${request.freeWrite}\n</their_words>` }],
+    prompt: `<their_words>\n${request.freeWrite}\n</their_words>`,
+    format: { name: 'phrases', schema: PHRASES_SCHEMA },
   })
   if (text === null) return null
-  const data: unknown = JSON.parse(text)
+  const data = jsonIn(text)
   if (typeof data !== 'object' || data === null) return null
   const phrases = (data as { phrases?: unknown }).phrases
   return Array.isArray(phrases) && phrases.every((phrase) => typeof phrase === 'string') ? phrases : null
 }
 
 /** Exported for scripts/calibrate-turn1.ts (`phrases`); the app uses the same request. */
-export function liftFreeWritePhrases(config: AiConfig, request: FreeWriteRequest): Promise<string[] | null> {
-  return extractFreeWritePhrases(new Anthropic({ apiKey: config.anthropicApiKey }), request)
+export async function liftFreeWritePhrases(config: AiConfig, request: FreeWriteRequest): Promise<string[] | null> {
+  const write = writerFor(config)
+  return write ? extractFreeWritePhrases(write, request) : null
 }
 
-async function analyzeFreeWrite(client: Anthropic | null, config: AiConfig, request: FreeWriteRequest): Promise<FreeWriteAnalysis | null> {
+async function analyzeFreeWrite(write: Writer | null, config: AiConfig, request: FreeWriteRequest): Promise<FreeWriteAnalysis | null> {
   const [form, phrases] = await Promise.all([
     config.jevApiKey ? settled('JEV free-write form', () => readFreeWriteForm(config, request)) : null,
-    client ? settled('Claude free-write phrases', () => extractFreeWritePhrases(client, request)) : null,
+    write ? settled('free-write phrases', () => extractFreeWritePhrases(write, request)) : null,
   ])
   return form === null && phrases === null ? null : { form, phrases }
 }
@@ -567,8 +655,7 @@ function send(res: ServerResponse, status: number, body: unknown) {
 const ROUTES = new Set<string>(Object.values(API))
 
 export function createHandler(config: AiConfig) {
-  let client: Anthropic | null = null
-  const anthropic = () => (client ??= new Anthropic({ apiKey: config.anthropicApiKey }))
+  const write = writerFor(config)
   const answer = (res: ServerResponse, result: unknown, failure: string) =>
     result === null ? send(res, 502, { error: failure }) : send(res, 200, result)
 
@@ -582,16 +669,15 @@ export function createHandler(config: AiConfig) {
         case API.reflect: {
           const request = parseReflect(body)
           if (!request) return send(res, 400, { error: 'bad request' })
-          const text = await reflect(anthropic(), request)
+          if (!write) return send(res, 503, { error: 'reflections are not configured' })
+          const text = await reflect(write, request)
           return answer(res, text === null ? null : { text }, 'no reflection')
         }
         case API.freeWrite: {
           const request = parseFreeWrite(body)
           if (!request) return send(res, 400, { error: 'bad request' })
-          if (!config.jevApiKey && !config.anthropicApiKey) {
-            return send(res, 503, { error: 'the free-write reading is not configured' })
-          }
-          const result = await analyzeFreeWrite(config.anthropicApiKey ? anthropic() : null, config, request)
+          if (!config.jevApiKey && !write) return send(res, 503, { error: 'the free-write reading is not configured' })
+          const result = await analyzeFreeWrite(write, config, request)
           return answer(res, result, 'no reading')
         }
         case API.risk: {
@@ -610,7 +696,8 @@ export function createHandler(config: AiConfig) {
         case API.extractName: {
           const request = parseExtract(body)
           if (!request) return send(res, 400, { error: 'bad request' })
-          const label = await extractName(anthropic(), request)
+          if (!write) return send(res, 503, { error: 'names are not configured' })
+          const label = await extractName(write, request)
           return answer(res, label === null ? null : { label }, 'no name')
         }
         case API.towardCheck: {
@@ -622,7 +709,11 @@ export function createHandler(config: AiConfig) {
       }
     } catch (error) {
       const detail =
-        error instanceof Anthropic.APIError ? `${error.name} ${error.status ?? ''}` : error instanceof Error ? error.name : 'unknown error'
+        error instanceof Anthropic.APIError || error instanceof MuseError
+          ? `${error.name} ${error.status ?? ''}`
+          : error instanceof Error
+            ? error.name
+            : 'unknown error'
       console.warn(`[ai] ${route} failed: ${detail}`)
       return send(res, 503, { error: 'unavailable' })
     }

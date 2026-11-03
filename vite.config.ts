@@ -1,7 +1,7 @@
 import react from '@vitejs/plugin-react'
 import { loadEnv } from 'vite'
 import { defineConfig } from 'vitest/config'
-import { aiRoutes } from './server/ai.ts'
+import { aiRoutes, configFromEnv } from './server/ai.ts'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -10,12 +10,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
-      aiRoutes({
-        anthropicApiKey: env.ANTHROPIC_API_KEY,
-        jevApiKey: env.JEV_API_KEY,
-        jevBaseUrl: env.JEV_BASE_URL || 'https://api.typesafe.ai',
-        openaiApiKey: env.OPENAI_API_KEY,
-      }),
+      aiRoutes(configFromEnv(env)),
     ],
     test: {
       include: ['src/**/*.test.ts'],

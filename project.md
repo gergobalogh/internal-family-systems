@@ -665,3 +665,25 @@ This decision will determine the tone of the responses, what happens after a cha
   steps aside). At dusk the box had only Smaller / Larger. A drag after
   the walk still brought a noticing card, with the corner Undo away until
   Skip this one. No page errors; build and lint pass.
+
+### 2026-11-03 — A test link on the VPS, and Muse Spark writes the words
+
+- **Change (the user's choice):** the five-person test runs on an
+  unlisted link, ifs.gergobalogh.me, on the VPS. Caddy serves the built app;
+  `server/serve.ts` serves the AI routes on 127.0.0.1:8785 as a user
+  service ([deploy/README.md](deploy/README.md)). No login; kept out of
+  search engines.
+- **Muse Spark instead of Claude** for the reflections, names and phrases,
+  because it's cheaper: when `META_API_KEY` is set, those three go to
+  Meta's Model API (`muse-spark-1.3`, its OpenAI-compatible chat
+  completions, low reasoning effort). The standard model, never a
+  "contributor" one, which is cheaper because Meta may train on what's sent.
+  Claude stays the fallback on the laptop. JEV and OpenAI moderation are
+  unchanged. Muse's wording hasn't been checked against the reflection
+  checks yet.
+- **Limits:** the routes have no login, so each visitor gets 200 AI calls an
+  hour and the site 2000 a day (a walk takes about 30); over a limit the
+  app carries on with its fixed lines.
+- **Checked:** against a stand-in for Meta's API (no model calls): the
+  request shape, a JSON answer in a code fence, a 503 without the safety
+  keys, and the limit's 429. The app builds on the VPS.

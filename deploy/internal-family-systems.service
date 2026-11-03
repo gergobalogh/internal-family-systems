@@ -1,0 +1,22 @@
+# ~/.config/systemd/user/internal-family-systems.service on the VPS.
+# The AI routes for ifs.gergobalogh.me (server/serve.ts), on 127.0.0.1:8785.
+# Keys live in /home/www/internal-family-systems/.env (see deploy/README.md).
+[Unit]
+Description=Inner landscape (IFS) AI routes - http://127.0.0.1:8785
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/www/internal-family-systems
+Environment=PORT=8785
+EnvironmentFile=-/home/www/internal-family-systems/.env
+ExecStart=/usr/bin/node --no-warnings server/serve.ts
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+
+[Install]
+WantedBy=default.target

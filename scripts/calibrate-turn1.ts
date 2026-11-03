@@ -12,20 +12,17 @@
 // corpus is deliberately messy: fragments, typos, context around feelings,
 // and several-feeling answers where collapsing to one would lose a part.
 import { loadEnv } from 'vite'
-import { liftFreeWritePhrases, readFreeWriteForm } from '../server/ai.ts'
+import { configFromEnv, liftFreeWritePhrases, readFreeWriteForm } from '../server/ai.ts'
 import { nameWords, verifiedPhrases, wordRun } from '../src/conversation/checks.ts'
 import { FREE_WRITE_FORM_LABELS } from '../src/conversation/contract.ts'
 import type { FreeWriteFormLabel } from '../src/conversation/contract.ts'
 
 const env = loadEnv('development', process.cwd(), '')
-const config = {
-  jevApiKey: env.JEV_API_KEY,
-  jevBaseUrl: env.JEV_BASE_URL || 'https://api.typesafe.ai',
-  anthropicApiKey: env.ANTHROPIC_API_KEY,
-}
+// Phrases come from Muse Spark when META_API_KEY is set, as in the app, else Claude.
+const config = configFromEnv(env)
 const liftingPhrases = process.argv[2] === 'phrases'
-if (liftingPhrases ? !config.anthropicApiKey : !config.jevApiKey) {
-  console.error(liftingPhrases ? 'Needs ANTHROPIC_API_KEY in .env.' : 'Needs JEV_API_KEY in .env.')
+if (liftingPhrases ? !config.metaApiKey && !config.anthropicApiKey : !config.jevApiKey) {
+  console.error(liftingPhrases ? 'Needs META_API_KEY or ANTHROPIC_API_KEY in .env.' : 'Needs JEV_API_KEY in .env.')
   process.exit(1)
 }
 

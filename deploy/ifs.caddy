@@ -1,0 +1,26 @@
+# /etc/caddy/sites/ifs.caddy on the VPS (imported by /etc/caddy/Caddyfile).
+# The built app is served from dist/; /api/* goes to server/serve.ts on
+# 127.0.0.1:8785 (the user service internal-family-systems.service).
+# An unlisted test link: no login, kept out of search engines. The AI routes
+# limit themselves (see server/serve.ts).
+ifs.gergobalogh.me {
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8785
+	}
+
+	handle {
+		root * /home/www/internal-family-systems/dist
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		X-Robots-Tag "noindex, nofollow"
+	}
+}
