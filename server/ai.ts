@@ -106,7 +106,16 @@ function reflectionPrompt(request: ReflectRequest): string {
         `They named a feeling:\n${words(request.partName)}\n\n` +
         `Asked what it would say if it had words, they wrote:\n${words(request.voice)}\n\n` +
         exchange(request.question, request.answer) +
-        `Reflect back that answer.`
+        `Reflect back what it might be trying to do for them.`
+      )
+    case 'fears':
+      return (
+        earlier +
+        `They named a feeling:\n${words(request.partName)}\n\n` +
+        `Asked what it would say if it had words, they wrote:\n${words(request.voice)}\n\n` +
+        `Asked what it might be trying to do for them, they wrote:\n${words(request.intent)}\n\n` +
+        exchange(request.question, request.answer) +
+        `Reflect back what it is afraid of, as its worry, gently, in one sentence. Don't ask about it, explain it, or reassure them that it won't happen.`
       )
     case 'experiment': {
       const changes = request.changes.length === 0 ? 'only small changes' : request.changes.map((line) => `- ${line}`).join('\n')
@@ -507,7 +516,7 @@ const isText = (value: unknown): value is string => typeof value === 'string' &&
 const isNames = (value: unknown): value is string[] => Array.isArray(value) && value.every((name) => typeof name === 'string')
 
 function parseReflect(body: unknown): ReflectRequest | null {
-  const { turn, freeWrite, loudest, question, answer, partName, voice, changes, nextQuestion, avoidPhrases } = (body ?? {}) as Record<string, unknown>
+  const { turn, freeWrite, loudest, question, answer, partName, voice, intent, changes, nextQuestion, avoidPhrases } = (body ?? {}) as Record<string, unknown>
   if (turn === 1 && isText(freeWrite)) {
     return {
       turn,
@@ -522,6 +531,9 @@ function parseReflect(body: unknown): ReflectRequest | null {
   if (turn === 3 || turn === 4 || turn === 'noticing') return { turn, freeWrite, question, answer }
   if ((turn === 'voice' || turn === 'toward') && isText(partName)) return { turn, freeWrite, partName, question, answer }
   if (turn === 'intent' && isText(partName) && isText(voice)) return { turn, freeWrite, partName, voice, question, answer }
+  if (turn === 'fears' && isText(partName) && typeof voice === 'string' && typeof intent === 'string') {
+    return { turn, freeWrite, partName, voice, intent, question, answer }
+  }
   if (turn === 'experiment' && isNames(changes)) return { turn, freeWrite, changes, question, answer }
   return null
 }

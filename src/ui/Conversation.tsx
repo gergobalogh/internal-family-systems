@@ -12,7 +12,7 @@ export const SUPPORT_URL = 'https://findahelpline.com/'
 /** What the person can do on a card, from the conversation hook. */
 type CardActions = Pick<
   Talk,
-  'answer' | 'choose' | 'goOn' | 'dismiss' | 'decline' | 'accept' | 'tried' | 'keepTrying'
+  'answer' | 'choose' | 'goOn' | 'dismiss' | 'decline' | 'accept' | 'tried' | 'keepTrying' | 'thank'
 >
 
 interface ConversationProps {
@@ -109,7 +109,7 @@ function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current,
   return (
     <section
       ref={cardRef}
-      className={`card${slim ? ' card--slim' : ''}${phase === 'waiting' ? ' is-waiting' : ''}${phase === 'arriving' || away ? ' is-away' : ''}`}
+      className={`card${slim ? ' card--slim' : ''}${step === 'choose' ? ' card--choose' : ''}${phase === 'waiting' ? ' is-waiting' : ''}${phase === 'arriving' || away ? ' is-away' : ''}`}
       aria-label={copy.talk.label}
       aria-busy={phase !== 'card'}
     >
@@ -161,6 +161,22 @@ function Card({ lines, step: stepNow, choices: choicesNow, phase, away, current,
               {copy.talk.goOn}
             </button>
           )}
+          {/* Act 2's first question: the figures are the buttons; this is the way out. */}
+          {step === 'choose' && (
+            <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.decline}>
+              {copy.talk.notNow}
+            </button>
+          )}
+          {step === 'thanks' && (
+            <>
+              <button type="button" className="card__button card__button--quiet" disabled={!current} onClick={actions.decline}>
+                {copy.talk.notYet}
+              </button>
+              <button type="button" className="card__button" disabled={!current} onClick={actions.thank}>
+                {copy.talk.thankIt}
+              </button>
+            </>
+          )}
           {(step === 'closed' || step === 'paused') && (
             <button type="button" className="card__button card__button--quiet" aria-label={copy.talk.closeLabel} onClick={actions.dismiss}>
               {copy.talk.close}
@@ -192,7 +208,8 @@ function Reply({ step, choices, phase, away, interactive, cardRef, actions }: Re
   const shiftBreak = useRef(false)
 
   // A new question takes focus only if the person isn't busy on the map —
-  // or just asked for this card (Get to know it). Layout effect: the old
+  // or just asked for this card (Get to know it, or the figure they tapped
+  // at Act 2, which the camera is now on). Layout effect: the old
   // card's field (still focused, so a phone keyboard stays up) is removed in
   // this same commit, and refocusing in the same task is what keeps that
   // keyboard up; a phone won't raise it outside a tap.
@@ -202,7 +219,7 @@ function Reply({ step, choices, phase, away, interactive, cardRef, actions }: Re
       !active ||
       active === document.body ||
       cardRef.current?.contains(active) ||
-      (active instanceof HTMLElement && active.dataset.opensCard !== undefined)
+      (active instanceof HTMLElement && (active.dataset.opensCard !== undefined || active.closest('.part.is-focus') !== null))
     if (interactive && idle) fieldRef.current?.focus()
   }, [interactive, cardRef])
 
@@ -255,6 +272,8 @@ function Reply({ step, choices, phase, away, interactive, cardRef, actions }: Re
           ? { label: copy.talk.quieterNo, onClick: () => submit(copy.talk.quieterNo) }
           : step === 'intent'
         ? { label: copy.talk.enough, onClick: actions.decline }
+        : step === 'fears'
+          ? { label: copy.talk.skipFears, onClick: actions.decline }
         : step === 'noticing'
           ? { label: copy.talk.skip, onClick: actions.decline }
           : step === 'newPart' || step === 'experiment' || step === 'voice'
@@ -292,7 +311,7 @@ function Reply({ step, choices, phase, away, interactive, cardRef, actions }: Re
         id={fieldId}
         ref={fieldRef}
         className="card__field"
-        rows={step === 'freeWrite' ? 3 : step === 'voice' || step === 'intent' || step === 'experiment' ? 2 : 1}
+        rows={step === 'freeWrite' ? 3 : step === 'voice' || step === 'intent' || step === 'fears' || step === 'experiment' ? 2 : 1}
         enterKeyHint="send"
         value={draft}
         // Read-only, not disabled, while waiting: it keeps focus, so a

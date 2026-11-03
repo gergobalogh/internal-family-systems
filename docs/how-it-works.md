@@ -107,16 +107,26 @@ them.
                         then "These are the ones who came."   [Go on]
                         (Turn 4's summary question and the closing card
                         are gone, 2026-11-03: the map is changed by hand)
-                        ─► the top bar appears; the summary stays on the
-                           map as a note, and keeps itself true as you
-                           move things (until Act 2 is built)
                                     │
                                     ▼
-          2. THE MAP IS YOURS (you lead; the app asks only when invited)
+          2. ACT 2: SIT WITH ONE (frames A07–A11; see "Sitting with one")
+             "Which one would like your attention first?"     [Not now]
+             the figures are the buttons; a part read as hurting, and
+             Turn 3's quieter part, aren't offered (until a therapist has
+             reviewed it); with nobody to offer, Act 2 is skipped
+             ─► the camera goes to it: its words, what it might be trying
+                to do, a thanks
+             ─► the camera steps back; the top bar appears; the summary
+                stays on the map as a note, and keeps itself true as you
+                move things (until Act 3 is built)
+                                    │
+                                    ▼
+          3. THE MAP IS YOURS (you lead; the app asks only when invited)
              │
              ├─ drag / resize / rename / remove any part, undo anything
              ├─ Add a part ............... from the bar, in "How it is"
              ├─ A. Get to know it ........ select a part, you start it
+             │                              (the same scenes as Act 2)
              ├─ B. Noticing ............... after you move a part in "How it is"
              └─ C. The experiment ......... the first time you open "What if…",
                                             then any time from the bar
@@ -173,20 +183,42 @@ minus.
 Selecting the knot on a "pulling in different directions" link offers
 [Remove this link] in "How it is", and the same pointer back in "What if…".
 
-## A. Get to know it (you start it)
+## A. Sitting with one: Act 2, and Get to know it (you start it)
+
+Tapping a figure at Act 2's first question, or [Get to know it] on a
+selected part after the hand-over, plays the same scenes. The camera goes
+to the part (closer for a smaller one), the others soften and lose their
+names, and the next card waits until the camera has arrived.
 
 ```
    card 1   "If ‘the worry’ had words, what would it say?"
             [Not now]                                 [Send]
-               │ your answer is kept word for word as its voice
+               │ your answer is kept word for word as its voice,
+               │ and comes out of the figure as speech
                ▼
    card 2   short reflection ("It sounds like ‘the worry’ tells you…")
             "What might ‘the worry’ be trying to do for you?"
             [That's enough for now]                   [Send]
-               │ kept word for word as its intent
+               │ kept word for word as its intent, shown under the
+               │ figure ("might be trying to: …")
                ▼
-            short reflection                          [Close]
+  (card 3   only with ?fears, until an IFS-trained therapist has
+            reviewed it: short reflection, then "What is it afraid
+            would happen if it stopped?"
+            [Skip]                                    [Send])
+               ▼
+   card 4   short reflection
+            "Would you like to thank it?"
+            [Not yet]                             [Thank it]
+               │ Thank it: the card goes, and the part glows, brightly
+               │ for a moment up close, then softly for the rest of
+               │ the visit
+               ▼
+            the camera steps back to the whole meadow
 ```
+
+Any way out ([Not now], [That's enough for now], [Not yet]) ends the
+sitting the same way: the camera steps back, and nothing more is asked.
 
 ## B. Noticing (the app asks, once per part)
 

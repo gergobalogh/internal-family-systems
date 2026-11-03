@@ -442,3 +442,46 @@ This decision will determine the tone of the responses, what happens after a cha
   opened its invitation without a wish. No page errors. Build and lint
   pass. Known left: after the hand-over on a phone, the bar shrinks the
   map and three labels crowd (the bar goes in step 8).
+
+### 2026-11-03 — Act 2: sit with one
+
+- **Change (Option A step 4, frames A07–A11):** Go on no longer hands the
+  map over. The guide asks "Which one would like your attention first?"
+  ("Tap one. The others can wait for another time.") and the figures are
+  the buttons: offered parts ring, the rest soften. A tap moves the camera
+  to that part, the others soften and lose their names, and the next card
+  waits until the camera arrives. Then its words ("If ‘X’ had words…"),
+  which come out of the figure as speech; what it might be trying to do,
+  shown under it; and "Would you like to thank it?" with Not yet / Thank
+  it. Thank it makes the part glow, brightly up close for a moment, then
+  softly for the rest of the visit. The camera steps back and the map is
+  handed over (the bar and note, until Act 3 replaces them).
+- **Who is offered (agreed 2026-11-03):** not a part read as hurting, and
+  not Turn 3's quieter part, until an IFS-trained therapist has said how to
+  meet them. With nobody to offer, Act 2 is skipped. With one, the line is
+  "Would ‘X’ like a little of your attention?"
+- **Fears:** built, with Skip, but off. The redesign doc puts the
+  therapist review before Fears ships, so it shows only with `?fears`, to
+  try it or show it to the reviewer. Its answer stays in the record, not on
+  the map. The server has a fears reflection prompt.
+- **Ways out:** the first question gets a quiet "Not now" (the frame had
+  none; every question in the app has a way out). Not now, That's enough
+  for now and Not yet all end the sitting the same way.
+- **Get to know it** on a selected part, after the hand-over, plays the
+  same scenes, thanks included. The part's box closes as the camera moves.
+- **Camera:** the world and parts sit in one layer the camera zooms, never
+  the card. It zooms closer for smaller parts (1.4–1.8 on a phone, where
+  the part comes to the middle of the meadow under the card's sky;
+  1.25–1.6 on a wide screen, where it stays on its own side, beside the
+  card), and never past the meadow's edges. Reduced motion cuts straight
+  there. The speech is drawn over the layer, so the zoom never scales the
+  text, and keeps clear of the card and the edges.
+- **Checked:** scripted AI answers in the browser, nine paths at 1440×900
+  and 390×844: thank, Not yet, Not now, hurting part held back, quieter
+  part held back, nobody to offer, AI off, Fears answered and skipped, and
+  Get to know it after the hand-over. Every path ended with the camera
+  back and the map handed over, with no page errors. Build and lint pass.
+  One slip: the first phone run's `?jump=after` path wasn't routed to the
+  script, so its two answers reached the real AI (two Claude reflections,
+  two moderation and two JEV risk checks, on made-up text). Every path is
+  scripted now.

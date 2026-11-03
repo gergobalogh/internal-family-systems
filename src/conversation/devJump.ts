@@ -1,6 +1,7 @@
 import { createLandscape, landscapeReducer } from '../model/landscape'
 import { LOOKS } from '../model/types'
 import type { LandscapeState, Look } from '../model/types'
+import { fearsRequested } from './features'
 import { conversationReducer, startConversation } from './flow'
 import type { ConversationEvent, ConversationState } from './flow'
 import type { PartKind } from './contract'
@@ -45,7 +46,7 @@ const certainKind = (kind: PartKind) => ({
 })
 
 export function jumpToClose(): { conversation: ConversationState; landscape: LandscapeState } {
-  let conversation = startConversation()
+  let conversation = startConversation({ askFears: fearsRequested })
   let landscape = createLandscape([])
 
   const feed = (event: WithoutMap<ConversationEvent>) => {

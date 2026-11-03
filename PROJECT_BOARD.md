@@ -5,13 +5,13 @@
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
 - **URL:** none
 - **Post where:** not decided yet
-- **Next:** Option A, step 4: Act 2, tap a figure to sit with it (camera move, its words, thanks; Fears behind Skip) ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md))
+- **Next:** Option A, step 5: Act 3, step back and look at everyone (moving and sizing live here), then one "what if" at dusk with Go back / Keep it ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md))
 - **Updated:** 2026-11-03
 
 ## Build
 - [x] The entry conversation, with all thirteen parts walking in on Rive
 - [x] Act 1: every answer brings someone (Turn 3), closing with who came
-- [ ] Act 2: sit with one part (its words, what it's trying to do, thanks)
+- [x] Act 2: sit with one part (its words, what it's trying to do, thanks)
 - [ ] Act 3 and the ending: step back, one "what if", a picture to keep
 - [ ] The meadow is saved on the device, and the next visit opens on it
 
@@ -36,10 +36,10 @@ only tracks the work.
   decisions are in project.md's log). One walk in three acts (meet who's
   here, sit with one, step back), ending with a picture to keep, and the
   meadow saved on the device for the next visit. Option B is the shape of
-  later visits. Done: Turn 3, arrivals the card never covers, and Act 1's
-  close. Next: Act 2 (Fears behind Skip until a therapist has reviewed
-  it), Act 3, the ending's picture, saving, then removing the modes, top
-  bar, map note and the label hedge. The doc's
+  later visits. Done: Turn 3, arrivals the card never covers, Act 1's
+  close, and Act 2 (Fears built but off, `?fears`, until a therapist has
+  reviewed it). Next: Act 3, the ending's picture, saving, then removing
+  the modes, top bar, map note and the label hedge. The doc's
   section 6 has a five-person test script and the therapist questions.
 - **A reflection that follows resizing (brainstorm).** Idea: when a part is
   resized, call Claude so the reflection changes with the map. Possibly
@@ -104,6 +104,11 @@ only tracks the work.
 
 ## Up next
 
+- **After the therapist review: Act 2's held-back parts and Fears**
+  (2026-11-03). Act 2 doesn't offer a part read as hurting or Turn 3's
+  quieter part, and Fears shows only with `?fears`. The review (the
+  redesign doc's questions 1, 3 and 5) decides whether Fears is on by
+  default, and how Act 2 meets the parts it holds back.
 - **After Go on, labels crowd on a phone** (2026-11-03): the top bar
   arrives and shrinks the map, so three name labels sit close at the
   bottom. Step 8 removes the bar; check again then.
@@ -144,8 +149,13 @@ only tracks the work.
   mentioned these. Are any of them here too?" / "Is there a quieter
   feeling ‘X’ might be standing in front of?" / "Is there a quieter
   feeling here, one that rarely gets heard?" / "No one else" / "I don't
-  think so", and Act 1's close: "These are the ones who came." / "This is
-  the one who came." / "Go on".
+  think so", Act 1's close: "These are the ones who came." / "This is
+  the one who came." / "Go on", and Act 2: "Which one would like your
+  attention first?" / "Tap one. The others can wait for another time." /
+  "Would ‘X’ like a little of your attention?" / "Tap it when you're
+  ready." / "What is it afraid would happen if it stopped?" / "Skip" /
+  "Would you like to thank it?" / "Not yet" / "Thank it", and the figure's
+  label "Give X your attention".
 - **Card covers the selected part's box on desktop.** The card sits at a
   fixed spot under the house, so a part dragged there has its box hidden
   behind it. (New parts no longer start there, 2026-11-03.) Idea: on
@@ -167,6 +177,21 @@ only tracks the work.
   good" scores near zero on both moderation and JEV (Claude caught it).
 
 ## Done
+
+- **Act 2: sit with one** (2026-11-03, Option A step 4, frames A07–A11).
+  Go on asks "Which one would like your attention first?" and the figures
+  are the buttons; a part read as hurting and Turn 3's quieter part aren't
+  offered, and with nobody to offer Act 2 is skipped. A tap moves the
+  camera to that part while the others soften; its words come out of it
+  as speech, what it might be trying to do sits under it, and "Would you
+  like to thank it?" ends with a glow. Then the camera steps back and the
+  map is handed over. Get to know it after the hand-over plays the same
+  scenes. Fears is built with Skip, but shows only with `?fears` until a
+  therapist has reviewed it. Checked with scripted AI answers in the
+  browser, nine paths at 1440×900 and 390×844, with no page errors. Build
+  and lint pass. Wording is draft. One slip: the first phone run's dev-jump
+  path reached the real AI (six calls on made-up text); all paths are
+  scripted now.
 
 - **Act 1 closes with who came** (2026-11-03, Option A step 3, frame
   A06). Turn 4's summary question, the typed corrections and the closing

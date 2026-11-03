@@ -68,6 +68,16 @@ export const script = {
    * and the closing card. Draft copy.
    */
   gathered: (count: number) => (count === 1 ? 'This is the one who came.' : 'These are the ones who came.'),
+  /**
+   * Act 2 (frames A07–A11): the question, then a softer line. The figures
+   * are the buttons. Draft copy.
+   */
+  choose: ['Which one would like your attention first?', 'Tap one. The others can wait for another time.'],
+  chooseOne: (name: string) => [`Would ${quoted(name)} like a little of your attention?`, "Tap it when you're ready."],
+  /** Only with `?fears`, until an IFS-trained therapist has reviewed it. Draft copy. */
+  fears: 'What is it afraid would happen if it stopped?',
+  /** The high point is a tap: Thank it, and it glows. Draft copy. */
+  thanks: 'Would you like to thank it?',
   /** Add a part, from the top bar after closing. Draft copy. */
   newPart: "What would you call the part you'd like to add?",
   partAdded: (name: string) => `${quoted(name)} is here now. Move it wherever feels right.`,
@@ -88,6 +98,7 @@ export const script = {
     toward: 'Thank you for telling me.',
     voice: 'Thank you for letting it speak.',
     intent: 'Thank you for telling me.',
+    fears: 'Thank you for telling me.',
     experiment: 'Thank you for trying that.',
     noticing: 'Thank you for telling me.',
   },
@@ -104,7 +115,7 @@ export const script = {
   whatWasThatLike: 'What was that like?',
   /** After the experiment's reflection. */
   experimentDone: "‘How it is’ hasn't changed — both pictures are here.",
-  /** Get to know it. */
+  /** Sitting with one (Act 2), and Get to know it. */
   voice: (name: string) => `If ${quoted(name)} had words, what would it say?`,
   intent: (name: string) => `What might ${quoted(name)} be trying to do for you?`,
   /** After a "How it is" edit changes what the summary says. `clause` is one summary clause ("‘X’ feels close"). */

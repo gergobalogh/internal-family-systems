@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Plays one whole session of the app the way a person would, AI on:
-// free-write → parts → who came → Go on → Get to know it → a move
+// free-write → parts → who came → Go on → Act 2 (tap one, its words, thanks)
+// → Get to know it → a move
 // (noticing) → What if… experiment. Records a video, a still of every card,
 // and a timeline of what each card said and when.
 //
@@ -119,7 +120,24 @@ try {
 
   // ── Act 1's close: who came → Go on ───────────────────────────────
   await press('Go on')
-  await page.waitForTimeout(2500)
+
+  // ── Act 2: tap one, its words, what it's trying to do, thanks ─────
+  await page.waitForTimeout(1500)
+  if (await page.locator('.part.is-offered').count()) {
+    await record('act2-choose')
+    await page.locator('.part.is-offered .part__body').first().click({ force: true })
+    await record('act2-voice')
+    await answer("you can't stop now or everything falls apart")
+    await record('act2-intent')
+    await answer('keep me from being let go, I think')
+    await record('act2-thanks')
+    await press('Thank it')
+    await page.waitForTimeout(1200)
+    log('act2 glow', { file: await shot('act2-glow') })
+  } else {
+    log('act2 skipped: nobody offered')
+  }
+  await page.waitForTimeout(4500)
   log('map handed over', { file: await shot('map-handed-over') })
 
   // ── Select a part → its box → Get to know it ──────────────────────
@@ -134,8 +152,8 @@ try {
   await answer("you can't stop now or everything falls apart")
   await record('know-intent')
   await answer('keep me from being let go, I think')
-  await record('know-reflection')
-  await press('Close')
+  await record('know-thanks')
+  await press('Not yet')
   await page.waitForTimeout(1500)
 
   // ── A move in How it is → noticing ───────────────────────────────

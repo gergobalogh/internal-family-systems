@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from 'rea
 import type { Dispatch } from 'react'
 import type { Action, LandscapeState } from '../model/types'
 import { analyzeFreeWrite, checkRisk, checkToward, chooseFigure, extractName, reflect } from './ai'
+import { fearsRequested } from './features'
 import { conversationReducer, startConversation } from './flow'
 import type { ConversationEvent, ConversationState, Pending } from './flow'
 import type { ReflectRequest } from './contract'
@@ -58,7 +59,7 @@ async function run(job: Pending, signal: AbortSignal, early: Early): Promise<Out
  * Turn 0 (the dev jump); its effects are already on the map.
  */
 export function useConversation(landscape: LandscapeState, dispatch: Dispatch<Action>, initial?: ConversationState) {
-  const [state, send] = useReducer(conversationReducer, initial, (start) => start ?? startConversation())
+  const [state, send] = useReducer(conversationReducer, initial, (start) => start ?? startConversation({ askFears: fearsRequested }))
 
   const landscapeRef = useRef(landscape)
   useLayoutEffect(() => {
@@ -102,6 +103,8 @@ export function useConversation(landscape: LandscapeState, dispatch: Dispatch<Ac
     newPart: useCallback(() => say({ type: 'newPart' }), [say]),
     enteredWhatIf: useCallback(() => say({ type: 'enteredWhatIf' }), [say]),
     getToKnow: useCallback((partId: string) => say({ type: 'getToKnow', partId }), [say]),
+    thank: useCallback(() => say({ type: 'thank' }), [say]),
+    thanksSeen: useCallback(() => say({ type: 'thanksSeen' }), [say]),
     notice: useCallback((before: LandscapeState, partId: string | null) => say({ type: 'notice', before, partId }), [say]),
   }
 }

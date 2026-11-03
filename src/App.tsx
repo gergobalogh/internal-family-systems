@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import type { ReactNode } from 'react'
 import { jumpRequested, jumpToClose } from './conversation/devJump'
-import { canAddPart, canGetToKnow, canTryExperiment, mapNote } from './conversation/flow'
+import { canAddPart, canGetToKnow, canTryExperiment, mapNote, offeredIds } from './conversation/flow'
 import { useConversation } from './conversation/useConversation'
 import { canUndo, createLandscape, landscapeReducer } from './model/landscape'
 import type { Action, LandscapeState } from './model/types'
@@ -16,9 +16,11 @@ import { SideEntranceSpike } from './ui/SideEntranceSpike'
 import { SproutRiseSpike } from './ui/SproutRiseSpike'
 import { copy } from './ui/copy'
 import { Landscape } from './ui/Landscape'
+import type { LandscapeProps } from './ui/Landscape'
 import { MapNote } from './ui/MapNote'
 import { ModeBar } from './ui/ModeBar'
 import { StatusToast } from './ui/StatusToast'
+import { THANKS_MS, useCamera } from './ui/useCamera'
 import { useChoreography } from './ui/useChoreography'
 import { useNoticing } from './ui/useNoticing'
 
@@ -101,6 +103,12 @@ interface ShellProps {
   onAddPart?: () => void
   /** Try an experiment, when one can start. */
   onTryExperiment?: () => void
+  /** Sitting with one part (Act 2, Get to know it): see Landscape. */
+  focus?: LandscapeProps['focus']
+  /** Act 2's first question: the figures to tap. */
+  offered?: readonly string[] | null
+  onChoose?: (partId: string) => void
+  thanked?: readonly string[]
   children?: ReactNode
 }
 
@@ -114,9 +122,20 @@ function Shell({
   onGetToKnow,
   onAddPart,
   onTryExperiment,
+  focus,
+  offered,
+  onChoose,
+  thanked,
   children,
 }: ShellProps) {
   const { state, act, selectedId, setSelectedId, notice, setNotice } = workspace
+  /** The camera goes to the part, so its box closes. */
+  const sitWith = (open?: (partId: string) => void) =>
+    open &&
+    ((partId: string) => {
+      setSelectedId(null)
+      open(partId)
+    })
   const dismissNotice = useCallback(() => setNotice(null), [setNotice])
   const removed = (message: string) => {
     setSelectedId(null)
@@ -159,11 +178,15 @@ function Shell({
             act({ type: 'unlink', linkId })
             removed(copy.link.removed)
           }}
-          onGetToKnow={onGetToKnow}
+          onGetToKnow={sitWith(onGetToKnow)}
           onClearWords={(partId) => act({ type: 'clearWords', partId })}
           waiting={waiting}
           onEntering={onEntering}
           settling={settling}
+          focus={focus}
+          offered={offered}
+          onChoose={sitWith(onChoose)}
+          thanked={thanked}
         >
           {children}
         </Landscape>
@@ -183,11 +206,22 @@ function TalkWorkspace() {
   const talk = useConversation(workspace.state, workspace.dispatch, jump?.conversation)
   const { state } = talk
   const [entering, setEntering] = useState(false)
-  const { shown, phase, waiting, settling, steppedBack } = useChoreography(state, entering)
+  // Act 2 and Get to know it: the camera goes to the part being sat with,
+  // and, once it's thanked, stays while its glow is seen up close.
+  const cameraMoving = useCamera(state.subject?.id ?? null)
+  const { shown, phase, waiting, settling, steppedBack } = useChoreography(state, entering, cameraMoving || state.step === 'thanked')
+  const { thanksSeen } = talk
+  useEffect(() => {
+    if (state.step !== 'thanked') return
+    const timer = setTimeout(thanksSeen, THANKS_MS)
+    return () => clearTimeout(timer)
+  }, [state.step, thanksSeen])
+  const sitting = state.subject
+  const thanking = state.step === 'thanks' || state.step === 'thanked'
 
-  // The last step: the bar and the map note arrive after Go on at Act 1's
-  // close (or with a pause, or an early close), when the map becomes the
-  // person's — and stay from then on.
+  // The last step: the bar and the map note arrive once Act 2 is over and
+  // the camera is back (or with a pause, or an early close), when the map
+  // becomes the person's — and stay from then on.
   const [handedOver, setHandedOver] = useState(false)
   if (!handedOver && state.ended && shown === state.card && phase === 'card') setHandedOver(true)
 
@@ -205,6 +239,18 @@ function TalkWorkspace() {
       onGetToKnow={canGetToKnow(state) ? talk.getToKnow : undefined}
       onAddPart={canAddPart(state) ? talk.newPart : undefined}
       onTryExperiment={canTryExperiment(state) ? talk.tryExperiment : undefined}
+      focus={
+        sitting && {
+          id: sitting.id,
+          // Its words are speech until the thanks; what it's trying to do stays with it.
+          voice: thanking ? null : sitting.voice,
+          intent: sitting.intent,
+          layoutKey: shown,
+        }
+      }
+      offered={state.step === 'choose' && shown === state.card && phase === 'card' ? offeredIds(state, workspace.state) : null}
+      onChoose={talk.getToKnow}
+      thanked={state.thanked}
     >
       {/* After a pause, the map keeps no summary of a conversation that stopped. */}
       {handedOver && !state.paused && <MapNote text={mapNote(state, workspace.state)} />}

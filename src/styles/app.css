@@ -469,7 +469,9 @@ button {
   height: 0;
   transition:
     left var(--glide) var(--ease-soft),
-    top var(--glide) var(--ease-soft);
+    top var(--glide) var(--ease-soft),
+    opacity 700ms var(--ease-soft),
+    filter 700ms var(--ease-soft);
 }
 
 .part__body {
@@ -1641,4 +1643,186 @@ a.card__button {
   stroke-linecap: round;
   stroke-linejoin: round;
   opacity: 0.9;
+}
+
+/* ---------- Act 2: sit with one (docs/redesign/story-redesign.md, frames A07–A11) ---------- */
+
+/*
+ * What the camera moves: the world and everyone in it. Focused, it zooms in
+ * on the part and brings it to a resting point, never past the meadow's own
+ * edges: the middle of the meadow under the card's sky on tall screens, and
+ * its own side, beside the card, on wide ones. Smaller parts get a closer
+ * look.
+ */
+.landscape__scene {
+  --zoom: clamp(1.25, calc(1.9 / var(--cam-scale, 1)), 1.6);
+  --focus-x: var(--cam-side, 0.2);
+  --focus-y: 0.6;
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  transition: transform var(--camera) var(--ease-soft);
+}
+
+@container (aspect-ratio < 0.9) {
+  .landscape__scene {
+    --zoom: clamp(1.4, calc(2.2 / var(--cam-scale, 1)), 1.8);
+    --focus-x: 0.5;
+    --focus-y: 0.74;
+  }
+}
+
+.landscape__scene.is-focused {
+  transform: translate(
+      clamp(calc((1 - var(--zoom)) * 100%), calc((var(--focus-x) - var(--zoom) * var(--cam-x)) * 100%), 0%),
+      clamp(calc((1 - var(--zoom)) * 100%), calc((var(--focus-y) - var(--zoom) * var(--cam-y)) * 100%), 0%)
+    )
+    scale(var(--zoom));
+}
+
+/* The others soften; nobody carries a name (the card names the part), and nothing is dragged while the camera is in. */
+.landscape__scene.is-focused .part:not(.is-focus),
+.landscape__scene.is-focused .link {
+  opacity: 0.45;
+  filter: saturate(0.5) blur(1.2px);
+}
+
+.landscape__scene.is-focused :is(.part__tag, .part__handle, .link__anchor) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.landscape__scene.is-focused :is(.part__body, .link) {
+  pointer-events: none;
+}
+
+.link {
+  transition:
+    opacity 700ms var(--ease-soft),
+    filter 700ms var(--ease-soft);
+}
+
+/* Which one would like your attention first? The figures are the buttons (frame A07). */
+.landscape__scene.is-choosing .part.is-offered .part__ring {
+  opacity: 1;
+  animation: offered 2.4s var(--ease-soft) infinite;
+}
+
+.landscape__scene.is-choosing .part.is-offered .part__body {
+  cursor: pointer;
+}
+
+.landscape__scene.is-choosing .part:not(.is-offered) {
+  opacity: 0.55;
+  filter: saturate(0.5) blur(1px);
+}
+
+@keyframes offered {
+  50% {
+    box-shadow: 0 0 22px rgba(255, 246, 220, 1);
+    scale: 1.06;
+  }
+}
+
+/* The question, then a softer line under it. */
+.card--choose .card__line + .card__line {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+/* Thanked (frame A11): it glows, brightly at first, then softly for the rest of the visit. */
+.part.is-thanked {
+  --lantern: 1;
+}
+
+.part.is-thanked .part__figure {
+  filter: drop-shadow(0 0 10px rgba(255, 220, 150, 0.7)) drop-shadow(0 0 28px rgba(255, 205, 130, 0.35));
+  animation: thanked 2.2s var(--ease-soft) both;
+}
+
+@keyframes thanked {
+  0% {
+    filter: drop-shadow(0 0 0 rgba(255, 220, 150, 0)) drop-shadow(0 0 0 rgba(255, 205, 130, 0));
+  }
+  45% {
+    filter: drop-shadow(0 0 22px rgba(255, 214, 140, 1)) drop-shadow(0 0 60px rgba(255, 196, 110, 0.8));
+  }
+}
+
+/* Its words, as speech from the figure (frame A09), and what it might be trying to do, under it. */
+.speech,
+.speech-intent {
+  position: absolute;
+  z-index: 1050;
+  margin: 0;
+  width: max-content;
+  pointer-events: none;
+  animation: speech-in 600ms var(--ease-soft) both;
+}
+
+.speech {
+  max-width: min(16rem, calc(100cqw - 32px));
+  padding: 10px 16px;
+  border: 2px dashed rgba(201, 138, 94, 0.45);
+  border-radius: 18px;
+  background: #fffaf2;
+  box-shadow: 0 6px 18px rgba(58, 51, 64, 0.18);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-style: italic;
+  line-height: 1.35;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+/* The tail points at the figure, wherever the bubble had to sit. */
+.speech::after {
+  content: '';
+  position: absolute;
+  left: var(--tail, 50%);
+  bottom: -9px;
+  width: 16px;
+  height: 16px;
+  translate: -50% 0;
+  rotate: 45deg;
+  border-right: 2px dashed rgba(201, 138, 94, 0.45);
+  border-bottom: 2px dashed rgba(201, 138, 94, 0.45);
+  background: #fffaf2;
+}
+
+.speech-intent {
+  max-width: min(20rem, calc(100cqw - 32px));
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255, 251, 246, 0.9);
+  box-shadow: 0 2px 10px rgba(58, 51, 64, 0.15);
+  color: var(--ink);
+  font-size: 0.85rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.speech-intent__label {
+  color: var(--ink-soft);
+}
+
+@keyframes speech-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landscape__scene {
+    transition: none;
+  }
+
+  .landscape__scene.is-choosing .part.is-offered .part__ring,
+  .part.is-thanked .part__figure,
+  .speech,
+  .speech-intent {
+    animation: none;
+  }
 }

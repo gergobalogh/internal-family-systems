@@ -39,6 +39,12 @@ interface PartFigureProps {
   onClearWords: () => void
   /** The in-progress gesture, so things drawn between parts can follow it. */
   onDraft?: (placement: Placement | null) => void
+  /** Offered at Act 2's first question: a tap chooses it (see Landscape). */
+  offered?: boolean
+  /** The part being sat with: the camera is on it, and the others soften. */
+  focused?: boolean
+  /** Thanked: it glows. */
+  thanked?: boolean
 }
 
 const MOVE_STEP = 0.02
@@ -122,6 +128,9 @@ export function PartFigure({
   onGetToKnow,
   onClearWords,
   onDraft,
+  offered = false,
+  focused = false,
+  thanked = false,
 }: PartFigureProps) {
   // In-progress gesture; the model only sees the committed placement.
   const [draft, setDraftState] = useState<Placement | null>(null)
@@ -235,7 +244,7 @@ export function PartFigure({
 
   return (
     <div
-      className={`part${selected ? ' is-selected' : ''}${draft ? ' is-dragging' : ''}${entrance}`}
+      className={`part${selected ? ' is-selected' : ''}${draft ? ' is-dragging' : ''}${entrance}${offered ? ' is-offered' : ''}${focused ? ' is-focus' : ''}${thanked ? ' is-thanked' : ''}`}
       style={style}
       data-part={part.id}
       data-look={part.look}
@@ -246,9 +255,11 @@ export function PartFigure({
       <button
         type="button"
         className="part__body"
-        aria-label={copy.partLabel(part.name)}
+        aria-label={offered ? copy.offeredLabel(part.name) : copy.partLabel(part.name)}
         aria-describedby={hintId}
         aria-expanded={selected}
+        // Chosen at Act 2, the next card's field may take focus (see Conversation's Reply).
+        data-opens-card={offered ? '' : undefined}
         onClick={(event) => {
           // Pointer taps select via the drag gesture; this covers Enter/Space.
           if (event.detail === 0) onSelect()

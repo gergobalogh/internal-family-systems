@@ -9,13 +9,15 @@ import { entersOnRive, useRiveEntranceFiles } from './riveEntrances'
 import { LinkThread } from './LinkThread'
 import { PartFigure } from './PartFigure'
 import type { Side } from './PartFigure'
+import { Speech } from './Speech'
+import { CAMERA_MS } from './useCamera'
 import { SETTLE_MS, WALK_MS } from './useChoreography'
 import { Atmosphere, Curtains, World } from './World'
 
 /** Matches the parts' own glide (`--glide` in tokens.css). */
 const GLIDE_MS = 350
 
-interface LandscapeProps {
+export interface LandscapeProps {
   state: LandscapeState
   selectedId: string | null
   onSelect: (id: string | null) => void
@@ -35,6 +37,18 @@ interface LandscapeProps {
   settling?: boolean
   /** Show the light that closeness is measured from (once the map is the person's, and its hint names it). */
   centre?: boolean
+  /**
+   * The part being sat with (Act 2, Get to know it): the camera goes to it,
+   * the others soften, and its words appear from it. `layoutKey` changes
+   * with the card on screen.
+   */
+  focus?: { id: string; voice: string | null; intent: string | null; layoutKey: number | null } | null
+  /** Act 2's first question: the figures to tap (they ring; the rest soften). */
+  offered?: readonly string[] | null
+  /** A figure tapped while offered. */
+  onChoose?: (partId: string) => void
+  /** Thanked parts: they glow. */
+  thanked?: readonly string[]
   /** Layered above the characters (the conversation card). */
   children?: ReactNode
 }
@@ -97,6 +111,10 @@ export function Landscape({
   onEntering,
   settling = false,
   centre = false,
+  focus = null,
+  offered = null,
+  onChoose,
+  thanked = [],
   children,
 }: LandscapeProps) {
   const ref = useRef<HTMLElement>(null)
@@ -121,7 +139,19 @@ export function Landscape({
   // A link appears once both of its parts have arrived.
   const links = visibleLinks(state).filter((link) => link.between.every((id) => !arriving.includes(id)))
 
-  const style = { '--walk': `${WALK_MS}ms`, '--glide': `${glide}ms` } as CSSProperties
+  const style = { '--walk': `${WALK_MS}ms`, '--glide': `${glide}ms`, '--camera': `${CAMERA_MS}ms` } as CSSProperties
+
+  // The camera: to the part being sat with (app.css works out the zoom and where it lands).
+  const focused = focus ? byId.get(focus.id) : undefined
+  const camera = focused
+    ? ({
+        '--cam-x': focused.placement.x,
+        '--cam-y': focused.placement.y,
+        '--cam-scale': focused.placement.scale,
+        // Wide screens keep it beside the card: on its own side of the meadow.
+        '--cam-side': focused.placement.x < 0.5 ? 0.2 : 0.8,
+      } as CSSProperties)
+    : undefined
 
   return (
     <main
@@ -132,16 +162,19 @@ export function Landscape({
         if (!(event.target as Element).closest('.part, .link__anchor, .card')) onSelect(null)
       }}
     >
-      <World waiting={waiting} />
-      <Curtains />
-      <Atmosphere />
-      {centre && <CentreLight />}
-
       <p id={hintId} className="visually-hidden">
         {copy.partHint}
       </p>
 
-      {parts.length === 0 && !children && <p className="landscape__empty">{copy.empty}</p>}
+      {/* What the camera moves: the world and everyone in it, never the card. */}
+      <div
+        className={`landscape__scene${focused ? ' is-focused' : ''}${offered && offered.length > 0 ? ' is-choosing' : ''}`}
+        style={camera}
+      >
+      <World waiting={waiting} />
+      <Curtains />
+      <Atmosphere />
+      {centre && <CentreLight />}
 
       {links.map((link) => (
         <LinkThread
@@ -169,7 +202,10 @@ export function Landscape({
           side={sideOf(state, part.id)}
           hintId={hintId}
           landscapeRef={ref}
-          onSelect={() => onSelect(part.id)}
+          onSelect={() => (offered?.includes(part.id) && onChoose ? onChoose(part.id) : onSelect(part.id))}
+          offered={offered?.includes(part.id) ?? false}
+          focused={focused?.part.id === part.id}
+          thanked={thanked.includes(part.id)}
           onPlace={(next) => onPlace(part.id, next)}
           onRename={(name) => onRename(part.id, name)}
           freeLooks={freeLooks}
@@ -180,6 +216,20 @@ export function Landscape({
           onDraft={(draft) => setDrafts((current) => ({ ...current, [part.id]: draft }))}
         />
       ))}
+      </div>
+
+      {parts.length === 0 && !children && <p className="landscape__empty">{copy.empty}</p>}
+
+      {focused && (
+        <Speech
+          key={focused.part.id}
+          landscapeRef={ref}
+          partId={focused.part.id}
+          voice={focus!.voice}
+          intent={focus!.intent}
+          layoutKey={focus!.layoutKey}
+        />
+      )}
 
       {children}
     </main>

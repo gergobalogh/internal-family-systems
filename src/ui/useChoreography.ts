@@ -16,13 +16,14 @@ export type Phase = 'card' | 'waiting' | 'arriving'
 /**
  * The input ritual's timing (docs/input-choreography-plan.md): send → ghost
  * → world waits, and a part named meanwhile walks in → next card. The next
- * card is held back while the world moves, and while any part is still
+ * card is held back while the world moves, while any part is still
  * entering (`entering`, from the landscape: a Rive walk-in takes as long as
- * its gait needs). While a part walks in, the card steps back
+ * its gait needs), and while the scene holds (`holding`: the camera moving,
+ * a thanked part glowing). While a part walks in, the card steps back
  * (`steppedBack`, docs/redesign/story-redesign.md, frame A03): nothing
  * covers an arrival.
  */
-export function useChoreography(state: ConversationState, entering: boolean) {
+export function useChoreography(state: ConversationState, entering: boolean, holding = false) {
   const waiting = state.pending !== null
   const [shown, setShown] = useState(state.card)
   const [arriving, setArriving] = useState(false)
@@ -57,7 +58,7 @@ export function useChoreography(state: ConversationState, entering: boolean) {
   }, [named])
 
   useEffect(() => {
-    if (waiting || entering || state.card === shown) return
+    if (waiting || entering || holding || state.card === shown) return
     const delay = motionUntil.current - performance.now()
     const show = () => {
       setArriving(false)
@@ -70,7 +71,7 @@ export function useChoreography(state: ConversationState, entering: boolean) {
     setArriving(true)
     const timer = setTimeout(show, delay)
     return () => clearTimeout(timer)
-  }, [waiting, entering, state.card, shown])
+  }, [waiting, entering, holding, state.card, shown])
 
   // The new card is owed from the render the waiting ends: never un-ghost the old one first.
   const phase: Phase = waiting ? 'waiting' : arriving || state.card !== shown ? 'arriving' : 'card'

@@ -60,6 +60,8 @@ export const copy = {
   removed: 'Taken off the map.',
   empty: 'No parts on the map right now.',
   partLabel: (name: string) => `${name}, one way to see this`,
+  /** A figure offered at Act 2's first question. Draft copy. */
+  offeredLabel: (name: string) => `Give ${name} your attention`,
   partHint: 'Drag, or use the arrow keys, to move. Plus and minus change its size.',
   /** Conversation chrome. The guide's own lines live in src/conversation/script.ts. */
   talk: {
@@ -69,12 +71,15 @@ export const copy = {
     feelingChoices: 'Feelings mentioned in your words',
     send: 'Send',
     waiting: 'One moment…',
-    /** Turn 4: same weight as Send, never more — the app doesn't invite agreement. */
     /** Turn 3's quiet way out, beside Send: "You also mentioned these…" and the quieter question. Draft copy. */
     noOneElse: 'No one else',
     quieterNo: "I don't think so",
-    /** Act 1's close: on to the map (later, Act 2). Draft copy. */
+    /** Act 1's close: on to Act 2. Draft copy. */
     goOn: 'Go on',
+    /** Act 2: Fears' way out (it goes on to the thanks), and the thanks. Draft copy. */
+    skipFears: 'Skip',
+    notYet: 'Not yet',
+    thankIt: 'Thank it',
     close: 'Close',
     closeLabel: 'Close the conversation',
     /** After the entry conversation (docs/slice-4-handoff.md). Draft copy. */

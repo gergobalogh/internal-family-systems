@@ -37,12 +37,13 @@ import { arrangementChanges, arrangementDiffers, partPhrases, summarize, summary
 import type { ArrangedPart, SummaryInput } from './summary'
 
 /**
- * The entry conversation, Turns 0–4, and what the guide does after it
- * (docs/slice-4-handoff.md), as a pure state machine. Turn 3 asks who else
- * is here (docs/four-turn-journey-plan.md): a feeling from their free-write
- * not yet on the map, or a quieter one; when it adds nobody, the closing
- * card still offers the quieter part. Async work (LLM
- * reflections, correction parsing and risk checks, JEV judgements) is
+ * The story's walk (docs/redesign/story-redesign.md, Option A) as a pure
+ * state machine. Act 1, the entry conversation: Turns 0–3, where Turn 3
+ * asks who else is here (docs/four-turn-journey-plan.md), closing with
+ * "These are the ones who came." Act 2: the person taps one figure and sits
+ * with it (its words, what it might be trying to do, a thanks). Then what
+ * the guide does after it (docs/slice-4-handoff.md). Async work (LLM
+ * reflections, risk checks, JEV judgements) is
  * described by `pending`; the caller runs it and feeds the result back.
  * Every AI result may be null (failed or timed out): the talk always
  * continues, only with less richness. Map changes go out through `effects`,
@@ -100,6 +101,9 @@ export interface Attribute {
     | 'alsoHere'
     | 'unheard'
     | 'gathered'
+    | 'sitWith'
+    | 'fears'
+    | 'thanks'
     | 'safety'
     | 'invitation'
     | 'experiment'
@@ -149,6 +153,9 @@ export type Step =
   | 'quieter'
   /** Act 1's close: "These are the ones who came." and Go on. */
   | 'gathered'
+  // Act 2: sit with one (frames A07–A11), and Get to know it after the hand-over.
+  /** Which one would like your attention first? The figures are the buttons. */
+  | 'choose'
   /** Nothing: the card has only lines and Close (an early close, a last reflection). */
   | 'closed'
   /** No card. */
@@ -164,10 +171,16 @@ export type Step =
   | 'nothingMoved'
   /** "What was that like?" */
   | 'experiment'
-  /** Get to know it: what the part would say… */
+  /** Sitting with one: what the part would say… */
   | 'voice'
-  /** …and what it might be trying to do. */
+  /** …what it might be trying to do… */
   | 'intent'
+  /** …what it's afraid would happen if it stopped (off until a therapist has reviewed it)… */
+  | 'fears'
+  /** …and would you like to thank it? */
+  | 'thanks'
+  /** Thanked: no card, while its glow is seen up close. */
+  | 'thanked'
   /** A "How it is" edit changed what the summary says. */
   | 'noticing'
   /** The safety path: the pause card, then no more guide this session. */
@@ -185,11 +198,15 @@ export const ANSWERED_STEPS: readonly Step[] = [
   'experiment',
   'voice',
   'intent',
+  'fears',
   'noticing',
 ]
 
-/** Steps with a way out that keeps the map as it is (Not now, That's enough for now, Skip this one, Finish without changes). */
+/** Steps with a way out that keeps the map as it is (Not now, That's enough for now, Skip, Not yet, Skip this one, Finish without changes). */
 export const DECLINABLE_STEPS: readonly Step[] = [
+  'choose',
+  'fears',
+  'thanks',
   'newPart',
   'invite',
   'nothingMoved',
@@ -270,8 +287,12 @@ export interface ConversationState {
   invited: boolean
   /** How "What if" differed from "How it is" when they said they'd tried it. */
   tried: string[]
-  /** Get to know it: the part being asked about, and its voice once given. */
-  subject: { id: string; voice: string | null } | null
+  /** The part being sat with (Act 2, Get to know it), and its words once given. */
+  subject: { id: string; voice: string | null; intent: string | null } | null
+  /** Parts the person has thanked: they glow. */
+  thanked: string[]
+  /** Act 2 asks the Fears question: off until an IFS-trained therapist has reviewed it (`?fears`). */
+  askFears: boolean
   /** Parts the noticing question has asked about (once each per session). */
   noticed: string[]
 }
@@ -303,8 +324,12 @@ export type ConversationEvent =
   | { type: 'goOn'; map: LandscapeState }
   /** Add a part, from the top bar in "How it is". */
   | { type: 'newPart'; map: LandscapeState }
-  /** Get to know it, on a selected part. */
+  /** Get to know it, on a selected part; or, at Act 2's first question, a tapped figure. */
   | { type: 'getToKnow'; partId: string; map: LandscapeState }
+  /** Thank it. */
+  | { type: 'thank'; map: LandscapeState }
+  /** The thanked part's glow has been seen up close: the sitting ends. */
+  | { type: 'thanksSeen'; map: LandscapeState }
   /** The person rested after a "How it is" edit; `before` is the map the last time this was asked. */
   | { type: 'notice'; before: LandscapeState; partId: string | null; map: LandscapeState }
 
@@ -620,10 +645,12 @@ const emptyConversation = (): ConversationState => ({
   tried: [],
   subject: null,
   noticed: [],
+  thanked: [],
+  askFears: false,
 })
 
-export function startConversation(): ConversationState {
-  return ask(emptyConversation(), 'freeWrite', script.freeWrite)
+export function startConversation({ askFears = false } = {}): ConversationState {
+  return ask({ ...emptyConversation(), askFears }, 'freeWrite', script.freeWrite)
 }
 
 // ---------- Turns 0–2 ----------
@@ -912,11 +939,46 @@ function gather(state: ConversationState, map: LandscapeState): ConversationStat
   return { ...guide(noted, script.gathered(here.length)), step: 'gathered', asked: '' }
 }
 
-/** Go on: the entry conversation is over and the map is the person's (until Act 2 is built, as Close did). */
-function onGoOn(state: ConversationState): ConversationState {
+/** Go on: Act 2. */
+function onGoOn(state: ConversationState, map: LandscapeState): ConversationState {
   if (state.pending || state.step !== 'gathered') return state
+  return toAct2(state, map)
+}
+
+// ---------- Act 2: sit with one (docs/redesign/story-redesign.md, frames A07–A11) ----------
+
+/**
+ * Who Act 2 offers: every part on the map but one read as hurting, and
+ * Turn 3's quieter part (it rarely gets heard, and is often the hurting
+ * one). Held back until an IFS-trained therapist has said how to meet them.
+ */
+function offeredParts(state: ConversationState, map: LandscapeState): PartNow[] {
+  const kinds = new Map(state.parts.map((part) => [part.id, part.kind]))
+  return visibleNow(state, map).filter((part) => kinds.get(part.id) !== 'hurts' && part.id !== state.unheard)
+}
+
+/** The figures to tap while Act 2's first question is up (none otherwise). */
+export const offeredIds = (state: ConversationState, map: LandscapeState): string[] =>
+  state.step === 'choose' ? offeredParts(state, map).map((part) => part.id) : []
+
+/** "Which one would like your attention first?" With nobody to offer, Act 2 is skipped. */
+function toAct2(state: ConversationState, map: LandscapeState): ConversationState {
+  const offered = offeredParts(state, map)
+  if (offered.length === 0) {
+    return endSitting(
+      note(state, { subject: 'conversation', attribute: 'sitWith', value: 'nobody offered', source: null, confidence: byDefault }),
+    )
+  }
+  const [question, hint] = offered.length === 1 ? script.chooseOne(offered[0].name) : script.choose
+  return { ...guide(guide(freshCard(state), question), hint), step: 'choose', asked: '' }
+}
+
+/** Act 2 (or Get to know it, after the hand-over) is over: no card, and the map is the person's. */
+function endSitting(state: ConversationState): ConversationState {
   return { ...idle(state), ended: true }
 }
+
+const askThanks = (state: ConversationState): ConversationState => ({ ...guide(state, script.thanks), step: 'thanks', asked: '' })
 
 function summaryInput(state: ConversationState, map: LandscapeState): SummaryInput {
   const visible = visibleNow(state, map)
@@ -1129,18 +1191,27 @@ function onExperimentAnswer(state: ConversationState, text: string): Conversatio
   })
 }
 
+/** A figure tapped at Act 2's first question, or Get to know it on a selected part: the same scenes. */
 function onGetToKnow(state: ConversationState, partId: string, map: LandscapeState): ConversationState {
-  if (!canGetToKnow(state) || !isHere(state, map, partId)) return state
+  const chosen = state.step === 'choose' && !state.pending && offeredIds(state, map).includes(partId)
+  if (!chosen && (!canGetToKnow(state) || !isHere(state, map, partId))) return state
   const name = partNow(state, map, partId)!.name
-  return ask(freshCard({ ...state, subject: { id: partId, voice: null } }), 'voice', script.voice(name))
+  const noted = note(state, {
+    subject: partId,
+    attribute: 'sitWith',
+    value: chosen ? 'chosen' : 'get to know it',
+    source: null,
+    confidence: high,
+  })
+  return ask(freshCard({ ...noted, subject: { id: partId, voice: null, intent: null } }), 'voice', script.voice(name))
 }
 
 function onVoiceAnswer(state: ConversationState, map: LandscapeState, text: string): ConversationState {
   // Taken off the map while they answered: the card ends quietly, and the answer is dropped.
-  if (!subjectHere(state, map)) return idle(state)
+  if (!subjectHere(state, map)) return endSitting(state)
   const { id } = state.subject!
   const stored = act(
-    note({ ...state, subject: { id, voice: text } }, { subject: id, attribute: 'voice', value: text, source: text, confidence: high }),
+    note({ ...state, subject: { ...state.subject!, voice: text } }, { subject: id, attribute: 'voice', value: text, source: text, confidence: high }),
     map,
     { type: 'setWords', partId: id, words: { voice: text } },
   )
@@ -1157,10 +1228,10 @@ function onVoiceAnswer(state: ConversationState, map: LandscapeState, text: stri
 }
 
 function onIntentAnswer(state: ConversationState, map: LandscapeState, text: string): ConversationState {
-  if (!subjectHere(state, map)) return idle(state)
+  if (!subjectHere(state, map)) return endSitting(state)
   const { id, voice } = state.subject!
   const stored = act(
-    note(state, { subject: id, attribute: 'intent', value: text, source: text, confidence: high }),
+    note({ ...state, subject: { ...state.subject!, intent: text } }, { subject: id, attribute: 'intent', value: text, source: text, confidence: high }),
     map,
     { type: 'setWords', partId: id, words: { voice: voice ?? undefined, intent: text } },
   )
@@ -1175,6 +1246,39 @@ function onIntentAnswer(state: ConversationState, map: LandscapeState, text: str
       answer: text,
     },
   })
+}
+
+/** Fears (frame A10), only with `askFears`: kept in the record, not on the map. */
+function onFearsAnswer(state: ConversationState, map: LandscapeState, text: string): ConversationState {
+  if (!subjectHere(state, map)) return endSitting(state)
+  const { id, voice, intent } = state.subject!
+  const noted = note(state, { subject: id, attribute: 'fears', value: text, source: text, confidence: high })
+  return request(noted, {
+    kind: 'reflect',
+    request: {
+      turn: 'fears',
+      freeWrite: state.answers.freeWrite ?? '',
+      partName: partNow(state, map, id)!.name,
+      voice: voice ?? '',
+      intent: intent ?? '',
+      question: state.asked,
+      answer: text,
+    },
+  })
+}
+
+/** Thank it (frame A11): the part glows, seen up close for a moment, then the sitting ends (`thanksSeen`). */
+function onThank(state: ConversationState, map: LandscapeState): ConversationState {
+  if (state.pending || state.step !== 'thanks') return state
+  if (!subjectHere(state, map)) return endSitting(state)
+  const { id } = state.subject!
+  const thanked = state.thanked.includes(id) ? state.thanked : [...state.thanked, id]
+  const noted = note({ ...state, thanked }, { subject: id, attribute: 'thanks', value: 'thanked', source: null, confidence: high })
+  return { ...noted, step: 'thanked', asked: '', card: null }
+}
+
+function onThanksSeen(state: ConversationState): ConversationState {
+  return state.step === 'thanked' ? endSitting(state) : state
 }
 
 /**
@@ -1212,9 +1316,26 @@ function onNoticingAnswer(state: ConversationState, text: string): ConversationS
   })
 }
 
-/** Not now, That's enough for now, Skip this one, Finish without changes: the card goes, and the map stays as it is. */
+/**
+ * Not now, That's enough for now, Not yet, Skip this one, Finish without
+ * changes: the card goes, and the map stays as it is. Skipping Fears goes on
+ * to the thanks.
+ */
 function onDecline(state: ConversationState): ConversationState {
   if (state.pending || !DECLINABLE_STEPS.includes(state.step)) return state
+  const about = state.subject?.id ?? 'conversation'
+  const said = (attribute: Attribute['attribute'], value: string): Attribute => ({ subject: about, attribute, value, source: null, confidence: high })
+  switch (state.step) {
+    case 'fears':
+      return askThanks(freshCard(note(state, said('fears', 'skipped'))))
+    case 'choose':
+      return endSitting(note(state, said('sitWith', 'not now')))
+    case 'voice':
+    case 'intent':
+      return endSitting(note(state, said(state.step, 'not answered')))
+    case 'thanks':
+      return endSitting(note(state, said('thanks', 'not yet')))
+  }
   const outcome: Partial<Record<Step, Attribute>> = {
     nothingMoved: { subject: 'conversation', attribute: 'experiment', value: 'finished without changes', source: null, confidence: high },
     invite: { subject: 'conversation', attribute: 'invitation', value: 'declined', source: null, confidence: high },
@@ -1315,6 +1436,9 @@ function proceed(state: ConversationState, text: string, map: LandscapeState): C
 
     case 'intent':
       return onIntentAnswer(state, map, text)
+
+    case 'fears':
+      return onFearsAnswer(state, map, text)
 
     case 'noticing':
       return onNoticingAnswer(state, text)
@@ -1444,8 +1568,8 @@ function onReflected(state: ConversationState, seq: number, text: string | null,
   }
   // Every part was taken off the map while reflecting: drop the reflection; the early close.
   if (turn === 3 && visibleNow(settled, map).length === 0) return toTurn3(settled, map, null)
-  // Get to know it: the part was taken off the map while reflecting, so the card ends quietly.
-  if (turn === 'voice' && !subjectHere(settled, map)) return idle(settled)
+  // Sitting with a part that was taken off the map while reflecting: the card ends quietly.
+  if ((turn === 'voice' || turn === 'intent' || turn === 'fears') && !subjectHere(settled, map)) return endSitting(settled)
   // The toward-check branched, but part 1 left meanwhile: no second part
   // without the first, so the toward answer is reflected as Turn 3 instead.
   if (turn === 'toward' && !isHere(settled, map, PART_1)) {
@@ -1466,9 +1590,12 @@ function onReflected(state: ConversationState, seq: number, text: string | null,
       return gather(reflected, map)
     case 'voice':
       return ask(reflected, 'intent', script.intent(partNow(settled, map, settled.subject!.id)!.name))
+    case 'intent':
+      return settled.askFears ? ask(reflected, 'fears', script.fears) : askThanks(reflected)
+    case 'fears':
+      return askThanks(reflected)
     case 'experiment':
       return rest(guide(reflected, script.experimentDone))
-    case 'intent':
     case 'noticing':
       return rest(reflected)
   }
@@ -1549,11 +1676,15 @@ export function conversationReducer(state: ConversationState, event: Conversatio
     case 'enteredWhatIf':
       return onEnteredWhatIf(state, event.map)
     case 'goOn':
-      return onGoOn(state)
+      return onGoOn(state, event.map)
     case 'newPart':
       return onNewPart(state, event.map)
     case 'getToKnow':
       return onGetToKnow(state, event.partId, event.map)
+    case 'thank':
+      return onThank(state, event.map)
+    case 'thanksSeen':
+      return onThanksSeen(state)
     case 'notice':
       return onNotice(state, event.before, event.partId, event.map)
   }
