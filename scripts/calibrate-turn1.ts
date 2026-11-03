@@ -2,12 +2,18 @@
 //
 //   npm run calibrate:turn1
 //   npm run calibrate:turn1 -- several_feelings
+//   npm run calibrate:turn1 -- phrases
+//
+// `phrases` checks Claude's phrase lifting instead (one call per free-write):
+// the several-feelings corpus, through the app's own phrase check, since the
+// choose row needs two phrases that survive it.
 //
 // Reads JEV_API_KEY and JEV_BASE_URL from .env, like the dev server. The
 // corpus is deliberately messy: fragments, typos, context around feelings,
 // and several-feeling answers where collapsing to one would lose a part.
 import { loadEnv } from 'vite'
-import { readFreeWriteForm } from '../server/ai.ts'
+import { liftFreeWritePhrases, readFreeWriteForm } from '../server/ai.ts'
+import { nameWords, verifiedPhrases, wordRun } from '../src/conversation/checks.ts'
 import { FREE_WRITE_FORM_LABELS } from '../src/conversation/contract.ts'
 import type { FreeWriteFormLabel } from '../src/conversation/contract.ts'
 
@@ -15,9 +21,11 @@ const env = loadEnv('development', process.cwd(), '')
 const config = {
   jevApiKey: env.JEV_API_KEY,
   jevBaseUrl: env.JEV_BASE_URL || 'https://api.typesafe.ai',
+  anthropicApiKey: env.ANTHROPIC_API_KEY,
 }
-if (!config.jevApiKey) {
-  console.error('Needs JEV_API_KEY in .env.')
+const liftingPhrases = process.argv[2] === 'phrases'
+if (liftingPhrases ? !config.anthropicApiKey : !config.jevApiKey) {
+  console.error(liftingPhrases ? 'Needs ANTHROPIC_API_KEY in .env.' : 'Needs JEV_API_KEY in .env.')
   process.exit(1)
 }
 
@@ -102,6 +110,55 @@ const CORPUS: Record<FreeWriteFormLabel, string[]> = {
     'all of it?',
     'I dont know yet',
   ],
+}
+
+/** The app's name cap (NAME_MAX_LENGTH in src/model/landscape.ts, which this script can't import). */
+const NAME_MAX_LENGTH = 40
+
+/** Several-feeling free-writes seen in real runs, for `phrases`. */
+const SEEN_IN_RUNS = [
+  // 2026-11-02: one lifted phrase was 42 characters, so Turn 1 showed no choices.
+  "Work has been relentless and I keep lying awake replaying everything I said in meetings. Part of me says I'm not good enough and should push harder, and part of me just wants to hide under the covers and not deal with any of it.",
+]
+
+if (liftingPhrases) {
+  const texts = [...CORPUS.several_feelings, ...SEEN_IN_RUNS]
+  const lifted: Array<{ text: string; phrases: string[] | null; ms: number }> = []
+  const lift = async (text: string) => {
+    const start = performance.now()
+    try {
+      lifted.push({ text, phrases: await liftFreeWritePhrases(config, { freeWrite: text }), ms: performance.now() - start })
+    } catch (error) {
+      console.warn(`Failed: ${error instanceof Error ? error.message : 'unknown error'}`)
+      lifted.push({ text, phrases: null, ms: performance.now() - start })
+    }
+  }
+  for (let at = 0; at < texts.length; at += 4) await Promise.all(texts.slice(at, at + 4).map(lift))
+
+  let rows = 0
+  let tooLong = 0
+  let notTheirs = 0
+  for (const { text, phrases } of lifted) {
+    const kept = verifiedPhrases(text, phrases, NAME_MAX_LENGTH)
+    if (kept.length >= 2) rows++
+    const dropped = (phrases ?? []).flatMap((phrase) => {
+      const run = wordRun(text, nameWords(phrase))
+      if (!run) return [`${JSON.stringify(phrase)} not word for word`]
+      if (run.text.length > NAME_MAX_LENGTH) return [`${JSON.stringify(phrase)} ${run.text.length} characters`]
+      return []
+    })
+    tooLong += dropped.filter((reason) => reason.endsWith('characters')).length
+    notTheirs += dropped.filter((reason) => reason.endsWith('word for word')).length
+    const mark = phrases === null ? '!' : kept.length >= 2 ? '✓' : '✗'
+    console.log(`\n${mark} ${JSON.stringify(text.length > 90 ? `${text.slice(0, 90)}…` : text)}`)
+    console.log(`  kept: ${kept.map((phrase) => `‘${phrase}’`).join(' · ') || '(none)'}`)
+    if (dropped.length) console.log(`  dropped: ${dropped.join('; ')}`)
+  }
+  const times = lifted.map(({ ms }) => ms).sort((a, b) => a - b)
+  console.log(`\n${rows} of ${lifted.length} keep two or more phrases (a choose row).`)
+  console.log(`Dropped: ${tooLong} over ${NAME_MAX_LENGTH} characters, ${notTheirs} not word for word.`)
+  console.log(`Median ${Math.round(times[Math.floor(times.length / 2)])} ms; slowest ${Math.round(times.at(-1) ?? 0)} ms.`)
+  process.exit(0)
 }
 
 const picked = process.argv[2] as FreeWriteFormLabel | undefined

@@ -24,7 +24,7 @@ import type { Look } from '../src/model/types.ts'
 /**
  * Server-side AI routes. API keys are read here and never reach the browser.
  * Mounted on Vite's dev and preview servers by `aiRoutes`; any other host
- * needs the same eight POST routes (see `handle`). Failures answer 502/503
+ * needs the same six POST routes (see `handle`). Failures answer 502/503
  * and the browser falls back — person text is never logged.
  */
 
@@ -223,7 +223,8 @@ const PHRASES_SYSTEM = `You read a free-write in a gentle self-reflection app an
 
 Return up to four distinct phrases, in the order they appear.
 - Copy each phrase exactly as one continuous stretch of the free-write. Never paraphrase, correct, or add words.
-- Keep the words that make the feeling recognizable, but not surrounding explanation. Each phrase must be 40 characters or fewer.
+- Keep each phrase short: the fewest words that still make the feeling recognizable, usually two to five. Leave out lead-ins such as "I", "I'm", "I feel", "part of me says", and any surrounding explanation. Each phrase must be 40 characters or fewer.
+- When one stretch holds two different feelings or voices, return each as its own phrase: "I'm useless and need to try harder" gives "useless" and "need to try harder".
 - Include feelings and inner voices ("sad", "not good enough", "the part yelling at me"). Do not return situations, people, events, symptoms, or actions by themselves ("the deadline", "my boss", "can't sleep", "scrolling").
 - Separate distinct feelings. Do not split several words for the same feeling into duplicate phrases.
 - If no feeling or inner voice is clearly named or described, return an empty list.
@@ -252,6 +253,11 @@ async function extractFreeWritePhrases(client: Anthropic, request: FreeWriteRequ
   if (typeof data !== 'object' || data === null) return null
   const phrases = (data as { phrases?: unknown }).phrases
   return Array.isArray(phrases) && phrases.every((phrase) => typeof phrase === 'string') ? phrases : null
+}
+
+/** Exported for scripts/calibrate-turn1.ts (`phrases`); the app uses the same request. */
+export function liftFreeWritePhrases(config: AiConfig, request: FreeWriteRequest): Promise<string[] | null> {
+  return extractFreeWritePhrases(new Anthropic({ apiKey: config.anthropicApiKey }), request)
 }
 
 async function analyzeFreeWrite(client: Anthropic | null, config: AiConfig, request: FreeWriteRequest): Promise<FreeWriteAnalysis | null> {

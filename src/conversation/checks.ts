@@ -290,6 +290,27 @@ export function findWords(words: readonly string[], needle: readonly string[], f
 }
 
 /**
+ * The lifted phrases that may become names: each must be found word for word
+ * in the free-write (and is taken as spelled there), no longer than
+ * `maxLength`, and not a repeat; at most four. Shared with
+ * scripts/calibrate-turn1.ts, so the check there is the app's own.
+ */
+export function verifiedPhrases(freeWrite: string, phrases: readonly string[] | null, maxLength: number): string[] {
+  if (!phrases) return []
+  const verified: string[] = []
+  const seen = new Set<string>()
+  for (const phrase of phrases.slice(0, 4)) {
+    const run = wordRun(freeWrite, nameWords(phrase))
+    if (!run || run.text.length > maxLength) continue
+    const key = normalizeAnswer(run.text)
+    if (key === '' || seen.has(key)) continue
+    seen.add(key)
+    verified.push(run.text)
+  }
+  return verified
+}
+
+/**
  * Where `needle` (as `nameWords`) first occurs in `text`, as the stretch of
  * `text` itself from that run's first word to its last — spelled as the
  * person wrote it, with no punctuation at either end — or null. `whole`

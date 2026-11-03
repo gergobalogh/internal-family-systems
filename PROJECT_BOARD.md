@@ -121,17 +121,6 @@ only tracks the work.
 - **Check a finger drag in "What if…" on a phone.** The recorder's drag
   didn't count as a move on a phone (twice); the same drag counted on
   desktop.
-- **Turn 1 gave no choices for a free-write naming a pusher and a hider**
-  ("Part of me says I'm not good enough and should push harder, and part
-  of me just wants to hide under the covers…"), four runs of four. Found
-  why (2026-11-02): JEV reads `several_feelings` at 1.0, but Claude lifts
-  "I'm not good enough and should push harder", 42 characters, over the
-  40-character name cap, so only one phrase survives and the choose row
-  needs two. Fix: ask the lifter for short names (a few words, under 40
-  characters), then run the lifter on the 18 several-feeling free-writes
-  in `scripts/calibrate-turn1.ts` (that script itself only tests JEV's
-  reading, which isn't the problem). About 18 Claude calls. The same
-  phrases feed Turn 3's choices.
 - **A new part's reflection can borrow the free-write.** With AI on, naming
   ‘the one who yells’ got "the part that keeps replaying everything you
   said in meetings", which was ‘the worry’'s. Seen before this change too;
@@ -177,6 +166,13 @@ only tracks the work.
   good" scores near zero on both moderation and JEV (Claude caught it).
 
 ## Done
+
+- **Turn 1's phrases are short names** (2026-11-03). The lifter returned
+  "I'm not good enough and should push harder", 42 characters, so Turn 1
+  showed no choices. Its prompt now asks for the fewest words that name the
+  feeling and splits two voices in one stretch. `npm run calibrate:turn1
+  -- phrases` checks it through the app's own phrase check: 19 of 19
+  free-writes keep two or more phrases (19 Claude calls, approved).
 
 - **Act 2: sit with one** (2026-11-03, Option A step 4, frames A07–A11).
   Go on asks "Which one would like your attention first?" and the figures

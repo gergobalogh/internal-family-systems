@@ -14,6 +14,7 @@ import {
   matchesAny,
   nameWords,
   normalizeAnswer,
+  verifiedPhrases,
   wordRun,
 } from './checks'
 import type {
@@ -693,20 +694,8 @@ function showReflection(
 // ---------- Turn 0 reading and Turn 1 rows ----------
 
 /** Only exact, short, contiguous copies of Turn 0 can become choice buttons. */
-function verifiedFreeWritePhrases(freeWrite: string, phrases: readonly string[] | null): string[] {
-  if (!phrases) return []
-  const verified: string[] = []
-  const seen = new Set<string>()
-  for (const phrase of phrases.slice(0, 4)) {
-    const run = wordRun(freeWrite, nameWords(phrase))
-    if (!run || run.text.length > NAME_MAX_LENGTH) continue
-    const key = normalizeAnswer(run.text)
-    if (key === '' || seen.has(key)) continue
-    seen.add(key)
-    verified.push(run.text)
-  }
-  return verified
-}
+const verifiedFreeWritePhrases = (freeWrite: string, phrases: readonly string[] | null) =>
+  verifiedPhrases(freeWrite, phrases, NAME_MAX_LENGTH)
 
 function turn1Row(form: FreeWriteForm | null, phrases: string[]): Turn1Ask {
   if (form) {

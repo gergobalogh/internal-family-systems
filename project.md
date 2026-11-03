@@ -485,3 +485,22 @@ This decision will determine the tone of the responses, what happens after a cha
   script, so its two answers reached the real AI (two Claude reflections,
   two moderation and two JEV risk checks, on made-up text). Every path is
   scripted now.
+
+### 2026-11-03 — Turn 1's phrases are short names
+
+- **Change:** the phrase lifter's prompt asks for the fewest words that
+  still make the feeling recognizable (usually two to five), without
+  lead-ins like "I'm" or "part of me says", and for two feelings in one
+  stretch to come back as two phrases. Its example is made up, not the
+  free-write that failed.
+- **Why:** the real run of 2026-11-02 lifted "I'm not good enough and
+  should push harder" (42 characters, two voices in one), over the
+  40-character cap, so only one phrase survived and Turn 1 showed no
+  choices.
+- **Check:** `npm run calibrate:turn1 -- phrases` runs the lifter on the
+  18 several-feeling free-writes plus that one, through the app's own
+  phrase check (now `verifiedPhrases` in `checks.ts`, shared by the app
+  and the script). 19 of 19 keep two or more phrases; none is over the cap
+  or not word for word. The failing free-write now gives ‘not good
+  enough’ · ‘should push harder’ · ‘wants to hide under the covers’. 19
+  Claude calls, approved.
