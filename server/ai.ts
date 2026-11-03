@@ -68,6 +68,13 @@ const MUSE_MODEL = 'muse-spark-1.3-contributor'
 const MUSE_TIMEOUT_MS = 10_000
 /** Low: medium ran past MUSE_TIMEOUT_MS on half the real calls (project.md, 2026-11-03). */
 const MUSE_EFFORT = 'low'
+/**
+ * Reasoning included; the same ceiling as Claude's. A reflection on the real
+ * prompt took 1,500 at about 110 a second (2026-11-03), so this never cuts an
+ * answer MUSE_TIMEOUT_MS would let finish. It stops Meta billing a runaway
+ * answer after we've hung up (Meta's dashboard has no spend cap).
+ */
+const MUSE_MAX_TOKENS = 2000
 const JEV_MODEL = 'jev-1.13.0'
 const JEV_TIMEOUT_MS = 8_000
 const MODERATION_MODEL = 'omni-moderation-latest'
@@ -209,6 +216,7 @@ function museWriter(config: AiConfig): Writer {
       body: JSON.stringify({
         model: config.museModel,
         reasoning_effort: MUSE_EFFORT,
+        max_completion_tokens: MUSE_MAX_TOKENS,
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: prompt },

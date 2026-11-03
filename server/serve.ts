@@ -15,8 +15,8 @@ import { createServer } from 'node:http'
 import { configFromEnv, createHandler } from './ai.ts'
 
 const PORT = Number(process.env.PORT) || 8785
-/** A whole walk makes about 30 AI calls; this allows several an hour per visitor. */
-const PER_VISITOR_HOUR = Number(process.env.AI_CALLS_PER_VISITOR_HOUR) || 200
+/** A whole walk makes about 30 AI calls; this allows three an hour per visitor. */
+const PER_VISITOR_HOUR = Number(process.env.AI_CALLS_PER_VISITOR_HOUR) || 100
 /** Every visitor together, per day (UTC): a ceiling on what a day can cost. */
 const PER_DAY = Number(process.env.AI_CALLS_PER_DAY) || 2000
 const HOUR_MS = 60 * 60 * 1000
@@ -47,10 +47,25 @@ function allowed(visitor: string, now: number): boolean {
   return true
 }
 
+/**
+ * Who counts as one visitor: the address, or for IPv6 its /64, since one
+ * connection gets a whole /64 and could otherwise pose as billions of visitors.
+ */
+function visitorKey(address: string): string {
+  const ip = address.replace(/^::ffff:/i, '')
+  if (!ip.includes(':')) return ip
+  const [head, tail = ''] = ip.toLowerCase().split('%')[0].split('::')
+  const left = head ? head.split(':') : []
+  const right = tail ? tail.split(':') : []
+  const groups = ip.includes('::') ? [...left, ...Array(8 - left.length - right.length).fill('0'), ...right] : left
+  return groups.slice(0, 4).map((group) => (parseInt(group, 16) || 0).toString(16)).join(':') + '::/64'
+}
+
 const server = createServer((req, res) => {
   // Caddy sets X-Forwarded-For to the visitor's address (it trusts no incoming one).
   const forwarded = req.headers['x-forwarded-for']
-  const visitor = (typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : '') || req.socket.remoteAddress || 'unknown'
+  const address = (typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : '') || req.socket.remoteAddress || 'unknown'
+  const visitor = visitorKey(address)
   if (req.method === 'POST' && req.url?.startsWith('/api/') && !allowed(visitor, Date.now())) {
     res.statusCode = 429
     res.setHeader('Content-Type', 'application/json')

@@ -5,7 +5,7 @@
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
 - **URL:** https://ifs.gergobalogh.me (unlisted test link, live since 2026-11-03)
 - **Post where:** not decided yet
-- **Next:** share the test link (yours), then read where visits stop in Umami (live since 2026-11-03 11:15 UTC, [docs/analytics.md](docs/analytics.md)); the line on where words go waits for your feedback
+- **Next:** look at Muse reflections timing out before sharing the link (the real prompt took 14 s against the 10 s timeout, so visitors get the fixed lines; the abuse limits are live since 2026-11-03: 2000 tokens a call, IPv6 by /64, 100 calls an hour). Then share the test link (yours) and read where visits stop in Umami (live since 2026-11-03 11:15 UTC, [docs/analytics.md](docs/analytics.md)); the line on where words go waits for your feedback
 - **Updated:** 2026-11-03
 
 ## Build
