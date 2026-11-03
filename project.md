@@ -675,17 +675,49 @@ This decision will determine the tone of the responses, what happens after a cha
   search engines.
 - **Muse Spark instead of Claude** for the reflections, names and phrases,
   because it's cheaper: when `META_API_KEY` is set, those three go to
-  Meta's Model API (its OpenAI-compatible chat completions, medium
-  reasoning effort, the user's choice over low). At first the standard `muse-spark-1.3`; then, the user's choice
-  for the price, `muse-spark-1.3-contributor` ($0.10 in / $0.20 out per
-  million tokens against $1.25 / $4.25), which Meta may train on: what's
-  sent and what it writes back. `MUSE_MODEL` in .env switches. Testers have
-  to be told. Claude stays the fallback on the laptop. JEV and OpenAI moderation are
-  unchanged. Muse's wording hasn't been checked against the reflection
-  checks yet.
+  Meta's Model API (its OpenAI-compatible chat completions). At first the
+  standard `muse-spark-1.3` at low reasoning effort; then, the user's
+  choice, `muse-spark-1.3-contributor` for the price ($0.10 in / $0.20 out
+  per million tokens against $1.25 / $4.25), which Meta may train on (what's
+  sent and what it writes back), at medium effort. `MUSE_MODEL` in .env
+  switches the model. Testers have to be told. Claude stays the fallback
+  on the laptop. JEV and OpenAI moderation are unchanged. Muse's wording
+  hasn't been checked against the reflection checks yet.
+- **The key** may be named `META_API_KEY` or `MUSE_API_KEY`.
 - **Limits:** the routes have no login, so each visitor gets 200 AI calls an
   hour and the site 2000 a day (a walk takes about 30); over a limit the
   app carries on with its fixed lines.
 - **Checked:** against a stand-in for Meta's API (no model calls): the
   request shape, a JSON answer in a code fence, a 503 without the safety
   keys, and the limit's 429. The app builds on the VPS.
+- **Checked on the VPS with real calls** (made-up words, through the
+  service on 127.0.0.1:8785): the standard model at low effort answered
+  all five (free-write, Turn 1's reflection, the name, a voice reflection,
+  the risk check) in 1–7.5 s; Turn 1's reflection kept clear of the
+  phrase it was told to avoid, and the name came back as "the critic". The
+  contributor model at medium effort ran out of the 10 s twice (Turn 1's
+  reflection and the phrase lifting), so those took the fixed lines. Timed
+  straight against Meta with a short prompt, it's the effort, not the
+  tier: contributor 4.1–4.5 s at low, 4.5–7.4 s at medium; standard
+  3.8–6.6 s at low, 6.9–9.3 s at medium.
+
+### 2026-11-03 — A new name is checked like an answer; a failed check is tried twice
+
+- **Change (the user's yes to Codex's review):** a name typed in a part's
+  box meets the same checks as a typed answer: the phrase list at once,
+  then the AI risk check (`RENAME_ASKED` stands in for the question).
+  Either can pause, any time the name is typed, mid-walk too: the pause
+  card comes on its own card, and a call the walk still had out is
+  dropped. The name's check runs beside the walk's own call, since a
+  rename can happen while one is out. Names equal to a listed answer
+  skip the AI check, as answers do.
+- **A failed AI risk check is tried once more** (`checkRisk` in the
+  browser), both tries within the same 12 s so a slow day doesn't double
+  the wait; if both fail, the walk goes on with the phrase list as the
+  floor and a "not checked" note, as before.
+- **Checked:** in the app at phone size, every /api call scripted: a risk
+  phrase in a name paused with no AI call; a name the AI check flagged
+  paused; a safe name didn't; a 503 then a clear answer made two calls
+  and no pause; a 503 then a flag paused; two 503s went on; "not sure"
+  made no call. Closing the pause card left no card. The tap, jump and
+  scripted walks still pass, with no page errors.

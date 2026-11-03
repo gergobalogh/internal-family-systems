@@ -3,9 +3,9 @@
 - **Status:** active
 - **What:** An app for mapping your inner landscape, based on Internal Family Systems
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
-- **URL:** https://ifs.gergobalogh.me (unlisted test link, being set up)
+- **URL:** https://ifs.gergobalogh.me (unlisted test link; the AI service runs, the Caddy step is left)
 - **Post where:** not decided yet
-- **Next:** finish the test link ([deploy/README.md](deploy/README.md)): DNS, keys and the Caddy step, then a few real Muse calls; then decide what a failed safety check does and tell testers where their words go ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md), section 6)
+- **Next:** the Caddy step on the VPS (sudo), then Muse at medium effort needs more than 10 s or low again; then tell testers where their words go (Meta may train on them) and write the five-person test script ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md), section 6)
 - **Updated:** 2026-11-03
 
 ## Build
@@ -49,13 +49,13 @@ only tracks the work.
 
 ## Needs a decision
 
-- **What happens when the AI safety check fails?** (Codex review,
-  2026-11-03.) Now the local phrase list is the floor and the walk goes on
-  (`onRiskChecked` in `flow.ts`). Also, renaming a part isn't checked at
-  all; names typed for Someone new are. Decide before anyone tests with
-  their own material: pause, retry, or go on with a note. Test the checks
-  on lifelike examples and false alarms too (the "new home for my cat"
-  miss is ambiguous, not a clear risk).
+- **Muse at medium effort: more time, or low again?** At medium, two of
+  four real calls ran past the server's 10 s and took the fixed lines
+  (2026-11-03, project.md). Either raise the limits (server 18 s, browser
+  20 s; cards wait longer) or go back to low (4–7 s).
+- **Test the safety checks on lifelike examples** and false alarms too
+  (the "new home for my cat" miss is ambiguous, not a clear risk). Renames
+  are now checked, and a failed check is tried twice (2026-11-03).
 - **Skip the name shortening for short answers?** It's now the slowest
   thing before a part appears: 1.8–2.4 s at first, 2.3–6.0 s in the
   Self-hug and Pod runs, 2.1–3.2 s in the Stack and Ribbon runs, 2.7–2.9 s
