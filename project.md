@@ -701,6 +701,17 @@ This decision will determine the tone of the responses, what happens after a cha
   straight against Meta with a short prompt, it's the effort, not the
   tier: contributor 4.1–4.5 s at low, 4.5–7.4 s at medium; standard
   3.8–6.6 s at low, 6.9–9.3 s at medium.
+- **Live** (2026-11-03): Caddy serves https://ifs.gergobalogh.me (noindex,
+  nofollow; a deep link gets the app; an unknown `/api/` path a 404). One
+  real walk through it at phone size (contributor model, low effort): 22
+  AI calls, every reflection and name arrived, no page errors. The free-
+  write's phrase lifting ran out of the 10 s once (Turn 1 took its default
+  question); three more tries took 3.7–4.3 s with good phrases.
+- **What testers are told** (the user's yes): "Before you start: what you
+  type goes to a few AI services so the app can answer you. Meta's Muse
+  writes the replies, and Meta may use what you write to train its AI. JEV
+  and OpenAI help read your answers and check you're okay. Your meadow
+  stays on your phone, so only write what you're fine with them seeing."
 
 ### 2026-11-03 — A new name is checked like an answer; a failed check is tried twice
 

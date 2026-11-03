@@ -3,9 +3,9 @@
 - **Status:** active
 - **What:** An app for mapping your inner landscape, based on Internal Family Systems
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
-- **URL:** https://ifs.gergobalogh.me (unlisted test link; the AI service runs, the Caddy step is left)
+- **URL:** https://ifs.gergobalogh.me (unlisted test link, live since 2026-11-03)
 - **Post where:** not decided yet
-- **Next:** the Caddy step on the VPS (sudo), then Muse at medium effort needs more than 10 s or low again; then tell testers where their words go (Meta may train on them) and write the five-person test script ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md), section 6)
+- **Next:** write the five-person test script ([docs/redesign/story-redesign.md](docs/redesign/story-redesign.md), section 6) with the agreed line on where words go (project.md, 2026-11-03); try Keep this picture on a real phone on the test link
 - **Updated:** 2026-11-03
 
 ## Build
@@ -49,10 +49,6 @@ only tracks the work.
 
 ## Needs a decision
 
-- **Muse at medium effort: more time, or low again?** At medium, two of
-  four real calls ran past the server's 10 s and took the fixed lines
-  (2026-11-03, project.md). Either raise the limits (server 18 s, browser
-  20 s; cards wait longer) or go back to low (4–7 s).
 - **Test the safety checks on lifelike examples** and false alarms too
   (the "new home for my cat" miss is ambiguous, not a clear risk). Renames
   are now checked, and a failed check is tried twice (2026-11-03).
@@ -113,21 +109,21 @@ only tracks the work.
 
 ## Up next
 
-- **Before the five-person test: tell testers where their words go**
-  (Codex review, 2026-11-03). The test plan says "Nothing is stored beyond
-  their device" (story-redesign.md, section 6), but each answer is read by
-  Anthropic, OpenAI and JEV. Say so, and check each one's retention policy.
-  Also: in private mode or with storage blocked, nothing is saved, yet the
-  ending says "They'll be here when you come back".
+- **Before the five-person test: tell testers where their words go.** The
+  line is agreed (project.md, 2026-11-03: Meta's Muse, JEV and OpenAI;
+  Meta may train on it); the test plan's "Nothing is stored beyond their
+  device" (story-redesign.md, section 6) needs it in place. Still open: in
+  private mode or with storage blocked, nothing is saved, yet the ending
+  says "They'll be here when you come back".
 - **Before going public** (Codex review, 2026-11-03): the AI routes have
   no login (the test link's `server/serve.ts` limits calls per visitor and
   per day, 2026-11-03); `?fears` works in a production build too.
 - **Check Muse Spark's words** (2026-11-03): reflections, names and phrases
-  now come from Muse Spark on the test link. Run Turn 1's phrase
-  calibration (`node scripts/calibrate-turn1.ts phrases`) and a few walks
-  with real answers, and see how often the reflection checks fall back.
-  Also check Meta's Model API terms: what it keeps, and whether it trains
-  on what's sent (the standard model).
+  now come from Muse Spark (contributor, low effort) on the test link. One
+  real walk read well; its names come in straight quotes ('not good
+  enough') where the app's own lines use ‘ ’. Run Turn 1's phrase
+  calibration (`node scripts/calibrate-turn1.ts phrases`) and a few more
+  walks, and see how often the reflection checks fall back.
 - **Try Keep this picture on a real phone** (2026-11-03). The walk was
   tried on the user's phone with `?ai=scripted` (2026-11-03) and looked
   fine; the share sheet is still untested, because it needs HTTPS. The browser
