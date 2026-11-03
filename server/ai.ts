@@ -31,7 +31,7 @@ import type { Look } from '../src/model/types.ts'
 
 export interface AiConfig {
   anthropicApiKey?: string
-  /** Meta's Model API: when set, Muse Spark writes the reflections, names and phrases instead of Claude. */
+  /** Meta's Model API (`META_API_KEY` or `MUSE_API_KEY`): when set, Muse Spark writes the reflections, names and phrases instead of Claude. */
   metaApiKey?: string
   metaBaseUrl: string
   jevApiKey?: string
@@ -44,7 +44,8 @@ export interface AiConfig {
 export function configFromEnv(env: Record<string, string | undefined>): AiConfig {
   return {
     anthropicApiKey: env.ANTHROPIC_API_KEY || undefined,
-    metaApiKey: env.META_API_KEY || undefined,
+    // Either name: Meta's own, or the one Muse (Meta's agent) goes by.
+    metaApiKey: env.META_API_KEY || env.MUSE_API_KEY || undefined,
     metaBaseUrl: env.META_BASE_URL || 'https://api.meta.ai/v1',
     jevApiKey: env.JEV_API_KEY || undefined,
     jevBaseUrl: env.JEV_BASE_URL || 'https://api.typesafe.ai',

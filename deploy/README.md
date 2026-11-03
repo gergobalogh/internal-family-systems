@@ -13,7 +13,7 @@ In `/home/www/internal-family-systems/.env` on the VPS (`chmod 600`):
 ```
 # Muse Spark writes the reflections, names and phrases (the standard model,
 # not a "contributor" one). Without it: Claude if ANTHROPIC_API_KEY is set,
-# else the app's fixed lines.
+# else the app's fixed lines. MUSE_API_KEY works too.
 META_API_KEY=
 # Figures, where parts start, the toward-check and the free-write's form.
 JEV_API_KEY=
