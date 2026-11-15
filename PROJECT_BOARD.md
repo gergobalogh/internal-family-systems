@@ -5,8 +5,8 @@
 - **Done when:** a stranger on a phone goes from the free-write to the picture to keep without help, and comes back to their meadow at least once
 - **URL:** https://ifs.gergobalogh.me (unlisted test link, live since 2026-11-03)
 - **Post where:** not decided yet
-- **Next:** send the therapist the diagram ([docs/therapist-diagram/how-it-works.png](docs/therapist-diagram/how-it-works.png), yours) with the questions in docs/redesign/story-redesign.md; share the test link (yours), then read where visits stop in Umami (live since 2026-11-03 11:15 UTC, [docs/analytics.md](docs/analytics.md)); the line on where words go waits for your feedback Also (from 2026-11-03): look at Muse reflections timing out before sharing the link (the real prompt took 14 s against the 10 s timeout, so visitors get the fixed lines; the abuse limits are live since 2026-11-03: 2000 tokens a call, IPv6 by /64, 100 calls an hour). Then share the test link (yours) and read where visits stop in Umami (live since 2026-11-03 11:15 UTC, [docs/analytics.md](docs/analytics.md)); the line on where words go waits for your feedback
-- **Updated:** 2026-11-13
+- **Next:** send the therapist the diagram ([docs/therapist-diagram/how-it-works.png](docs/therapist-diagram/how-it-works.png), yours) with the questions in docs/redesign/story-redesign.md; share the test link (yours), then read where visits stop in Umami (live since 2026-11-03 11:15 UTC, [docs/analytics.md](docs/analytics.md)); the line on where words go waits for your feedback Also (from 2026-11-14): look at Muse reflections timing out before sharing the link (the real prompt took 14 s against the 10 s timeout, so visitors get the fixed lines; the abuse limits are live since 2026-11-03: 2000 tokens a call, IPv6 by /64, 100 calls an hour). Then share the test link (yours) and read where visits stop in Umami (live since 2026-11-03 11:15 UTC, [docs/analytics.md](docs/analytics.md)); the line on where words go waits for your feedback
+- **Updated:** 2026-11-14
 
 ## Build
 - [x] The entry conversation, with all thirteen parts walking in on Rive
@@ -209,6 +209,8 @@ only tracks the work.
   good" scores near zero on both moderation and JEV (Claude caught it).
 
 ## Done
+
+- [x] 2026-11-14 VPS upgrade: `@anthropic-ai/sdk` 0.133 → 1.8.0 (sends API version 2026-10-21, key as Bearer; no code changes needed), TypeScript 7.0, `@types/node` 26. Type check, build and the 22 tests pass; the Claude route checked against a local stub; live service restarted (it writes with Muse, as before).
 
 - **No modes, top bar or map note** (2026-11-03, Option A step 8). After
   the walk the meadow has no menu: the How it is / What if… switch, Try an
