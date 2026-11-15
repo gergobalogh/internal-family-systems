@@ -1,0 +1,55 @@
+---
+config:
+  theme: base
+  themeVariables:
+    fontFamily: "Helvetica, Arial, sans-serif"
+    fontSize: "17px"
+    primaryColor: "#ffffff"
+    primaryBorderColor: "#8a8f98"
+    lineColor: "#8a8f98"
+  flowchart:
+    wrappingWidth: 560
+    nodeSpacing: 30
+    rankSpacing: 36
+---
+flowchart TD
+  title["<b style='font-size:22px'>Inner landscape: what a person goes through</b><br/>One question at a time. After each answer, the app says one short sentence back.<br/><span style='color:#7a4b9c'>Purple: the IFS idea behind each step.</span>"]
+
+  s1["<b>1. Write freely</b><br/>“What's weighing on you right now?”<br/><span style='color:#7a4b9c'>Seeing what's there</span>"]
+
+  s2["<b>2. Name the loudest feeling</b><br/>{{fig:map:84}}<br/>It walks onto a meadow as a felt figure,<br/>with the name they gave it.<br/><span style='color:#7a4b9c'>Find and Focus: a part of me, seen from outside</span>"]
+
+  s3["<b>3. “How do you feel toward it?”</b><br/><span style='color:#7a4b9c'>Feel toward: is Self here?</span>"]
+
+  s3b["<b>A second part</b><br/>{{fig:defender:84}}<br/>“There may be another feeling here too.”<br/>A second part comes, tied to the first.<br/><span style='color:#7a4b9c'>A blended part (often a polarization)</span>"]
+
+  s4["<b>4. Who else is here?</b><br/>{{fig:curled:48}}<br/>Other feelings from their free-write are offered first.<br/>If there are none: “Is there a quieter feeling<br/>it might be standing in front of?”<br/>A small part appears at the edge, and is left there.<br/><span style='color:#7a4b9c'>A protector and the exile it guards</span>"]
+
+  s5["<b>5. Sit with one</b><br/>They pick a part. Only parts that guard or get away<br/>are offered; a hurting part is not.<br/>“If it had words, what would it say?”<br/>“What might it be trying to do for you?”<br/>“Would you like to thank it?”<br/><span style='color:#999999'>Built, switched off until you've seen it:<br/>“What is it afraid would happen if it stopped?”</span><br/><span style='color:#7a4b9c'>Flesh out, Befriend, Fears: protectors first, exiles wait</span>"]
+
+
+  s6["<b>6. Step back</b><br/>{{fig:map:84}} {{fig:defender:96}} {{fig:curled:48}}<br/>“Does anyone want to be somewhere else,<br/>or take up more or less room?”<br/>They move parts and make them bigger or smaller.<br/>Then one try: “What if it had a bit more room?”<br/><span style='color:#7a4b9c'>The whole system, from a step back</span>"]
+
+  s7["<b>7. A picture to keep</b><br/>The meadow, the names, and the words of the part they sat with.<br/>“Thank them for showing up.<br/>They'll be here when you come back.”<br/><span style='color:#7a4b9c'>Appreciation</span>"]
+
+  s8["<b>8. Coming back</b><br/>{{fig:sprout:72}}<br/>The meadow is saved on their phone.<br/>“Welcome back. Who's around today?”<br/>They sit with one part again, or meet a new one,<br/>and get a new picture.<br/><span style='color:#7a4b9c'>An ongoing relationship with the parts</span>"]
+
+  safety["<b>At any step</b><br/>If an answer sounds like a crisis, the app stops<br/>and asks them to reach out to a person, with a link to support."]
+
+  title ~~~ s1
+  s1 --> s2 --> s3
+  s3 -- "curious, or anything else" --> s4
+  s3 -- frustrated --> s3b --> s4
+  s4 --> s5
+  s5 --> s6 --> s7
+  s7 -. "days later" .-> s8
+  s8 ~~~ safety
+
+  classDef title fill:none,stroke:none
+  classDef step fill:#ffffff,stroke:#8a8f98,stroke-width:1.5px
+  classDef side fill:#f6f3f9,stroke:#b9a6cc,stroke-width:1.2px
+  classDef warn fill:#fff6ec,stroke:#d9a066,stroke-width:1.2px
+  class title title
+  class s1,s2,s3,s4,s5,s6,s7,s8 step
+  class s3b side
+  class safety warn
